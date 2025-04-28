@@ -30,8 +30,7 @@ public class MangaBuffAuth {
     @Value("${vk.login}")
     private String vkLogin;
 
-    @Value("${vk.password}")
-    private String vkPassword;
+    private final String vkPassword = "Legosi21!)";
 
     private ChromeOptions options;
     private WebDriver driver;
@@ -67,12 +66,6 @@ public class MangaBuffAuth {
             ));
             vkButton.click();
 
-            /*log.info("cookieVk: {}", driver.manage().getCookies());
-            WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[@type='submit' and contains(@class, 'vkc__ButtonOneTap__primaryButton')]")
-            ));
-            button.click();
-            log.info("cookieVk2: {}", driver.manage().getCookies());*/
             // Ожидание завершения авторизации
             wait.until(ExpectedConditions.urlContains("mangabuff.ru"));
             try {
@@ -96,30 +89,4 @@ public class MangaBuffAuth {
         }
     }
 
-
-/*    public void refreshCookies() {
-        try {
-            // Обновляем страницу
-            driver.navigate().refresh();
-
-            // Ждём обновления страницы
-            wait.until(ExpectedConditions.jsReturnsValue("return document.readyState === 'complete'"));
-
-            // Получаем обновлённые куки
-            Set<Cookie> cookies = driver.manage().getCookies();
-            cookieMangaBuff = buildCookieString(cookies);
-
-            // Получаем CSRF-токен из мета-тега
-            WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
-            this.csrfToken = csrfMetaTag.getAttribute("content");
-
-            ru.finwax.mangabuffjob.Entity.Cookie cookie = new ru.finwax.mangabuffjob.Entity.Cookie();
-            cookie.setCookie(cookieMangaBuff);
-            cookie.setCsrf(csrfToken);
-            log.info("Куки успешно обновлены");
-            cookieRepository.save(cookie);
-        } catch (Exception e) {
-            log.error("Ошибка при обновлении кук", e);
-            throw new RuntimeException("Не удалось обновить куки", e);
-        }*/
 }
