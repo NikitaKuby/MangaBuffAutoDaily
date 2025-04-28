@@ -1,4 +1,4 @@
-package ru.finwax.mangabuffjob.Sheduled;
+package ru.finwax.mangabuffjob.Sheduled.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openqa.selenium.By;
@@ -23,7 +23,6 @@ public class QuizScheduler {
 
     public void monitorQuizRequests(WebDriver driverWeb) {
         AtomicInteger clickCounter = new AtomicInteger(0);
-        log.info("---MINER START---");
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth
          ChromeDriver driver = (ChromeDriver) driverWeb;
@@ -68,7 +67,6 @@ public class QuizScheduler {
                 Thread.sleep(5000); // Проверяем каждые 5 секунд
             }
 
-            log.info("---MINER END---");
             devTools.disconnectSession();
 
         } catch (Exception e) {

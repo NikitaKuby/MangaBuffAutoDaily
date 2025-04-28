@@ -5,9 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
-import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
+import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
@@ -18,7 +21,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,11 +31,12 @@ public class SchedulerService {
     private final MineScheduler mineScheduler;
     private final QuizScheduler quizScheduler;
     private final MangaReadScheduler mangaReadScheduler;
+    private final AdvertisingScheduler advertisingScheduler;
     private final MbAuth mbAuth;
     private final UserCookieRepository userCookieRepository;
 
     // Запускается каждый день в 00:01 ночи
-    @Scheduled(cron = "0 47 1 * * ?")
+    @Scheduled(cron = "0 22 0 * * ?")
     public void startScheduledPlan() {
         // Получаем список всех аккаунтов
         List<Long> userIds = userCookieRepository.findAll()
@@ -53,25 +56,46 @@ public class SchedulerService {
         ExecutorService executor = Executors.newFixedThreadPool(maxParallelTasks);
 
         try {
+//
+//            // 5. Этап квизов (5 минут)
+//            log.info("--------SCHEDULER: START QUIZ--------");
+//            executeUserTasks(executor, userIds,
+//                (driver, userId) -> quizScheduler.monitorQuizRequests(driver),
+//                5, TimeUnit.MINUTES, "Quiz");
+//            log.info("--------SCHEDULER: STOP QUIZ--------");
+//
+//            TimeUnit.MINUTES.sleep(2);
+//
+//            // 5. Этап майнинга (5 минут)
+//            log.info("--------SCHEDULER: START MINE--------");
+//            executeUserTasks(executor, userIds,
+//                (driver, userId) -> mineScheduler.performMining(driver),
+//                5, TimeUnit.MINUTES, "Mining");
+//            log.info("--------SCHEDULER: STOP MINE--------");
+//
+//            TimeUnit.MINUTES.sleep(2);
+//
+//            // 6. Этап рекламы (5 минут)
+//            log.info("--------SCHEDULER: START ADV--------");
+//            executeUserTasks(executor, userIds,
+//                (driver, userId) -> advertisingScheduler.performAdv(driver),
+//                5, TimeUnit.MINUTES, "Mining");
+//            log.info("--------SCHEDULER: STOP ADV--------");
+//
+//            TimeUnit.MINUTES.sleep(2);
 
-            // 5. Этап квизов (7 минут на аккаунт)
+            // 6. Этап чтения манги (5 минут)
+            log.info("--------SCHEDULER: START READER--------");
             executeUserTasks(executor, userIds,
-                (driver, userId) -> quizScheduler.monitorQuizRequests(driver),
-                7, TimeUnit.MINUTES, "Quiz");
-
-            executeUserTasks(executor, userIds,
-                (driver, userId) -> mineScheduler.performMining(driver),
-                10, TimeUnit.MINUTES, "Mining");
-
-            // 4. Пауза между этапами (7 минут)
-            log.info("Mining completed. Waiting 7 minutes before quizzes...");
-            TimeUnit.MINUTES.sleep(7);
+                mangaReadScheduler::readMangaChapters,
+                5, TimeUnit.MINUTES, "Mining");
+            log.info("--------SCHEDULER: STOP READER--------");
 
 
-            log.info("All scheduled tasks completed successfully");
-        } catch (InterruptedException e) {
-            log.error("Scheduled task was interrupted", e);
-            Thread.currentThread().interrupt();
+            log.info("--------SCHEDULER: SUCCESSFULLY--------");
+//        } catch (InterruptedException e) {
+//            log.error("Scheduled task was interrupted", e);
+//            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("Error in scheduled task execution", e);
         }

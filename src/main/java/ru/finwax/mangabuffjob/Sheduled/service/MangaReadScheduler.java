@@ -1,24 +1,23 @@
-package ru.finwax.mangabuffjob.Sheduled;
+package ru.finwax.mangabuffjob.Sheduled.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
-import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
-import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,13 +39,10 @@ public class MangaReadScheduler {
     private final MangaDataRepository mangaRepository;
     private final MangaReadingProgressRepository progressRepository;
 
-    @Transactional
-    public void readMangaChapters(Long id) {
+    public void readMangaChapters(WebDriver driverWeb,Long id) {
         // Инициализируем счетчик для этого аккаунта
+        ChromeDriver driver = (ChromeDriver) driverWeb;
         giftCounters.putIfAbsent(id, new AtomicInteger(0));
-        ChromeDriver driver = new ChromeDriver();
-        //driver = (ChromeDriver)mbAuth.getActualDriver(id);
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         int remainingChapters = CHAPTERS_PER_DAY;
 
         try {
@@ -58,11 +54,10 @@ public class MangaReadScheduler {
                 }
 
                 MangaData manga = mangaOpt.get();
-                int chaptersRead = getChaptersRead(manga.getId());
+                int chaptersRead = getChaptersRead(manga.getId(), id);
                 int chaptersToRead = calculateChaptersToRead(manga, chaptersRead, remainingChapters);
 
-                readMangaChapters(manga, id, chaptersRead, chaptersToRead, driver, wait);
-                updateProgress(manga, chaptersRead + chaptersToRead);
+                readMangaChapters(manga, id, chaptersToRead, driver);
 
                 remainingChapters -= chaptersToRead;
             }
@@ -73,8 +68,8 @@ public class MangaReadScheduler {
         }
     }
 
-    private int getChaptersRead(Long mangaId) {
-        return progressRepository.findByMangaId(mangaId)
+    private int getChaptersRead(Long mangaId, Long id) {
+        return progressRepository.findByMangaIdAndUserCookieId(mangaId, id)
             .map(MangaReadingProgress::getChapterReaded)
             .orElse(0);
     }
@@ -85,51 +80,54 @@ public class MangaReadScheduler {
 
     private void readMangaChapters(MangaData manga,
                                    Long accountId,
-                                   int startChapter,
                                    int chaptersToRead,
-                                   ChromeDriver driver,
-                                   WebDriverWait wait) {
+                                   ChromeDriver driver) {
         try {
             // Переходим на страницу с главами манги
             driver.get(manga.getUrl());
 
-            WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[contains(@class, 'tabs__item') and @data-page='chapters']")
-            ));
-            button.click();
+            Thread.sleep(2000);
+            try {
+                ((JavascriptExecutor)driver).executeScript(
+                    "document.querySelector('button.tabs__item[data-page=\"chapters\"]').click()"
+                );
+            } catch (Exception e) {
+                log.error("Не удалось кликнуть через JS: {}", e.getMessage());
+            }
 
-            Thread.sleep(5000);
 
-            // Находим все элементы глав
+            Thread.sleep(2000);
+            if(manga.getCountChapters()>=100){
+                ((JavascriptExecutor)driver).executeScript("window.scrollTo(0, document.body.scrollHeight);");
+            }
+            Thread.sleep(2000);
+
+            // Находим и фильтруем только непрочитанные главы
             List<WebElement> chapterItems = driver.findElements(
-                By.cssSelector(".chapters__list .chapters__item")
+                By.cssSelector(".chapters__list .chapters__item:not(:has(.chapters__item-mark))")
             );
-            log.info("countChp" + chapterItems.size());
-
+            Collections.reverse(chapterItems);
+            updateProgress(manga, accountId, manga.getCountChapters() - chapterItems.size());
             // Проверяем, что нашли главы
             if (chapterItems.isEmpty()) {
-                log.warn("Не найдено глав для манги {} (ID: {})", manga.getTitle(), manga.getId());
+                log.warn("Не найдено непрочитанных глав для манги {} (ID: {})",
+                    manga.getTitle(), manga.getId());
                 return;
             }
 
             // Логируем общее количество найденных глав
-            log.info("Найдено {} глав для манги {} (ID: {})",
+            log.info("Найдено {} непрочитанных глав для манги {} (ID: {})",
                 chapterItems.size(), manga.getTitle(), manga.getId());
 
             // Читаем указанное количество глав
-            for (int i = startChapter; i < startChapter + chaptersToRead; i++) {
-                if (i >= chapterItems.size()) {
-                    log.info("Достигнут конец списка глав для манги {} (ID: {})",
-                        manga.getTitle(), manga.getId());
-                    break;
-                }
-
-                WebElement chapterItem = chapterItems.get(chapterItems.size()-i-1);
+            int chaptersToProcess = Math.min(chaptersToRead, chapterItems.size());
+            for (int i = 0; i < chaptersToProcess; i++) {
+                WebElement chapterItem = chapterItems.get(i);
 
                 try {
                     // Получаем информацию о главе
                     String chapterNumber = chapterItem.getAttribute("data-chapter");
-                    log.info("chapterNumber: " + chapterNumber);
+                    log.info("Обрабатываем непрочитанную главу {}", chapterNumber);
 
 
                     // Кликаем на главу (открываем в новой вкладке)
@@ -154,14 +152,17 @@ public class MangaReadScheduler {
                     driver.switchTo().window(originalWindow);
 
                     // Обновляем список глав после возврата (на случай динамической загрузки)
-                    chapterItems = driver.findElements(By.cssSelector(".chapters__list .chapters__item"));
+                    chapterItems = driver.findElements(
+                        By.cssSelector(".chapters__list .chapters__item:not(:has(.chapters__item-mark))"));
+                    Collections.reverse(chapterItems);
 
                 } catch (Exception e) {
-                    log.error("Ошибка при чтении главы {} манги {}: {}",
-                        i+1, manga.getTitle(), e.getMessage());
-
-                    // В случае ошибки пробуем обновить список глав
-                    chapterItems = driver.findElements(By.cssSelector(".chapters__list .chapters__item"));
+                    log.error("Ошибка при чтении главы: {}", e.getMessage().substring(0,60));
+                    // Обновляем список глав после ошибки
+                    chapterItems = driver.findElements(
+                        By.cssSelector(".chapters__list .chapters__item:not(:has(.chapters__item-mark))"));
+                    Collections.reverse(chapterItems);
+                    if (i >= chapterItems.size()) break;
                 }
 
                 // Небольшая пауза между главами
@@ -289,9 +290,9 @@ public class MangaReadScheduler {
         }
     }
 
-    private void updateProgress(MangaData manga, int newChaptersRead) {
+    private void updateProgress(MangaData manga, Long id, int newChaptersRead) {
         boolean hasReaded = newChaptersRead >= manga.getCountChapters();
-        progressRepository.upsertProgress(manga.getId(), newChaptersRead, hasReaded);
+        progressRepository.upsertProgress(manga.getId(), id, newChaptersRead, hasReaded);
     }
 
 

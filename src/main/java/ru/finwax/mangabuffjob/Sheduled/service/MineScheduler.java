@@ -1,4 +1,4 @@
-package ru.finwax.mangabuffjob.Sheduled;
+package ru.finwax.mangabuffjob.Sheduled.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -111,7 +111,7 @@ public class MineScheduler {
                     String body =
                         devTools.send(Network.getResponseBody(response.getRequestId())).getBody();
                     JsonNode root = MAPPER.readTree(body);
-                    if (LIMIT_MESSAGE.equals(root.get("message").asText())) {
+                    if (root != null &&  LIMIT_MESSAGE.equals(root.get("message").asText())) {
                         limitReached = true;
                         limitCheckFuture.complete(null);
                         log.info("Обнаружено сообщение о лимите в ответе");

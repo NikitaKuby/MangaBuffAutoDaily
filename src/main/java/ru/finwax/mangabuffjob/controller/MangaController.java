@@ -5,22 +5,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.finwax.mangabuffjob.Sheduled.CommentScheduler;
-import ru.finwax.mangabuffjob.Sheduled.MangaReadScheduler;
-import ru.finwax.mangabuffjob.Sheduled.MineScheduler;
-import ru.finwax.mangabuffjob.Sheduled.QuizScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.Sheduled.SchedulerService;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.service.ChapterThanksGeneratorService;
-import ru.finwax.mangabuffjob.service.CommentParserService;
 import ru.finwax.mangabuffjob.service.CommentService;
-
-import java.util.Collections;
-
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -35,6 +29,7 @@ public class MangaController {
     private final QuizScheduler quizScheduler;
     private final MangaReadScheduler mangaReadScheduler;
     private final SchedulerService schedulerService;
+    private final AdvertisingScheduler advertisingScheduler;
 
     @GetMapping("/auth")
     public void authMangaBuff(){
@@ -64,6 +59,11 @@ public class MangaController {
         commentScheduler.startDailyCommentSending(1L);
     }
 
+    @GetMapping("/start")
+    public void start(){
+        schedulerService.startScheduledPlan();
+    }
+
     @GetMapping("/mine")
     public void mine(){
 
@@ -83,12 +83,17 @@ public class MangaController {
 
     @GetMapping("/read/{id}")
     public void startReading(@PathVariable Long id){
-        mangaReadScheduler.readMangaChapters(id);
+        mangaReadScheduler.readMangaChapters(mangaAuth.getActualDriver(id),id);
     }
 
     @GetMapping("/gifts")
     public String getGift(){
         return mangaReadScheduler.getAllGiftCounts().toString();
+    }
+
+    @GetMapping("/adv")
+    public void advClick(){
+        advertisingScheduler.performAdv(mangaAuth.getActualDriver(1L));
     }
 
 

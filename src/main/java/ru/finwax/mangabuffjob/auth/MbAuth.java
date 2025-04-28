@@ -105,7 +105,9 @@ public class MbAuth {
     }
 
     public WebDriver getActualDriver(Long id) {
-        WebDriver driver = new ChromeDriver(setUpDriver());
+        ChromeOptions options = setUpDriver();
+        options.addArguments("user-data-dir=/path/to/user/data/"+id);
+        WebDriver driver = new ChromeDriver(options);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {

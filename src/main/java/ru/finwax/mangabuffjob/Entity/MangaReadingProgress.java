@@ -20,6 +20,10 @@ public class MangaReadingProgress {
     @JoinColumn(name = "manga_id", referencedColumnName = "id")
     private MangaData manga;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private UserCookie userCookie;
+
     @Column(name = "chapter_readed")
     private Integer chapterReaded;
 
