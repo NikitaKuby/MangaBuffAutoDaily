@@ -2,6 +2,7 @@ package ru.finwax.mangabuffjob.Sheduled;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
@@ -18,18 +19,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class QuizScheduler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
-    private final AtomicInteger clickCounter = new AtomicInteger(0);
     private final int QUESTION_DELAY_MS = 3000;
-    private final MangaBuffAuth mangaBuffAuth;
 
-    public void monitorQuizRequests() {
+    public void monitorQuizRequests(WebDriver driverWeb) {
+        AtomicInteger clickCounter = new AtomicInteger(0);
+        log.info("---MINER START---");
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth
-         ChromeDriver driver = (ChromeDriver) mangaBuffAuth.getDriver();
+         ChromeDriver driver = (ChromeDriver) driverWeb;
 
         try {
             // Инициализируем DevTools
@@ -42,7 +42,6 @@ public class QuizScheduler {
             // Ловим ответы
             devTools.addListener(Network.responseReceived(), response -> {
                 if (clickCounter.get() >= MAX_CLICKS) {
-                    log.info("Достигнут лимит в {} кликов. Завершаем работу.", MAX_CLICKS);
                     devTools.disconnectSession();
                     return;
                 }
@@ -54,7 +53,10 @@ public class QuizScheduler {
                             String correctAnswer = root.path("question")
                                 .path("correct_text")
                                 .asText();
-                            responseToQuestion(correctAnswer, driver);
+                            responseToQuestion(correctAnswer, driver, clickCounter);
+                            if(root.path("status").asText().equals("restart")){
+                                clickCounter.set(0);
+                            }
                     } catch (Exception e) {
                         log.warn("Failed to get response body for URL: {}", response.getResponse().getUrl());
                     }
@@ -68,16 +70,19 @@ public class QuizScheduler {
                 Thread.sleep(5000); // Проверяем каждые 5 секунд
             }
 
-            log.info("Успешно выполнено {} кликов. Завершаем работу.", MAX_CLICKS);
+            log.info("---MINER END---");
             devTools.disconnectSession();
 
         } catch (Exception e) {
             log.error("Error in quiz monitoring", e);
             throw new RuntimeException("Quiz monitoring failed", e);
         }
+        finally {
+            driver.quit();
+        }
     }
 
-    private void responseToQuestion(String correctAnswer, ChromeDriver driver) throws InterruptedException {
+    private void responseToQuestion(String correctAnswer, ChromeDriver driver, AtomicInteger clickCounter) throws InterruptedException {
         humanDelay();
         List<WebElement> answers = driver.findElements(
             By.cssSelector(".quiz__answer-item.button")
@@ -89,7 +94,7 @@ public class QuizScheduler {
                     if (clickCounter.get() < MAX_CLICKS) {
                         answer.click();
                         clickCounter.incrementAndGet();
-                        log.info("[{}]"+"/[{}]", clickCounter.get(),MAX_CLICKS);
+                        if(clickCounter.intValue() % 2==1){ log.info("[{}]"+"/[{}]", clickCounter.get(),MAX_CLICKS);}
                     } else {
                         log.info("Лимит кликов достигнут, пропускаем ответ");
                     }

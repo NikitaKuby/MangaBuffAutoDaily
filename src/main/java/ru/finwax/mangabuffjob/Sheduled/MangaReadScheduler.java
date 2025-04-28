@@ -59,6 +59,7 @@ public class MangaReadScheduler {
 
             remainingChapters -= chaptersToRead;
         }
+        driver.quit();
     }
 
     private int getChaptersRead(Long mangaId) {

@@ -1,7 +1,6 @@
 package ru.finwax.mangabuffjob.auth;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -19,28 +18,24 @@ import ru.finwax.mangabuffjob.service.CookieService;
 import java.time.Duration;
 import java.util.Set;
 
-@Getter
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MangaBuffAuth {
+public class MbAuth {
+
+    @Value("${mb.login}")
+    private String mbLogin;
+
 
     private final CookieService cookieService;
 
-    @Value("${vk.login}")
-    private String vkLogin;
+    @Value("${mb.password}")
+    private String mbPassword;
 
-    @Value("${vk.password}")
-    private String vkPassword;
 
-    private ChromeOptions options;
-    private WebDriver driver;
-    private WebDriverWait wait;
-    private String csrfToken;
-
-    public void setUpDriver() {
+    public ChromeOptions setUpDriver() {
         WebDriverManager.chromedriver().setup();
-        options = new ChromeOptions();
+        ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--remote-allow-origins=*");
@@ -51,32 +46,42 @@ public class MangaBuffAuth {
         /*options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
         options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
         options.addArguments("--window-size=1920,1080");*/
-
-        this.driver = new ChromeDriver(options);
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        return options;
     }
     public void authenticate() {
-        this.setUpDriver();
+        WebDriver driver = new ChromeDriver(setUpDriver());
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         try {
-            // Переход на страницу логина
             driver.get("https://mangabuff.ru/login");
 
-            // Клик по кнопке VK
-            WebElement vkButton = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(@class, 'social__vk') and contains(@href, 'vkontakte')]")
-            ));
-            vkButton.click();
+            // Ввод email
+            WebElement emailField = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("input.form__field[type='email']")
+                )
+            );
+            emailField.sendKeys(mbLogin);
 
-            /*log.info("cookieVk: {}", driver.manage().getCookies());
-            WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[@type='submit' and contains(@class, 'vkc__ButtonOneTap__primaryButton')]")
-            ));
-            button.click();
-            log.info("cookieVk2: {}", driver.manage().getCookies());*/
+            // Ввод пароля
+            WebElement passwordField = driver.findElement(
+                By.cssSelector("input.form__field[type='password']")
+            );
+            passwordField.sendKeys(mbPassword);
+
+            // Клик по кнопке входа
+            WebElement loginButton = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    By.cssSelector("button.login-button")
+                )
+            );
+            loginButton.click();
+
             // Ожидание завершения авторизации
             wait.until(ExpectedConditions.urlContains("mangabuff.ru"));
+            log.info("Успешный вход");
+
             try {
-                Thread.sleep(30000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -85,7 +90,8 @@ public class MangaBuffAuth {
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
 
-            cookieService.saveCookies(vkLogin, cookies, csrfToken);
+            // Сохраняем в БД вместо файла
+            cookieService.saveCookies(mbLogin, cookies, csrfToken);
 
         } catch (Exception e) {
             log.error("Ошибка при аутентификации", e);
@@ -96,30 +102,35 @@ public class MangaBuffAuth {
         }
     }
 
+    public WebDriver getActualDriver(Long id) {
+        WebDriver driver = new ChromeDriver(setUpDriver());
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
-/*    public void refreshCookies() {
         try {
-            // Обновляем страницу
-            driver.navigate().refresh();
+            driver.get("https://mangabuff.ru");
 
-            // Ждём обновления страницы
+
+            cookieService.loadCookies(id).ifPresent(cookies -> {
+                cookies.forEach(driver.manage()::addCookie);
+            });
+
+            driver.navigate().refresh();
+            log.info("Загрузка с куками");
+
             wait.until(ExpectedConditions.jsReturnsValue("return document.readyState === 'complete'"));
 
-            // Получаем обновлённые куки
-            Set<Cookie> cookies = driver.manage().getCookies();
-            cookieMangaBuff = buildCookieString(cookies);
-
-            // Получаем CSRF-токен из мета-тега
+            // Обновляем CSRF токен
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
-            this.csrfToken = csrfMetaTag.getAttribute("content");
+            String csrfToken = csrfMetaTag.getAttribute("content");
 
-            ru.finwax.mangabuffjob.Entity.Cookie cookie = new ru.finwax.mangabuffjob.Entity.Cookie();
-            cookie.setCookie(cookieMangaBuff);
-            cookie.setCsrf(csrfToken);
-            log.info("Куки успешно обновлены");
-            cookieRepository.save(cookie);
+            // Обновляем запись в БД
+            cookieService.saveCookies(id, driver.manage().getCookies(), csrfToken);
+
+            return driver;
         } catch (Exception e) {
-            log.error("Ошибка при обновлении кук", e);
-            throw new RuntimeException("Не удалось обновить куки", e);
-        }*/
+            driver.quit();
+            throw e;
+        }
+    }
+
 }

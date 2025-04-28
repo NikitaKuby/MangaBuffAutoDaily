@@ -2,35 +2,34 @@ package ru.finwax.mangabuffjob.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.Cookie;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import ru.finwax.mangabuffjob.Entity.Cookie;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
-import ru.finwax.mangabuffjob.repository.CookieRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CommentService {
-    private final MangaBuffAuth mangaBuffAuth;
-    private final CookieRepository cookieRepository;
-    public void sendPostRequestWithCookies(String commentText, String commentId) {
+    private final UserCookieRepository userCookieRepository;
+    private final CookieService cookieService;
+    public void sendPostRequestWithCookies(String commentText, String commentId, Long id) {
         try {
-            mangaBuffAuth.refreshCookies();
-        } catch (Exception e) {
-            log.error("Не удалось обновить куки, продолжаем со старыми", e);
-        }
-
-        try {
+            log.info("Патаемся отправить коментарий");
             RestTemplate restTemplate = new RestTemplate();
 
             // URL и тело запроса
@@ -49,14 +48,16 @@ public class CommentService {
 
             // Пытаемся получить куки, даже если refresh не сработал
             try {
-                Cookie latestCookie = cookieRepository.findTopByOrderByIdDesc()
+                UserCookie latestCookie = userCookieRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("No cookies found"));
 
-                if (latestCookie.getCookie() != null) {
-                    headers.add("Cookie", latestCookie.getCookie());
+                if (latestCookie.getCookiesJson() != null) {
+                    headers.add("Cookie", buildCookieString(
+                        cookieService.loadCookies(id)
+                            .orElseThrow()));
                 }
-                if (latestCookie.getCsrf() != null) {
-                    headers.add("x-csrf-token", latestCookie.getCsrf());
+                if (latestCookie.getCsrfToken() != null) {
+                    headers.add("x-csrf-token", latestCookie.getCsrfToken());
                 }
             } catch (Exception e) {
                 log.error("Не удалось получить куки из БД", e);
@@ -81,11 +82,31 @@ public class CommentService {
 
             // Отправляем запрос
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-            log.info("Ответ сервера: {}", response.getStatusCode());
-
+            log.info("Ответ сервера: {}, комментарий отправленн", response.getStatusCode());
+        } catch (HttpClientErrorException.UnprocessableEntity e) {
+            log.warn("Попытка: Лимит комментариев. Ждем...");
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (Exception e) {
             log.error("Ошибка при отправке комментария", e);
             throw new RuntimeException("Failed to send comment", e);
         }
+    }
+    private String buildCookieString(Set<Cookie> cookies) {
+        StringBuilder cookiesBuilder = new StringBuilder();
+        for (Cookie seleniumCookie : cookies) {
+            cookiesBuilder.append(seleniumCookie.getName())
+                .append("=")
+                .append(seleniumCookie.getValue())
+                .append("; ");
+        }
+        // Удаляем последнюю "; "
+        if (cookiesBuilder.length() > 0) {
+            cookiesBuilder.setLength(cookiesBuilder.length() - 2);
+        }
+        return cookiesBuilder.toString();
     }
 }
