@@ -7,11 +7,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
 import org.openqa.selenium.devtools.v135.network.Network;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class QuizScheduler {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
     private final int QUESTION_DELAY_MS = 3000;
 
@@ -48,7 +45,8 @@ public class QuizScheduler {
                 if (response.getResponse().getUrl().contains("https://mangabuff.ru/quiz/")) {
                     try {
                             // Получаем тело ответа сразу при получении события
-                            String body = devTools.send(Network.getResponseBody(response.getRequestId())).getBody();
+                            String body =
+                                devTools.send(Network.getResponseBody(response.getRequestId())).getBody();
                             JsonNode root = objectMapper.readTree(body);
                             String correctAnswer = root.path("question")
                                 .path("correct_text")

@@ -2,6 +2,7 @@ package ru.finwax.mangabuffjob.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.finwax.mangabuffjob.Sheduled.CommentScheduler;
@@ -40,9 +41,9 @@ public class MangaController {
         schedulerService.startScheduledPlan();
     }
 
-    @GetMapping("/actual")
-    public void getActual(){
-        mangaAuth.getActualDriver(2L).quit();
+    @GetMapping("/actual/{id}")
+    public void getActual(@PathVariable Long id){
+        mangaAuth.getActualDriver(id).quit();
     }
 
     @GetMapping("/update")
@@ -67,7 +68,7 @@ public class MangaController {
     public void mine(){
 
         mineScheduler.performMining(mangaAuth.getActualDriver(1L));
-        mineScheduler.performMining(mangaAuth.getActualDriver(2L));
+        mineScheduler.performMining(mangaAuth.getActualDriver(3L));
     }
 
     @GetMapping("/quiz")
@@ -80,9 +81,14 @@ public class MangaController {
         quizScheduler.monitorQuizRequests(mangaAuth.getActualDriver(1L));
     }
 
-    @GetMapping("/read")
-    public void startReading(){
-        mangaReadScheduler.readMangaChapters();
+    @GetMapping("/read/{id}")
+    public void startReading(@PathVariable Long id){
+        mangaReadScheduler.readMangaChapters(id);
+    }
+
+    @GetMapping("/gifts")
+    public String getGift(){
+        return mangaReadScheduler.getAllGiftCounts().toString();
     }
 
 

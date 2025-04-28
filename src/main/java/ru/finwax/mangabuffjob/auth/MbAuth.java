@@ -43,6 +43,8 @@ public class MbAuth {
         options.addArguments("--disk-cache-size=0");
         options.addArguments("--disable-cache");
         options.addArguments("--force-device-scale-factor=0.5");
+        options.addArguments("--blink-setting=imagesEnabled=false");
+
         /*options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
         options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
         options.addArguments("--window-size=1920,1080");*/

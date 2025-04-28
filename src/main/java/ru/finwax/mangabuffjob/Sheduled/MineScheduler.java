@@ -1,5 +1,7 @@
 package ru.finwax.mangabuffjob.Sheduled;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -28,9 +30,11 @@ public class MineScheduler {
     private static final String MINE_PAGE_URL = "https://mangabuff.ru/mine";
     private static final String MINE_BUTTON_CSS = "button.main-mine__game-tap";
     private static final String MINE_HIT_URL = "https://mangabuff.ru/mine/hit";
-    private static final String LIMIT_MESSAGE = "\"Лимит ударов на сегодня исчерпан\"";
+    private static final String LIMIT_MESSAGE = "Лимит ударов на сегодня исчерпан";
     private static final int TOTAL_CLICKS = 100;
     private static final int CLICK_INTERVAL_MS = 1000;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private volatile boolean limitReached = false;
     private CompletableFuture<Void> limitCheckFuture;
@@ -101,19 +105,16 @@ public class MineScheduler {
 
         // Слушаем входящие ответы
         devTools.addListener(Network.responseReceived(), response -> {
-            Response networkResponse = response.getResponse();
-            if (networkResponse.getUrl().contains(MINE_HIT_URL)) {
-                try {
-                    // Получаем Optional<Network.GetResponseBodyResponse>
-                    Network.GetResponseBodyResponse responseBody =
-                        devTools.send(Network.getResponseBody(response.getRequestId()));
 
-                    // Извлекаем тело ответа
-                    String body = responseBody.getBody();
-                    if (body.contains(LIMIT_MESSAGE)) {
+            if (response.getResponse().getUrl().contains(MINE_HIT_URL)) {
+                try {
+                    String body =
+                        devTools.send(Network.getResponseBody(response.getRequestId())).getBody();
+                    JsonNode root = MAPPER.readTree(body);
+                    if (LIMIT_MESSAGE.equals(root.get("message").asText())) {
                         limitReached = true;
                         limitCheckFuture.complete(null);
-                        log.debug("Обнаружено сообщение о лимите в ответе");
+                        log.info("Обнаружено сообщение о лимите в ответе");
                     }
                 } catch (Exception e) {
                     log.error("Ошибка при обработке ответа: {}", e.getMessage());
@@ -121,27 +122,6 @@ public class MineScheduler {
             }
         });
 
-        // Слушаем входящие ответы
-        devTools.addListener(Network.responseReceived(), response -> {
-            Response networkResponse = response.getResponse();
-            String url = networkResponse.getUrl();
-
-            if (url != null && url.contains(MINE_HIT_URL)) {
-                try {
-                    Network.GetResponseBodyResponse responseBody =
-                        devTools.send(Network.getResponseBody(response.getRequestId()));
-                    String body = responseBody.getBody();
-
-                    if (body.contains(LIMIT_MESSAGE)) {
-                        limitReached = true;
-                        limitCheckFuture.complete(null);
-                        log.debug("Обнаружено сообщение о лимите в ответе");
-                    }
-                } catch (Exception e) {
-                    log.error("Ошибка при обработке ответа: {}", e.getMessage());
-                }
-            }
-        });
 
         // 3. Слушаем ошибки загрузки
         devTools.addListener(Network.loadingFailed(), event -> {
