@@ -20,16 +20,24 @@ public interface MangaDataRepository extends JpaRepository<MangaData, Long> {
 
     @Query(value = """
     SELECT m FROM MangaData m
-    LEFT JOIN MangaReadingProgress p ON m.id = p.manga.id
-    WHERE (p.hasReaded = false AND p.chapterReaded > 0) OR p.manga.id IS NULL
+    LEFT JOIN MangaReadingProgress p ON m.id = p.manga.id AND p.userCookie.id = :userId
+    WHERE (p IS NULL OR p.hasReaded = false)
+    AND (p IS NULL OR p.chapterReaded < m.countChapters)
     ORDER BY 
-        CASE WHEN p.manga.id IS NULL THEN 1 ELSE 0 END,
-        p.chapterReaded ASC,
+        CASE WHEN p IS NULL THEN 0 ELSE p.chapterReaded END ASC,
         m.id ASC
     LIMIT 1
     """)
-    Optional<MangaData> findNextMangaToRead();
+    Optional<MangaData> findNextMangaToRead(@Param("userId") Long userId);
     Optional<MangaData> findFirstByIdGreaterThanOrderByIdAsc(Long id);
+
+    @Query(value = """
+        SELECT m FROM MangaData m
+        WHERE m.id>:id
+        ORDER BY m.id asc
+        LIMIT 1
+        """)
+    Optional<MangaData> findNextAfterId(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE MangaData m SET m.countChapters = :chapters WHERE m.id = :id")

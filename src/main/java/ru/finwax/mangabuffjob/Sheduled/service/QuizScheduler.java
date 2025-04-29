@@ -95,7 +95,7 @@ public class QuizScheduler {
                         log.info("Лимит кликов достигнут, пропускаем ответ");
                     }
                 } catch (Exception e) {
-                    log.error("Ошибка при клике на ответ");
+                    log.error("Ошибка при клике на ответ", e.getMessage().substring(0, 250));
                 }
             }
         }

@@ -13,11 +13,12 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
     Optional<MangaReadingProgress> findByMangaIdAndUserCookieId(Long mangaId, Long userId);
 
     @Modifying
+    @Transactional
     @Query(value = """
         INSERT INTO manga_reading_progress
         (manga_id, user_id, chapter_readed, has_readed, last_updated)
         VALUES (:mangaId, :userId, :chapterReaded, :hasReaded, NOW())
-        ON CONFLICT (manga_id)
+        ON CONFLICT (manga_id, user_id)
         DO UPDATE SET
             chapter_readed = EXCLUDED.chapter_readed,
             has_readed = EXCLUDED.has_readed,
@@ -27,4 +28,17 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
                         @Param("userId") Long userId,
                         @Param("chapterReaded") Integer chapterReaded,
                         @Param("hasReaded") Boolean hasReaded);
+
+
+
+    Optional<MangaReadingProgress> findMangaReadingProgressByUserCookieIdAndHasReadedIsFalse( Long userId);
+
+    @Query(value = """
+        SELECT * FROM manga_reading_progress
+        WHERE has_readed=true and user_id=:userId
+        ORDER BY manga_id DESC
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<MangaReadingProgress> findMangaProgress(@Param("userId") Long userId);
+
 }

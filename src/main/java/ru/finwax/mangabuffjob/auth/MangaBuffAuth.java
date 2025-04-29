@@ -29,17 +29,16 @@ public class MangaBuffAuth {
 
     @Value("${vk.login}")
     private String vkLogin;
+    @Value("${mb.login}")
+    private String mbLogin;
+    @Value("${mb.password}")
+    private String mbPassword;
 
-    private final String vkPassword = "Legosi21!)";
 
-    private ChromeOptions options;
-    private WebDriver driver;
-    private WebDriverWait wait;
-    private String csrfToken;
 
-    public void setUpDriver() {
+    public ChromeOptions setUpDriver() {
         WebDriverManager.chromedriver().setup();
-        options = new ChromeOptions();
+        ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--remote-allow-origins=*");
@@ -47,15 +46,17 @@ public class MangaBuffAuth {
         options.addArguments("--disk-cache-size=0");
         options.addArguments("--disable-cache");
         options.addArguments("--force-device-scale-factor=0.5");
-        /*options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
-        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
-        options.addArguments("--window-size=1920,1080");*/
+        options.addArguments("--blink-setting=imagesEnabled=false");
 
-        this.driver = new ChromeDriver(options);
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
+        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
+        options.addArguments("--window-size=1920,1080");
+        return options;
     }
+
     public void authenticate() {
-        this.setUpDriver();
+        WebDriver driver = new ChromeDriver(setUpDriver());
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         try {
             // Переход на страницу логина
             driver.get("https://mangabuff.ru/login");
@@ -79,6 +80,60 @@ public class MangaBuffAuth {
             String csrfToken = csrfMetaTag.getAttribute("content");
 
             cookieService.saveCookies(vkLogin, cookies, csrfToken);
+
+        } catch (Exception e) {
+            log.error("Ошибка при аутентификации", e);
+            throw e;
+        }
+        finally {
+            driver.quit();
+        }
+    }
+
+    public void authenticateMangaBuff() {
+        WebDriver driver = new ChromeDriver(setUpDriver());
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        try {
+            driver.get("https://mangabuff.ru/login");
+
+            // Ввод email
+            WebElement emailField = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("input.form__field[type='email']")
+                )
+            );
+            emailField.sendKeys(mbLogin);
+
+            // Ввод пароля
+            WebElement passwordField = driver.findElement(
+                By.cssSelector("input.form__field[type='password']")
+            );
+            passwordField.sendKeys(mbPassword);
+
+            // Клик по кнопке входа
+            WebElement loginButton = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                    By.cssSelector("button.login-button")
+                )
+            );
+            loginButton.click();
+
+            // Ожидание завершения авторизации
+            wait.until(ExpectedConditions.urlContains("mangabuff.ru"));
+            log.info("Успешный вход");
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            Set<Cookie> cookies = driver.manage().getCookies();
+            WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
+            String csrfToken = csrfMetaTag.getAttribute("content");
+
+            // Сохраняем в БД вместо файла
+            cookieService.saveCookies(mbLogin, cookies, csrfToken);
 
         } catch (Exception e) {
             log.error("Ошибка при аутентификации", e);

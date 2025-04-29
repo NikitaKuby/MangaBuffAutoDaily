@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.jsoup.nodes.Element;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.MangaChapter;
 import ru.finwax.mangabuffjob.Entity.MangaData;
@@ -27,12 +28,12 @@ public class CommentParserService {
     private final MangaDataRepository mangaDataRepository;
 
 
-    public List<String> getNewChapterIds() {
-        if (mangaChapterRepository.hasMoreThanTenUncommentedChapters()){
-            return mangaChapterRepository.findFirstTenUncommentedChapterIds();
+    public List<String> getNewChapterIds(int count) {
+        if (mangaChapterRepository.hasMoreThanTenUncommentedChapters(count)){
+            return mangaChapterRepository.findFirstTenUncommentedChapterIds(PageRequest.of(0, count));
         } else {
             parseMangaChapter();
-            return getNewChapterIds();
+            return getNewChapterIds(count);
         }
     }
 

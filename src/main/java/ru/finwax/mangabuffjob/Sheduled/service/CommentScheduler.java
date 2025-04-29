@@ -2,6 +2,7 @@ package ru.finwax.mangabuffjob.Sheduled.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,14 +43,13 @@ public class CommentScheduler {
         counter.set(0);
 
         // Получаем новые ID и проверяем их наличие
-        List<String> newIds = commentParserService.getNewChapterIds();
+        List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS);
         if (newIds.isEmpty()) {
             log.warn("Нет новых глав для комментирования");
             return;
         }
 
         commentIds.addAll(newIds);
-        mbAuth.getActualDriver(id).quit();
 
         // Запускаем отправку комментариев через ThreadPool
         scheduleComments(id);
@@ -75,7 +75,7 @@ public class CommentScheduler {
                     currentCount + 1, Math.min(COUNT_OF_COMMENTS, commentIds.size()),
                     idComment);
             } catch (Exception e) {
-                log.error("Ошибка при отправке комментария: {}", e.getMessage());
+                log.error("Ошибка при отправке комментария: {}", e.getMessage().substring(0,100));
             }
         };
 

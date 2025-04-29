@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.service.CookieService;
 
 import java.time.Duration;
+import java.util.Random;
 import java.util.Set;
 
 @Slf4j
@@ -45,68 +46,16 @@ public class MbAuth {
         options.addArguments("--force-device-scale-factor=0.5");
         options.addArguments("--blink-setting=imagesEnabled=false");
 
-        /*options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
+        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
         options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
-        options.addArguments("--window-size=1920,1080");*/
+        options.addArguments("--window-size=1920,1080");
         return options;
     }
-    public void authenticate() {
-        WebDriver driver = new ChromeDriver(setUpDriver());
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        try {
-            driver.get("https://mangabuff.ru/login");
 
-            // Ввод email
-            WebElement emailField = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    By.cssSelector("input.form__field[type='email']")
-                )
-            );
-            emailField.sendKeys(mbLogin);
 
-            // Ввод пароля
-            WebElement passwordField = driver.findElement(
-                By.cssSelector("input.form__field[type='password']")
-            );
-            passwordField.sendKeys(mbPassword);
-
-            // Клик по кнопке входа
-            WebElement loginButton = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("button.login-button")
-                )
-            );
-            loginButton.click();
-
-            // Ожидание завершения авторизации
-            wait.until(ExpectedConditions.urlContains("mangabuff.ru"));
-            log.info("Успешный вход");
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            Set<Cookie> cookies = driver.manage().getCookies();
-            WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
-            String csrfToken = csrfMetaTag.getAttribute("content");
-
-            // Сохраняем в БД вместо файла
-            cookieService.saveCookies(mbLogin, cookies, csrfToken);
-
-        } catch (Exception e) {
-            log.error("Ошибка при аутентификации", e);
-            throw e;
-        }
-        finally {
-            driver.quit();
-        }
-    }
-
-    public WebDriver getActualDriver(Long id) {
+    public WebDriver getActualDriver(Long id, String taskname) {
         ChromeOptions options = setUpDriver();
-        options.addArguments("user-data-dir=/path/to/user/data/"+id);
+        options.addArguments("user-data-dir=/path/to/user/data/" + id+taskname);
         WebDriver driver = new ChromeDriver(options);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 

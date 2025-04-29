@@ -1,7 +1,5 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -9,20 +7,20 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
 import org.openqa.selenium.devtools.v133.network.Network;
-import org.openqa.selenium.devtools.v133.network.model.*;
-
+import org.openqa.selenium.devtools.v133.network.model.Response;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Component
@@ -30,107 +28,161 @@ public class MineScheduler {
     private static final String MINE_PAGE_URL = "https://mangabuff.ru/mine";
     private static final String MINE_BUTTON_CSS = "button.main-mine__game-tap";
     private static final String MINE_HIT_URL = "https://mangabuff.ru/mine/hit";
-    private static final String LIMIT_MESSAGE = "Лимит ударов на сегодня исчерпан";
     private static final int TOTAL_CLICKS = 100;
     private static final int CLICK_INTERVAL_MS = 1000;
+    private static final int MAX_PARALLEL_SESSIONS = 5;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    private volatile boolean limitReached = false;
-    private CompletableFuture<Void> limitCheckFuture;
-
+    private final AtomicBoolean limitReached = new AtomicBoolean(false);
+    private final AtomicInteger activeMiningSessions = new AtomicInteger(0);
+    private final ReentrantLock miningLock = new ReentrantLock(true);
+    private final Semaphore concurrentSessionsSemaphore = new Semaphore(MAX_PARALLEL_SESSIONS);
 
     public void performMining(WebDriver driver) {
-        if (!(driver instanceof ChromeDriver chromeDriver)) {
-            throw new IllegalArgumentException("Only ChromeDriver is supported for mining");
+        if (!tryAcquireMiningPermission()) {
+            log.warn("Max parallel mining sessions reached ({})", MAX_PARALLEL_SESSIONS);
+            return;
         }
 
-        DevTools devTools = chromeDriver.getDevTools();
-        devTools.createSession();
-
         try {
-            // Настройка DevTools для перехвата сетевых запросов
-            setupNetworkMonitoring(devTools);
-
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-            driver.get(MINE_PAGE_URL);
-
-            WebElement mineButton = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.cssSelector(MINE_BUTTON_CSS))
-            );
-
-            for (int i = 0; i < TOTAL_CLICKS && !limitReached; i++) {
-                mineButton.click();
-
-                // Проверяем не достигнут ли лимит
-                if (limitReached) {
-                    log.info("Обнаружен лимит ударов. Майнинг остановлен.");
-                    break;
-                }
-
-                try {
-                    // Ждем с таймаутом, чтобы не блокировать проверку лимита
-                    limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException e) {
-                    // Таймаут ожидания - продолжаем клики
-                } catch (InterruptedException | ExecutionException e) {
-                    log.error("Ошибка при проверке лимита: {}", e.getMessage());
-                    break;
-                }
+            if (!(driver instanceof ChromeDriver chromeDriver)) {
+                throw new IllegalArgumentException("Only ChromeDriver is supported for mining");
             }
 
-            if (!limitReached) {
-                log.info("Майнинг завершен! Всего кликов: {}", TOTAL_CLICKS);
-            }
+            limitReached.set(false);
+            CompletableFuture<Void> limitCheckFuture = new CompletableFuture<>();
 
+            DevTools devTools = chromeDriver.getDevTools();
+            devTools.createSession();
+
+            try {
+                setupNetworkMonitoring(devTools, limitCheckFuture);
+                performMiningOperations(driver, limitCheckFuture);
+            } finally {
+                cleanupResources(devTools, driver);
+                releaseMiningPermission();
+            }
         } catch (Exception e) {
-            log.error("Ошибка при выполнении майнинга: {}", e.getMessage());
-        } finally {
-            devTools.disconnectSession();
-            driver.quit();
+            log.error("Critical mining error: {}", e.getMessage());
+            releaseMiningPermission();
         }
     }
 
-    private void setupNetworkMonitoring(DevTools devTools) {
-        // Включаем мониторинг сети
-        devTools.send(Network.enable(
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty()
-        ));
+    private boolean tryAcquireMiningPermission() {
+        try {
+            if (!concurrentSessionsSemaphore.tryAcquire(1, TimeUnit.SECONDS)) {
+                return false;
+            }
 
-        Map<RequestId, String> requestIdToUrlMap = new ConcurrentHashMap<>();
+            miningLock.lock();
+            try {
+                if (activeMiningSessions.get() >= MAX_PARALLEL_SESSIONS) {
+                    return false;
+                }
+                activeMiningSessions.incrementAndGet();
+                return true;
+            } finally {
+                miningLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
 
-        limitCheckFuture = new CompletableFuture<>();
+    private void releaseMiningPermission() {
+        miningLock.lock();
+        try {
+            activeMiningSessions.decrementAndGet();
+        } finally {
+            miningLock.unlock();
+            concurrentSessionsSemaphore.release();
+        }
+    }
 
-        // Слушаем входящие ответы
-        devTools.addListener(Network.responseReceived(), response -> {
+    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.get(MINE_PAGE_URL);
 
-            if (response.getResponse().getUrl().contains(MINE_HIT_URL)) {
+        WebElement mineButton = wait.until(
+            ExpectedConditions.elementToBeClickable(By.cssSelector(MINE_BUTTON_CSS))
+        );
+
+        int clicksPerformed = 0;
+        while (clicksPerformed < TOTAL_CLICKS && !limitReached.get()) {
+            try {
+                mineButton.click();
+                clicksPerformed++;
+                Thread.sleep(CLICK_INTERVAL_MS);
                 try {
-                    String body =
-                        devTools.send(Network.getResponseBody(response.getRequestId())).getBody();
-                    JsonNode root = MAPPER.readTree(body);
-                    if (root != null &&  LIMIT_MESSAGE.equals(root.get("message").asText())) {
-                        limitReached = true;
-                        limitCheckFuture.complete(null);
-                        log.info("Обнаружено сообщение о лимите в ответе");
-                    }
-                } catch (Exception e) {
-                    log.error("Ошибка при обработке ответа: {}", e.getMessage());
+                    limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
+                    break;
+                } catch (TimeoutException e) {
+                    // Continue mining
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("Click error: {}", e.getMessage());
+                if (e.getMessage().contains("element is not attached")) {
+                    break;
+                }
+            }
+        }
+
+        logMiningResult(clicksPerformed);
+    }
+
+    private void logMiningResult(int clicksPerformed) {
+        if (limitReached.get()) {
+            log.info("Mining stopped. Limit reached. Clicks: {}", clicksPerformed);
+        } else {
+            log.info("Mining completed. Total clicks: {}", clicksPerformed);
+        }
+    }
+
+    private void setupNetworkMonitoring(DevTools devTools, CompletableFuture<Void> limitCheckFuture) {
+        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+
+        // Обработка ответов сервера
+        devTools.addListener(Network.responseReceived(), response -> {
+            Response receivedResponse = response.getResponse();
+            if (receivedResponse.getUrl().contains(MINE_HIT_URL)) {
+                if (receivedResponse.getStatus() == 403) {
+                    handleLimitReached(limitCheckFuture, "403 status code received");
                 }
             }
         });
 
-
-        // 3. Слушаем ошибки загрузки
+        // Обработка ошибок загрузки
         devTools.addListener(Network.loadingFailed(), event -> {
-            RequestId requestId = event.getRequestId();
-            String url = requestIdToUrlMap.remove(requestId); // Удаляем и получаем URL
-
-            if (url != null && url.contains(MINE_HIT_URL)) {
-                log.warn("Ошибка запроса майнинга ({}): {}", url, event.getErrorText());
+            if (event.getRequestId() != null && event.getErrorText().toLowerCase().contains("blocked")) {
+                handleLimitReached(limitCheckFuture, "Request blocked: " + event.getErrorText());
             }
         });
+    }
+
+    private void handleLimitReached(CompletableFuture<Void> limitCheckFuture, String reason) {
+        log.info("Limit detected: {}", reason);
+        limitReached.set(true);
+        limitCheckFuture.complete(null);
+    }
+
+    private void cleanupResources(DevTools devTools, WebDriver driver) {
+        try {
+            if (devTools != null) {
+                devTools.disconnectSession();
+            }
+        } catch (Exception e) {
+            log.error("DevTools cleanup error: {}", e.getMessage());
+        }
+
+        try {
+            if (driver != null) {
+                driver.quit();
+            }
+        } catch (Exception e) {
+            log.error("Driver cleanup error: {}", e.getMessage());
+        }
     }
 }

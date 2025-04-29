@@ -1,5 +1,6 @@
 package ru.finwax.mangabuffjob.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,12 +22,12 @@ public interface MangaChapterRepository extends JpaRepository<MangaChapter, Long
     Optional<MangaChapter> findTopByOrderByIdDesc();
     @Query("SELECT COUNT(c) FROM MangaChapter c WHERE c.hasComment = false")
     long countUncommentedChapters();
-    default boolean hasMoreThanTenUncommentedChapters() {
-        return countUncommentedChapters() >= 10;
+    default boolean hasMoreThanTenUncommentedChapters(int count) {
+        return countUncommentedChapters() >= count;
     }
 
-    @Query("SELECT c.commentId FROM MangaChapter c WHERE c.hasComment = false AND c.commentId IS NOT NULL ORDER BY c.id ASC LIMIT 10")
-    List<String> findFirstTenUncommentedChapterIds();
+    @Query("SELECT c.commentId FROM MangaChapter c WHERE c.hasComment = false AND c.commentId IS NOT NULL ORDER BY c.id ASC")
+    List<String> findFirstTenUncommentedChapterIds(Pageable pageable);
 
 
 }
