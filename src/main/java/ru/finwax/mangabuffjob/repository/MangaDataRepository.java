@@ -7,8 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -29,7 +27,7 @@ public interface MangaDataRepository extends JpaRepository<MangaData, Long> {
     LIMIT 1
     """)
     Optional<MangaData> findNextMangaToRead(@Param("userId") Long userId);
-    Optional<MangaData> findFirstByIdGreaterThanOrderByIdAsc(Long id);
+    Optional<MangaData> findFirstByIdGreaterThanOrderByIdAsc(Long lastMangaId);
 
     @Query(value = """
         SELECT m FROM MangaData m

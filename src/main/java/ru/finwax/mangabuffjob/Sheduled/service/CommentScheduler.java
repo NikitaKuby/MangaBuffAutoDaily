@@ -2,6 +2,7 @@ package ru.finwax.mangabuffjob.Sheduled.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import ru.finwax.mangabuffjob.service.CommentParserService;
 import ru.finwax.mangabuffjob.service.CommentService;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,59 +32,61 @@ public class CommentScheduler {
     private final CommentParserService commentParserService;
     private final MbAuth mbAuth;
     private static final int COUNT_OF_COMMENTS = 15;
-    private final AtomicInteger counter = new AtomicInteger(0);
-    private final CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>();
-
     private static final int MIN_DELAY_SEC = 30;
     private static final int MAX_DELAY_SEC = 40;
 
     @Transactional
-    public void startDailyCommentSending(Long id) {
-        // Очищаем предыдущие данные
-        commentIds.clear();
-        counter.set(0);
+    public void startDailyCommentSending(WebDriver driver, Long id){
+        AtomicInteger counter = new AtomicInteger(0);
 
-        // Получаем новые ID и проверяем их наличие
-        List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS);
+        List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS, id);
         if (newIds.isEmpty()) {
             log.warn("Нет новых глав для комментирования");
             return;
         }
 
-        commentIds.addAll(newIds);
+        CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>(newIds);
 
         // Запускаем отправку комментариев через ThreadPool
-        scheduleComments(id);
-        mangaChapterRepository.markMultipleAsCommented(newIds);
+        scheduleComments(driver, id, counter, commentIds);
+        mangaChapterRepository.markMultipleAsCommented(newIds, id);
     }
 
-    private void scheduleComments(Long id) {
+    private void scheduleComments(WebDriver driver, Long userId,
+                                  AtomicInteger counter,
+                                  CopyOnWriteArrayList<String> commentIds) {
+        try {
+            Thread.sleep((long) ((Math.random()*10+1)*15));
+        } catch (InterruptedException e) {
+            log.info("все по пизде...");
+        }
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        try {
+            for (int i = 0; i < COUNT_OF_COMMENTS; i++) {
+                int delay = MIN_DELAY_SEC + (int)(Math.random() * (MAX_DELAY_SEC - MIN_DELAY_SEC));
+                executor.schedule(() -> {
+                    int currentCount = counter.getAndIncrement();
+                    if (currentCount >= COUNT_OF_COMMENTS) return;
 
-        Runnable commentTask = () -> {
-            int currentCount = counter.getAndIncrement();
-            if (currentCount >= COUNT_OF_COMMENTS || currentCount >= commentIds.size()) {
-                executor.shutdown();
-                return;
+                    try {
+                        String idComment = commentIds.get(currentCount);
+                        String textMessage = chapterThanksGeneratorService.generateThanks();
+
+                        // Обновляем куки перед отправкой
+                        //commentService.updateCookie(driver, userId);
+
+                        commentService.sendPostRequestWithCookies(textMessage, idComment, userId);
+                        log.info("[User {}] Отправлен комментарий {}/{}",
+                            userId, currentCount + 1, COUNT_OF_COMMENTS);
+                    } catch (Exception e) {
+                        log.error("[User {}] Ошибка: {}", userId, e.getMessage());
+                    }
+                }, delay * i, TimeUnit.SECONDS);
             }
-
-            try {
-                String idComment = commentIds.get(currentCount);
-                String textMessage = chapterThanksGeneratorService.generateThanks();
-                commentService.sendPostRequestWithCookies(textMessage, idComment, id);
-
-                log.info("Отправлен комментарий {}/{} к главе {}",
-                    currentCount + 1, Math.min(COUNT_OF_COMMENTS, commentIds.size()),
-                    idComment);
-            } catch (Exception e) {
-                log.error("Ошибка при отправке комментария: {}", e.getMessage().substring(0,100));
-            }
-        };
-
-        // Планируем с случайной задержкой
-        for (int i = 0; i < Math.min(COUNT_OF_COMMENTS, commentIds.size()); i++) {
-            int delay = MIN_DELAY_SEC + (int)(Math.random() * (MAX_DELAY_SEC - MIN_DELAY_SEC));
-            executor.schedule(commentTask, delay * i, TimeUnit.SECONDS);
+        } finally {
+            // Гарантированное завершение
+            executor.schedule(() -> executor.shutdown(),
+                COUNT_OF_COMMENTS * MAX_DELAY_SEC, TimeUnit.SECONDS);
         }
     }
 }

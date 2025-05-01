@@ -24,7 +24,7 @@ public class ChapterThanksGeneratorService {
         "очень интересно"
     };
 
-    private static final String[] PUNCTUATION_MARKS = { "!", ".", ",", "..." };
+    private static final String[] PUNCTUATION_MARKS = { "!", ".", ",", "...","\uD83E\uDD23\uD83E\uDD23" };
 
     private final Random random = new Random();
 

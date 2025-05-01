@@ -2,7 +2,13 @@ package ru.finwax.mangabuffjob.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -17,8 +23,11 @@ import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -26,7 +35,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class CommentService {
     private final UserCookieRepository userCookieRepository;
+    private final ConcurrentMap<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final CookieService cookieService;
+
     public void sendPostRequestWithCookies(String commentText, String commentId, Long id) {
         try {
             log.info("Патаемся отправить коментарий");
@@ -95,6 +106,7 @@ public class CommentService {
             throw new RuntimeException("Failed to send comment", e);
         }
     }
+
     private String buildCookieString(Set<Cookie> cookies) {
         StringBuilder cookiesBuilder = new StringBuilder();
         for (Cookie seleniumCookie : cookies) {
@@ -109,4 +121,5 @@ public class CommentService {
         }
         return cookiesBuilder.toString();
     }
+
 }

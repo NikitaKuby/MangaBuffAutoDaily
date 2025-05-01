@@ -58,11 +58,12 @@ public class MineScheduler {
                 setupNetworkMonitoring(devTools, limitCheckFuture);
                 performMiningOperations(driver, limitCheckFuture);
             } finally {
-                cleanupResources(devTools, driver);
+                cleanupResources(devTools);
                 releaseMiningPermission();
             }
         } catch (Exception e) {
             log.error("Critical mining error: {}", e.getMessage());
+            driver.quit();
             releaseMiningPermission();
         }
     }
@@ -168,21 +169,13 @@ public class MineScheduler {
         limitCheckFuture.complete(null);
     }
 
-    private void cleanupResources(DevTools devTools, WebDriver driver) {
+    private void cleanupResources(DevTools devTools) {
         try {
             if (devTools != null) {
                 devTools.disconnectSession();
             }
         } catch (Exception e) {
             log.error("DevTools cleanup error: {}", e.getMessage());
-        }
-
-        try {
-            if (driver != null) {
-                driver.quit();
-            }
-        } catch (Exception e) {
-            log.error("Driver cleanup error: {}", e.getMessage());
         }
     }
 }

@@ -49,6 +49,8 @@ public class MangaController {
         mangaAuth.getActualDriver(id, "actual").quit();
     }
 
+
+
     @GetMapping("/update")
     public void createMangaDb(){
         mangaBuffAuth.authenticate();
@@ -56,7 +58,7 @@ public class MangaController {
 
     @GetMapping("/comment/{id}")
     public void getChId(@PathVariable Long id){
-        commentScheduler.startDailyCommentSending(id);
+        commentScheduler.startDailyCommentSending(mangaAuth.getActualDriver(id, "COmment"), id);
     }
 
     @GetMapping("/start")

@@ -25,12 +25,12 @@ public class QuizScheduler {
         AtomicInteger clickCounter = new AtomicInteger(0);
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth
-         ChromeDriver driver = (ChromeDriver) driverWeb;
+
+        ChromeDriver driver = (ChromeDriver) driverWeb;
+        DevTools devTools = driver.getDevTools();
+        devTools.createSession();
 
         try {
-            // Инициализируем DevTools
-            DevTools devTools = driver.getDevTools();
-            devTools.createSession();
 
             // Включаем мониторинг сети
             devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
@@ -72,10 +72,13 @@ public class QuizScheduler {
         } catch (Exception e) {
             log.error("Error in quiz monitoring", e);
             throw new RuntimeException("Quiz monitoring failed", e);
-        }
-        finally {
+        } finally {
+            if (devTools != null) {
+            devTools.disconnectSession();  // Закрываем только DevTools
+            }
             driver.quit();
         }
+
     }
 
     private void responseToQuestion(String correctAnswer, ChromeDriver driver, AtomicInteger clickCounter) throws InterruptedException {

@@ -11,12 +11,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.MangaChapter;
 import ru.finwax.mangabuffjob.Entity.MangaData;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.repository.MangaChapterRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,32 +27,33 @@ import java.util.Objects;
 public class CommentParserService {
     private final MangaChapterRepository mangaChapterRepository;
     private final MangaDataRepository mangaDataRepository;
+    private final UserCookieRepository userCookieRepository;
 
 
-    public List<String> getNewChapterIds(int count) {
-        if (mangaChapterRepository.hasMoreThanTenUncommentedChapters(count)){
-            return mangaChapterRepository.findFirstTenUncommentedChapterIds(PageRequest.of(0, count));
+    public List<String> getNewChapterIds(int count, Long id) {
+        if (mangaChapterRepository.hasMoreThanTenUncommentedChapters(count, id)){
+            return mangaChapterRepository.findFirstTenUncommentedChapterIds(PageRequest.of(0, count), id);
         } else {
-            parseMangaChapter();
-            return getNewChapterIds(count);
+            parseMangaChapter(id);
+            return getNewChapterIds(count, id);
         }
     }
 
-    private void parseMangaChapter(){
+    private void parseMangaChapter(Long id){
         // Получаем следующую мангу для парсинга
-        MangaData mangaToParse = getNextMangaForParsing();
-        createMangaChapter(mangaToParse);
+        MangaData mangaToParse = getNextMangaForParsing(id);
+        createMangaChapter(mangaToParse, id);
     }
 
-    private MangaData getNextMangaForParsing() {
+    private MangaData getNextMangaForParsing(Long id) {
         // Если таблица mangaChapter пустая, берем первую мангу из manga_parsing_data
-        if (mangaChapterRepository.count() == 0) {
+        if (mangaChapterRepository.countByUserId(id) == 0) {
             return mangaDataRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new RuntimeException("No manga found in manga_parsing_data"));
         }
 
         // Иначе получаем mangaId последней записи в mangaChapter
-        Long lastMangaId = mangaChapterRepository.findTopByOrderByIdDesc()
+        Long lastMangaId = mangaChapterRepository.findTopByUserIdOrderByIdDesc(id)
             .orElseThrow(() -> new RuntimeException("No chapters found"))
             .getManga().getId();
 
@@ -61,7 +63,7 @@ public class CommentParserService {
                 .orElseThrow(() -> new RuntimeException("No more manga to parse")));
     }
 
-    public void createMangaChapter(MangaData mangaData) {
+    public void createMangaChapter(MangaData mangaData, Long id) {
         try {
             Document pageDoc = fetchWithRetry(mangaData.getUrl());
             if (pageDoc == null) return;
@@ -69,7 +71,7 @@ public class CommentParserService {
             Elements chapterItems = pageDoc.select("a.chapters__item");
             for (int i = chapterItems.size() - 1; i >= 0; i--) {
                 try {
-                    processMangaElement(chapterItems.get(i), mangaData);
+                    processMangaElement(chapterItems.get(i), mangaData, id);
                 } catch (Exception e) {
                     log.error("Ошибка при обработке элемента манги: {}", e.getMessage());
                 }
@@ -80,18 +82,19 @@ public class CommentParserService {
         }
     }
 
-    private void processMangaElement(Element mangaElement, MangaData manga) {
+    private void processMangaElement(Element mangaElement, MangaData manga, Long id) {
         Element chapterValue = mangaElement.selectFirst("div.chapters__value span");
         int chapterNumber = Integer.parseInt(Objects.requireNonNull(chapterValue).text());
 
         Element likeButton = mangaElement.selectFirst("button.chapters__like-btn");
-        String dataId = Objects.requireNonNull(likeButton).attr("data-id");
-
-        if (!mangaChapterRepository.existsByMangaIdAndChapterNumber(manga.getId(), chapterNumber)) {
+        String chapterId = Objects.requireNonNull(likeButton).attr("data-id");
+        if (!mangaChapterRepository.existsByMangaIdAndChapterNumberAndUserId(manga.getId(), chapterNumber, id)) {
             MangaChapter mangaChapter = new MangaChapter();
             mangaChapter.setManga(manga);
+            UserCookie userRef = userCookieRepository.getReferenceById(id);
+            mangaChapter.setUser(userRef);
             mangaChapter.setChapterNumber(chapterNumber);
-            mangaChapter.setCommentId(dataId);
+            mangaChapter.setCommentId(chapterId);
             mangaChapter.setHasComment(false);
 
             mangaChapterRepository.save(mangaChapter);

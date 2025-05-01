@@ -11,12 +11,17 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,22 +38,18 @@ public class MangaReadScheduler {
 
     private final ConcurrentHashMap<Long, AtomicInteger> giftCounters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
-    private final CommentScheduler commentScheduler;
-    private static final int CHAPTER_READ_TIME_MS =  90 * 1000;
+    private final GiftStatisticRepository giftRepository;
+    private static final int CHAPTER_READ_TIME_MS =  80 * 1000;
     private static final Random random = new Random();
 
     private final MangaDataRepository mangaRepository;
+    private final UserCookieRepository userRepository;
     private final MangaReadingProgressRepository progressRepository;
 
     public void readMangaChapters(WebDriver driverWeb, Long id, int countChapter) {
-
+        long startTime = System.currentTimeMillis();
         ChromeDriver driver = (ChromeDriver) driverWeb;
         giftCounters.putIfAbsent(id, new AtomicInteger(0));
-        if(countChapter>10){
-            commentScheduler.startDailyCommentSending(id);
-        }
-
-
         remainingChaptersMap.putIfAbsent(id, new AtomicInteger(countChapter));
         AtomicInteger remainingChapters = remainingChaptersMap.get(id);
 
@@ -64,30 +65,29 @@ public class MangaReadScheduler {
         try {
             int maxIterations = 100;
             int iterations = 0;
+            int actuallyRead = 0;
             while (remainingChapters.get() > 0 && iterations++ < maxIterations) {
-                log.info("[{}] ОСТАТОК ГЛАВ: {}", id, remainingChapters.get());
-
                 Optional<MangaData> mangaOpt = getNextMangaToRead(id);
                 if (mangaOpt.isEmpty()) {
-                    log.info("[{}] Нет доступных манг для чтения", id);
+                    log.warn("[{}] Нет доступных манг для чтения", id);
                     break;
                 }
 
                 MangaData manga = mangaOpt.get();
                 int chaptersRead = getChaptersRead(manga.getId(), id);
-                log.debug("chaptersRead: {}", chaptersRead);
+                log.debug("[{}] chaptersRead: {}", id, chaptersRead);
                 int unreadChapters = manga.getCountChapters() - chaptersRead;
 
-                log.debug("unreadChapters: {}", unreadChapters);
+                log.debug("[{}] unreadChapters: {}", id, unreadChapters);
                 if (unreadChapters <= 0) {
                     updateProgress(manga, id, manga.getCountChapters());
                     continue;
                 }
 
                 int chaptersToRead = Math.min(unreadChapters, remainingChapters.get());
-                log.debug("chaptersToRead: {}", chaptersToRead);
-                int actuallyRead = readMangaChaptersInternal(manga, id, chaptersToRead, driver);
-                log.debug("actuallyRead: {}", actuallyRead);
+                log.debug("[{}] chaptersToRead: {}", id, chaptersToRead);
+                actuallyRead = readMangaChaptersInternal(manga, id, chaptersToRead, chaptersRead, driver);
+                log.info("[{}] actuallyRead: {}", id, actuallyRead);
 
                 if (actuallyRead > 0) {
                     // Атомарное обновление
@@ -96,26 +96,30 @@ public class MangaReadScheduler {
                         id,
                         System.identityHashCode(remainingChapters),
                         remainingChapters.get());
-                    log.info("Осталось глав: {}", newRemaining);
+                    log.debug("Осталось глав: {}", newRemaining);
 
                     // Немедленный выход при достижении 0
                     if (newRemaining <= 0) {
-                        log.info("[{}] Все главы прочитаны", id);
+                        log.debug("[{}] Все главы прочитаны", id);
                         break;
                     }
                 } else {
-                    log.warn("[{}] Не удалось прочитать главы", id);
-                    // Прерываем цикл при ошибке чтения
-                    break;
+                    log.warn("[{}] Не удалось прочитать главы, воможно все главы прочитанны", id);
                 }
             }
+            log.info("[{}] Чтение глав завершено: {}/{} за {} мин",
+                id,
+                actuallyRead,
+                countChapter,
+                String.format("%.1f", (System.currentTimeMillis() - startTime) / 60000.0));
+
         } catch (Exception e) {
             log.error("[{}] Ошибка: {}", id, e.getMessage());
         } finally {
-
+            updateGift();
             remainingChaptersMap.remove(id);
+            giftCounters.remove(id);
             driver.quit();
-
         }
     }
 
@@ -161,6 +165,7 @@ public class MangaReadScheduler {
     private int readMangaChaptersInternal(MangaData manga,
                                    Long accountId,
                                    int chaptersToRead,
+                                   int chaptersRead,
                                    ChromeDriver driver) {
 
         if (chaptersToRead <= 0) {
@@ -172,7 +177,7 @@ public class MangaReadScheduler {
         try {
             synchronized (driver) {
                 driver.get(manga.getUrl());
-                Thread.sleep(2000);
+                Thread.sleep(1000);
 
                 // Кликаем на вкладку "Главы" через JS
                 try {
@@ -183,12 +188,12 @@ public class MangaReadScheduler {
                     log.error("[{}] Не удалось кликнуть через JS: {}", accountId, e.getMessage());
                 }
 
-                Thread.sleep(2000);
+                Thread.sleep(500);
 
                 if (manga.getCountChapters() >= 100) {
                     ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, document.body.scrollHeight);");
                 }
-                Thread.sleep(2000);
+                Thread.sleep(1000);
 
                 // Находим и фильтруем только непрочитанные главы
                 List<WebElement> chapterItems = driver.findElements(
@@ -197,28 +202,32 @@ public class MangaReadScheduler {
                 Collections.reverse(chapterItems);
 
                 // Логируем общее количество найденных глав
-                log.info("Найдено {} непрочитанных глав для манги {} (ID: {})",
-                    chapterItems.size(), manga.getTitle(), manga.getId());
+                log.debug("[{}]Найдено {} непрочитанных глав для манги {} (ID: {})",
+                    accountId, chapterItems.size(), manga.getTitle(), manga.getId());
 
                 // Читаем указанное количество глав
                 int chaptersToProcess = Math.min(chaptersToRead, chapterItems.size());
-                log.info("chapterToProcess: {}", chaptersToProcess);
+                log.debug("chapterToProcess: {}", chaptersToProcess);
                 for (int i = 0; i < Math.min(chaptersToRead, chapterItems.size()); i++) {
                     if (readSingleChapter(driver, accountId, chapterItems.get(i))) {
                         newChaptersRead++;
                     }
-                    Thread.sleep(1000 + random.nextInt(2000));
+                    Thread.sleep(500 + random.nextInt(1000));
                 }
 
                 if (newChaptersRead > 0) {
-                    int totalRead = getChaptersRead(manga.getId(), accountId) + newChaptersRead;
+                    int totalRead = manga.getCountChapters() - chapterItems.size()+newChaptersRead;
                     updateProgress(manga, accountId, totalRead);
+                }
+
+                if(newChaptersRead==0&&chapterItems.isEmpty()&&chaptersRead<manga.getCountChapters()){
+                    updateProgress(manga, accountId, manga.getCountChapters());
                 }
 
                 return newChaptersRead;
             }
         } catch (Exception e) {
-            log.error("Ошибка при чтении манги {}: {}", manga.getTitle(), e.getMessage());
+            log.error("[{}]Ошибка при чтении манги {}: {}", accountId, manga.getTitle(), e.getMessage());
             return 0;
         }
 
@@ -291,23 +300,27 @@ public class MangaReadScheduler {
                     if (e instanceof StaleElementReferenceException) {
                         log.warn("Элемент устарел, перезагружаем страницу");
                         driver.navigate().refresh();
-                        Thread.sleep(2000);
+                        Thread.sleep(200);
                         continue;
                     }
                     resetScrollPosition(driver);
-                    Thread.sleep(200); // Добавляем паузу после ошибки
+                    Thread.sleep(200);
+                    continue;
                 }
             }
-        } catch (Exception e) {
+        }
+
+        catch (Exception e) {
             if (e instanceof StaleElementReferenceException) {
                 log.warn("Элемент устарел, перезагружаем страницу");
                 driver.navigate().refresh();
-                Thread.sleep(2000);
+                Thread.sleep(200);
             } else {
-                log.error("Ошибка чтения главы", e);
+                log.error("[{}]Ошибка чтения главы", accountId, e);
                 throw e; // Пробрасываем исключение выше
             }
         }
+
     }
 
     private boolean readSingleChapter(ChromeDriver driver, Long accountId, WebElement chapterItem) {
@@ -324,9 +337,12 @@ public class MangaReadScheduler {
                     break;
                 }
             }
-
+            long chapterStart = System.currentTimeMillis();
             // Читаем главу
             readChapter(driver, accountId);
+            log.info("[{}] Глава прочитана за {} сек",
+                accountId,
+                (System.currentTimeMillis() - chapterStart)/1000 );
             return true;
         } catch (Exception e) {
             log.error("[{}] Ошибка при чтении главы: {}", accountId, e.getMessage());
@@ -338,12 +354,13 @@ public class MangaReadScheduler {
         }
     }
 
-    private void resetScrollPosition(ChromeDriver driver) {
+    private void resetScrollPosition(ChromeDriver driver) throws InterruptedException {
         try {
-            new Actions(driver).moveByOffset(0, 0).perform();
-            ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, -100)");
+            ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, -50)");
         } catch (Exception e) {
-            log.warn("Ошибка сброса позиции");
+            if (isDriverAlive(driver)) {
+                log.debug("Не удалось сбросить скролл, но драйвер жив");
+            }
         }
     }
 
@@ -372,7 +389,7 @@ public class MangaReadScheduler {
                 ((JavascriptExecutor)driver).executeScript("arguments[0].click();", gift);
 
                 // 3. Обработка возможного popup (если появится)
-                Thread.sleep(1000);
+                Thread.sleep(500);
                 tryAlternativeCloseMethods(driver, accountId);
 
             } catch (Exception e) {
@@ -417,6 +434,8 @@ public class MangaReadScheduler {
         giftCounters.get(accountId).incrementAndGet();
     }
 
+
+
     public int getValue(Long accountId) {
         return giftCounters.getOrDefault(accountId, new AtomicInteger(0)).get();
     }
@@ -428,6 +447,49 @@ public class MangaReadScheduler {
                 Map.Entry::getKey,
                 e -> e.getValue().get()
             ));
+    }
+
+    public void updateGift() {
+        try {
+            // Получаем текущую дату (без времени)
+            LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+            // Получаем все актуальные счетчики подарков
+            Map<Long, Integer> giftCounts = getAllGiftCounts();
+
+            // Обрабатываем только ненулевые значения
+            giftCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .forEach(entry -> {
+                    Long userId = entry.getKey();
+                    int newGifts = entry.getValue();
+
+                    // Ищем запись для этого пользователя за сегодня
+                    Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(userId, today);
+
+                    if (existingStat.isPresent()) {
+                        // Обновляем существующую запись
+                        GiftStatistic stat = existingStat.get();
+                        stat.setCountGift(stat.getCountGift() + newGifts);
+                        giftRepository.save(stat);
+                        log.info("Обновлена статистика подарков для userId={}: добавлено {} подарков", userId, newGifts);
+                    } else {
+                        // Создаем новую запись
+                        GiftStatistic newStat = new GiftStatistic();
+                        UserCookie userRef = userRepository.getReferenceById(userId);
+
+                        newStat.setUser(userRef);
+                        newStat.setCountGift(newGifts);
+                        giftRepository.save(newStat);
+                        log.info("Создана новая статистика подарков для userId={}: {} подарков", userId, newGifts);
+                    }
+
+                    // Сбрасываем счетчик после сохранения
+                    giftCounters.get(userId).set(0);
+                });
+        } catch (Exception e) {
+            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
+        }
     }
 
     public boolean isDriverAlive(ChromeDriver driver) {
