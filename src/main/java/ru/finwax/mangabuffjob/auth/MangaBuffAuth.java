@@ -48,9 +48,9 @@ public class MangaBuffAuth {
         options.addArguments("--force-device-scale-factor=0.5");
         options.addArguments("--blink-setting=imagesEnabled=false");
 
-        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
-        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
-        options.addArguments("--window-size=1920,1080");
+//        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
+//        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
+//        options.addArguments("--window-size=1920,1080");
         return options;
     }
 
@@ -78,7 +78,7 @@ public class MangaBuffAuth {
             Set<Cookie> cookies = driver.manage().getCookies();
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
-
+            log.debug("save new cookie");
             cookieService.saveCookies(vkLogin, cookies, csrfToken);
 
         } catch (Exception e) {

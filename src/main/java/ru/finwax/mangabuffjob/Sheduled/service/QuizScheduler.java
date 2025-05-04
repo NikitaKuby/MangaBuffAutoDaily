@@ -2,6 +2,7 @@ package ru.finwax.mangabuffjob.Sheduled.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -91,6 +92,11 @@ public class QuizScheduler {
             if (answer.getText().equals(correctAnswer)) {
                 try {
                     if (clickCounter.get() < MAX_CLICKS) {
+                        // Прокручиваем к элементу
+                        ((JavascriptExecutor)driver).executeScript(
+                            "arguments[0].scrollIntoView({block: 'center'});",
+                            answer
+                        );
                         answer.click();
                         clickCounter.incrementAndGet();
                         if(clickCounter.intValue() % 2==1){ log.info("[{}]"+"/[{}]", clickCounter.get(),MAX_CLICKS);}
@@ -98,7 +104,7 @@ public class QuizScheduler {
                         log.info("Лимит кликов достигнут, пропускаем ответ");
                     }
                 } catch (Exception e) {
-                    log.error("Ошибка при клике на ответ", e.getMessage().substring(0, 250));
+                    log.error("Ошибка при клике на ответ {}", e.getMessage().substring(0, 250));
                 }
             }
         }

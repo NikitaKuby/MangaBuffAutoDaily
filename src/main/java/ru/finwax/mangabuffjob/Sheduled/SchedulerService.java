@@ -67,37 +67,37 @@ public class SchedulerService {
         try {
 
 
-//            log.info("--------SCHEDULER: START QUIZ--------");
-//            executeUserTasks(executor, userIds,
-//                (driver, userId) -> quizScheduler.monitorQuizRequests(driver),
-//                3, TimeUnit.MINUTES, "Quiz");
-//            log.info("--------SCHEDULER: STOP QUIZ--------");
-//
-//
-//            log.info("--------SCHEDULER: START MINE--------");
-//            executeUserTasks(executor, userIds,
-//                (driver, userId) -> mineScheduler.performMining(driver),
-//                3, TimeUnit.MINUTES, "Mining");
-//            log.info("--------SCHEDULER: STOP MINE--------");
-//
-//
-//            log.info("--------SCHEDULER: START ADV--------");
-//            executeUserTasks(executor, userIds,
-//                (driver, userId) -> advertisingScheduler.performAdv(driver),
-//                4, TimeUnit.MINUTES, "ADV");
-//            log.info("--------SCHEDULER: STOP ADV--------");
-
-//            log.info("--------SCHEDULER: START COMMENT--------");
-//            executeUserTasks(executor, userIds,
-//                commentScheduler::startDailyCommentSending,
-//                20, TimeUnit.MINUTES, "Comment");
-//            log.info("--------SCHEDULER: STOP COMMENT--------");
-
-            log.info("--------SCHEDULER: START READER--------");
+            log.info("--------SCHEDULER: START QUIZ--------");
             executeUserTasks(executor, userIds,
-                (driver, userId) ->
-                    mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
-                120, TimeUnit.MINUTES, "READER");
+                (driver, userId) -> quizScheduler.monitorQuizRequests(driver),
+                3, "Quiz");
+            log.info("--------SCHEDULER: STOP QUIZ--------");
+
+
+            log.info("--------SCHEDULER: START MINE--------");
+            executeUserTasks(executor, userIds,
+                (driver, userId) -> mineScheduler.performMining(driver),
+                3, "Mining");
+            log.info("--------SCHEDULER: STOP MINE--------");
+
+
+            log.info("--------SCHEDULER: START ADV--------");
+            executeUserTasks(executor, userIds,
+                (driver, userId) -> advertisingScheduler.performAdv(driver),
+                4, "ADV");
+            log.info("--------SCHEDULER: STOP ADV--------");
+
+            log.info("--------SCHEDULER: START COMMENT--------");
+            executeUserTasks(executor, userIds,
+                commentScheduler::startDailyCommentSending,
+                20, "Comment");
+            log.info("--------SCHEDULER: STOP COMMENT--------");
+
+//            log.info("--------SCHEDULER: START READER--------");
+//            executeUserTasks(executor, userIds,
+//                (driver, userId) ->
+//                    mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
+//                120, "READER");
 
             log.info("--------SCHEDULER: STOP READER--------");
             log.info("--------SCHEDULER: SUCCESSFULLY--------");
@@ -109,12 +109,10 @@ public class SchedulerService {
         }
     }
 
-    // Универсальный метод для выполнения задач пользователей
     private void executeUserTasks(ExecutorService executor,
                                   List<Long> userIds,
                                   BiConsumer<WebDriver, Long> task,
                                   long timeout,
-                                  TimeUnit timeUnit,
                                   String taskName) {
 
         List<Future<?>> futures = userIds.stream()
@@ -128,10 +126,10 @@ public class SchedulerService {
 
                     // 2. Засекаем время выполнения
                     long startTime = System.currentTimeMillis();
-                    long endTime = startTime + timeUnit.toMillis(timeout);
+                    long endTime = startTime + TimeUnit.MINUTES.toMillis(timeout);
 
                     // 3. Выполняем задачу в цикле (для периодических операций)
-                    while (System.currentTimeMillis() < endTime && mangaReadScheduler.isDriverAlive((ChromeDriver) driver)) {
+                    while (mangaReadScheduler.isDriverAlive((ChromeDriver) driver)) {
                         task.accept(driver, userId);
 
                         // Для квизов добавляем паузу между проверками
@@ -148,7 +146,7 @@ public class SchedulerService {
                         taskName,
                         userId,
                         formattedDuration,
-                        timeUnit.toMinutes(timeout));
+                        TimeUnit.MINUTES.toMinutes(timeout));
 
                 } catch (Exception e) {
                     double durationMin = (System.currentTimeMillis() - taskStartTime) / 60000.0;
@@ -166,13 +164,13 @@ public class SchedulerService {
                         } catch (Exception e) {
                             log.error("Error closing driver for user [{}]: {}", userId, e.getMessage());
                         }
-                    }
+                    } else {log.info("Драйвер закрыт на уровне Task");}
                 }
             }))
             .collect(Collectors.toList());
 
         // 5. Ожидаем завершения всех задач с таймаутом
-        long timeoutMillis = timeUnit.toMillis(timeout);
+        long timeoutMillis = TimeUnit.MINUTES.toMillis(timeout);
         long startTime = System.currentTimeMillis();
 
         for (Future<?> future : futures) {
@@ -197,7 +195,7 @@ public class SchedulerService {
             return;
         }
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(5, 0))&& now.isBefore(LocalTime.of(23, 50))){
+        if (now.isAfter(LocalTime.of(6, 0))&& now.isBefore(LocalTime.of(22, 0))){
             killChromeDrivers();
             List<Long> userIds = userCookieRepository.findAll()
                 .stream()
@@ -213,7 +211,7 @@ public class SchedulerService {
             executeUserTasks(executor, userIds,
                 (driver, userId) ->
                     mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_HOUR),
-                4, TimeUnit.MINUTES, "SHADOW READER");
+                6, "SHADOW READER");
             log.info("--------[SCHEDULER: STOP SHADOW READER]--------");
         }
     }

@@ -31,7 +31,7 @@ public class CommentScheduler {
     private final CommentService commentService;
     private final CommentParserService commentParserService;
     private final MbAuth mbAuth;
-    private static final int COUNT_OF_COMMENTS = 15;
+    private static final int COUNT_OF_COMMENTS = 13;
     private static final int MIN_DELAY_SEC = 30;
     private static final int MAX_DELAY_SEC = 40;
 
@@ -39,22 +39,29 @@ public class CommentScheduler {
     public void startDailyCommentSending(WebDriver driver, Long id){
         AtomicInteger counter = new AtomicInteger(0);
 
+        log.debug("startDailyCommentSending");
+
         List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS, id);
         if (newIds.isEmpty()) {
             log.warn("Нет новых глав для комментирования");
             return;
         }
-
+        log.info("{}: "+newIds.toString(), id);
         CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>(newIds);
-
         // Запускаем отправку комментариев через ThreadPool
-        scheduleComments(driver, id, counter, commentIds);
-        mangaChapterRepository.markMultipleAsCommented(newIds, id);
+        log.debug("try scheduleComments");
+        try {
+            scheduleComments(id, counter, commentIds);
+            mangaChapterRepository.markMultipleAsCommented(newIds, id);
+        }finally {
+            driver.quit();
+        }
     }
 
-    private void scheduleComments(WebDriver driver, Long userId,
+    private void scheduleComments(Long userId,
                                   AtomicInteger counter,
                                   CopyOnWriteArrayList<String> commentIds) {
+        log.debug("[{}]start scheduleComments", userId);
         try {
             Thread.sleep((long) ((Math.random()*10+1)*15));
         } catch (InterruptedException e) {
@@ -71,10 +78,7 @@ public class CommentScheduler {
                     try {
                         String idComment = commentIds.get(currentCount);
                         String textMessage = chapterThanksGeneratorService.generateThanks();
-
-                        // Обновляем куки перед отправкой
-                        //commentService.updateCookie(driver, userId);
-
+                        log.debug("[{}]sendPostRequestWithCookies", userId);
                         commentService.sendPostRequestWithCookies(textMessage, idComment, userId);
                         log.info("[User {}] Отправлен комментарий {}/{}",
                             userId, currentCount + 1, COUNT_OF_COMMENTS);
@@ -85,7 +89,7 @@ public class CommentScheduler {
             }
         } finally {
             // Гарантированное завершение
-            executor.schedule(() -> executor.shutdown(),
+            executor.schedule(executor::shutdown,
                 COUNT_OF_COMMENTS * MAX_DELAY_SEC, TimeUnit.SECONDS);
         }
     }

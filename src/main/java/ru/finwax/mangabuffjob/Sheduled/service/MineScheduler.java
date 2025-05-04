@@ -65,6 +65,8 @@ public class MineScheduler {
             log.error("Critical mining error: {}", e.getMessage());
             driver.quit();
             releaseMiningPermission();
+        }finally {
+            driver.quit();
         }
     }
 

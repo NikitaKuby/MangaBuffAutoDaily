@@ -21,7 +21,9 @@ public interface MangaChapterRepository extends JpaRepository<MangaChapter, Long
     boolean existsByMangaIdAndChapterNumberAndUserId(Long mangaId, Integer chapterNumber, Long userId);
     @Query("SELECT COUNT(c) FROM MangaChapter c WHERE c.user.id = :userId")
     long countByUserId(@Param("userId") Long userId);
-    Optional<MangaChapter> findTopByUserIdOrderByIdDesc(Long userId);
+    @Query("SELECT mc.manga.id FROM MangaChapter mc WHERE mc.user.id = :userId ORDER BY mc.id DESC LIMIT 1")
+    Optional<Long> findLastMangaIdByUserId(@Param("userId") Long userId);
+
     @Query("SELECT COUNT(c) FROM MangaChapter c WHERE c.hasComment = false AND c.user.id = :userId")
     long countUncommentedChapters(@Param("userId") Long userId);
     default boolean hasMoreThanTenUncommentedChapters(int count, Long id) {

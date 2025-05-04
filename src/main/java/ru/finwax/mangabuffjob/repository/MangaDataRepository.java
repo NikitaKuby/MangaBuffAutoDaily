@@ -16,18 +16,6 @@ public interface MangaDataRepository extends JpaRepository<MangaData, Long> {
 
     Optional<MangaData> findFirstByOrderByIdAsc();
 
-    @Query(value = """
-    SELECT m FROM MangaData m
-    LEFT JOIN MangaReadingProgress p ON m.id = p.manga.id AND p.userCookie.id = :userId
-    WHERE (p IS NULL OR p.hasReaded = false)
-    AND (p IS NULL OR p.chapterReaded < m.countChapters)
-    ORDER BY 
-        CASE WHEN p IS NULL THEN 0 ELSE p.chapterReaded END ASC,
-        m.id ASC
-    LIMIT 1
-    """)
-    Optional<MangaData> findNextMangaToRead(@Param("userId") Long userId);
-    Optional<MangaData> findFirstByIdGreaterThanOrderByIdAsc(Long lastMangaId);
 
     @Query(value = """
         SELECT m FROM MangaData m
@@ -37,13 +25,9 @@ public interface MangaDataRepository extends JpaRepository<MangaData, Long> {
         """)
     Optional<MangaData> findNextAfterId(@Param("id") Long id);
 
-    @Modifying
-    @Query("UPDATE MangaData m SET m.countChapters = :chapters WHERE m.id = :id")
-    void updateChaptersCount(@Param("id") Long id, @Param("chapters") int chapters);
-
-    // Обновление времени последнего обновления
-    @Modifying
-    @Query("UPDATE MangaData m SET m.lastUpdated = CURRENT_TIMESTAMP WHERE m.id = :id")
-    void refreshLastUpdated(@Param("id") Long id);
+    @Query("SELECT m FROM MangaData m WHERE NOT EXISTS " +
+        "(SELECT 1 FROM MangaChapter mc WHERE mc.manga.id = m.id AND mc.user.id = :userId AND mc.chapterNumber = -1) " +
+        "ORDER BY m.id ASC")
+    Optional<MangaData> findFirstByNotMarkedAsEmpty(@Param("userId") Long userId);
 
 }

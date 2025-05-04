@@ -64,6 +64,7 @@ public class CookieService {
                 .ifPresentOrElse(
                     cookie -> {
                         cookie.setCookiesJson(cookiesJson);
+                        log.debug("saveNewCookie for user {}", id);
                         cookie.setCsrfToken(csrfToken);
                         userCookieRepository.save(cookie);
                     },

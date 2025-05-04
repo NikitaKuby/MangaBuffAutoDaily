@@ -12,6 +12,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,11 +31,11 @@ public class GiftStatistic {
     private Integer countGift = 0;
 
     @Column(name = "date", nullable = false, updatable = false)
-    private LocalDateTime date;
+    private LocalDate date;
 
     @PrePersist
     protected void onCreate() {
-        date = LocalDateTime.now();
+        date = LocalDate.now();
     }
 }
 

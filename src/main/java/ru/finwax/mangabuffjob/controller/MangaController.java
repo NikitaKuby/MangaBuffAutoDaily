@@ -2,6 +2,8 @@ package ru.finwax.mangabuffjob.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.service.ChapterThanksGeneratorService;
 import ru.finwax.mangabuffjob.service.CommentService;
+import ru.finwax.mangabuffjob.service.ScanningProgress;
 
 import java.io.IOException;
 
@@ -25,6 +28,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class MangaController {
     private final MangaBuffAuth mangaBuffAuth;
+    private final ScanningProgress scanningProgress;
     private final MbAuth mangaAuth;
     private final CommentScheduler commentScheduler;
     private final MineScheduler mineScheduler;
@@ -32,11 +36,6 @@ public class MangaController {
     private final MangaReadScheduler mangaReadScheduler;
     private final SchedulerService schedulerService;
     private final AdvertisingScheduler advertisingScheduler;
-
-    @GetMapping("/auth")
-    public void authMangaBuff(){
-        schedulerService.startScheduledPlan();
-    }
 
 
     @GetMapping("/kill")
@@ -61,6 +60,12 @@ public class MangaController {
         commentScheduler.startDailyCommentSending(mangaAuth.getActualDriver(id, "COmment"), id);
     }
 
+    @GetMapping("/scanning/{id}")
+    public void getStatusChapters(@PathVariable Long id){
+        scanningProgress.sendGetRequestWithCookies(id);
+    }
+
+
     @GetMapping("/start")
     public void start(){
         schedulerService.startScheduledPlan();
@@ -80,11 +85,7 @@ public class MangaController {
     public void startReading(@PathVariable Long id){
         mangaReadScheduler.readMangaChapters(mangaAuth.getActualDriver(id, "reader"),id, 2);
     }
-//
-    @GetMapping("/gifts")
-    public String getGift(){
-        return mangaReadScheduler.getAllGiftCounts().toString();
-    }
+
 
     @GetMapping("/adv/{id}")
     public void advClick(@PathVariable Long id){

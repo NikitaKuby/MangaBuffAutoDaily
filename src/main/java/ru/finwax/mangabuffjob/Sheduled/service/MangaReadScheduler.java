@@ -21,22 +21,20 @@ import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MangaReadScheduler {
 
-    private final ConcurrentHashMap<Long, AtomicInteger> giftCounters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
     private static final int CHAPTER_READ_TIME_MS =  80 * 1000;
@@ -49,7 +47,6 @@ public class MangaReadScheduler {
     public void readMangaChapters(WebDriver driverWeb, Long id, int countChapter) {
         long startTime = System.currentTimeMillis();
         ChromeDriver driver = (ChromeDriver) driverWeb;
-        giftCounters.putIfAbsent(id, new AtomicInteger(0));
         remainingChaptersMap.putIfAbsent(id, new AtomicInteger(countChapter));
         AtomicInteger remainingChapters = remainingChaptersMap.get(id);
 
@@ -116,10 +113,8 @@ public class MangaReadScheduler {
         } catch (Exception e) {
             log.error("[{}] Ошибка: {}", id, e.getMessage());
         } finally {
-            updateGift();
-            remainingChaptersMap.remove(id);
-            giftCounters.remove(id);
             driver.quit();
+            remainingChaptersMap.remove(id);
         }
     }
 
@@ -424,69 +419,36 @@ public class MangaReadScheduler {
                 .click()
                 .perform();
             log.info("Пытаемся закрыть окно подарка");
-            increment(accountId);
+            updateGift(accountId);
 
         } catch (Exception e) {
             log.warn("Альтернативные методы закрытия не сработали");
         }
     }
-    public void increment(Long accountId) {
-        giftCounters.get(accountId).incrementAndGet();
-    }
 
 
 
-    public int getValue(Long accountId) {
-        return giftCounters.getOrDefault(accountId, new AtomicInteger(0)).get();
-    }
-
-    // Метод для получения всех счетчиков (для мониторинга)
-    public Map<Long, Integer> getAllGiftCounts() {
-        return giftCounters.entrySet().stream()
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                e -> e.getValue().get()
-            ));
-    }
-
-    public void updateGift() {
+    public void updateGift(Long accountId) {
         try {
             // Получаем текущую дату (без времени)
-            LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+            Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(accountId, today);
 
-            // Получаем все актуальные счетчики подарков
-            Map<Long, Integer> giftCounts = getAllGiftCounts();
-
-            // Обрабатываем только ненулевые значения
-            giftCounts.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0)
-                .forEach(entry -> {
-                    Long userId = entry.getKey();
-                    int newGifts = entry.getValue();
-
-                    // Ищем запись для этого пользователя за сегодня
-                    Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(userId, today);
-
-                    if (existingStat.isPresent()) {
-                        // Обновляем существующую запись
-                        GiftStatistic stat = existingStat.get();
-                        stat.setCountGift(stat.getCountGift() + newGifts);
-                        giftRepository.save(stat);
-                        log.info("Обновлена статистика подарков для userId={}: добавлено {} подарков", userId, newGifts);
-                    } else {
-                        // Создаем новую запись
-                        GiftStatistic newStat = new GiftStatistic();
-                        UserCookie userRef = userRepository.getReferenceById(userId);
-
-                        newStat.setUser(userRef);
-                        newStat.setCountGift(newGifts);
-                        giftRepository.save(newStat);
-                        log.info("Создана новая статистика подарков для userId={}: {} подарков", userId, newGifts);
-                    }
-
-                    // Сбрасываем счетчик после сохранения
-                    giftCounters.get(userId).set(0);
-                });
+            if (existingStat.isPresent()) {
+                GiftStatistic stat = existingStat.get();
+                stat.setCountGift(stat.getCountGift() + 1);
+                giftRepository.save(stat);
+                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}",
+                    accountId, stat.getCountGift());
+            } else {
+                // Создаем новую запись
+                GiftStatistic newStat = new GiftStatistic();
+                UserCookie userRef = userRepository.getReferenceById(accountId);
+                newStat.setUser(userRef);
+                newStat.setCountGift(1);
+                giftRepository.save(newStat);
+                log.info("Создана новая статистика подарков для userId={}: {} подарков", accountId, newStat.getCountGift());
+            }
         } catch (Exception e) {
             log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
         }

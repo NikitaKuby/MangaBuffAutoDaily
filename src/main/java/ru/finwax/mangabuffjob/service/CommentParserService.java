@@ -34,6 +34,7 @@ public class CommentParserService {
         if (mangaChapterRepository.hasMoreThanTenUncommentedChapters(count, id)){
             return mangaChapterRepository.findFirstTenUncommentedChapterIds(PageRequest.of(0, count), id);
         } else {
+            log.debug("parse");
             parseMangaChapter(id);
             return getNewChapterIds(count, id);
         }
@@ -53,22 +54,33 @@ public class CommentParserService {
         }
 
         // Иначе получаем mangaId последней записи в mangaChapter
-        Long lastMangaId = mangaChapterRepository.findTopByUserIdOrderByIdDesc(id)
-            .orElseThrow(() -> new RuntimeException("No chapters found"))
-            .getManga().getId();
-
+        Long lastMangaId = mangaChapterRepository.findLastMangaIdByUserId(id)
+            .orElseThrow(() -> new RuntimeException("No chapters found"));
+        log.debug("[{}] lastmangaId = {}",id, lastMangaId);
         // Ищем следующую мангу после lastMangaId
-        return mangaDataRepository.findFirstByIdGreaterThanOrderByIdAsc(lastMangaId)
-            .orElseGet(() -> mangaDataRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new RuntimeException("No more manga to parse")));
+        log.debug("[{}] nextId = {}",id,mangaDataRepository.findNextAfterId(lastMangaId).get().getId() );
+
+        return mangaDataRepository.findNextAfterId(lastMangaId)
+                .orElseThrow(() -> new RuntimeException("No more manga to parse"));
     }
 
     public void createMangaChapter(MangaData mangaData, Long id) {
         try {
             Document pageDoc = fetchWithRetry(mangaData.getUrl());
             if (pageDoc == null) return;
-
             Elements chapterItems = pageDoc.select("a.chapters__item");
+            if (chapterItems.isEmpty()) {
+                log.info("Манга ID: {} не содержит глав для комментариев, помечаем как обработанную", mangaData.getId());
+                MangaChapter markerChapter = new MangaChapter();
+                markerChapter.setManga(mangaData);
+                markerChapter.setUser(userCookieRepository.getReferenceById(id));
+                markerChapter.setChapterNumber(-1); // Специальное значение для маркера
+                markerChapter.setCommentId("NO_CHAPTERS");
+                markerChapter.setHasComment(true); // Помечаем как "обработанную"
+
+                mangaChapterRepository.save(markerChapter);
+                return;
+            }
             for (int i = chapterItems.size() - 1; i >= 0; i--) {
                 try {
                     processMangaElement(chapterItems.get(i), mangaData, id);
@@ -107,7 +119,6 @@ public class CommentParserService {
                     .userAgent("Mozilla/5.0")
                     .timeout(5000)
                     .ignoreHttpErrors(true);
-
                 Connection.Response response = connection.execute();
                 int statusCode = response.statusCode();
 
