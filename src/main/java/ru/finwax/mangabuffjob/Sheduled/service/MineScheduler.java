@@ -37,9 +37,9 @@ public class MineScheduler {
     private final ReentrantLock miningLock = new ReentrantLock(true);
     private final Semaphore concurrentSessionsSemaphore = new Semaphore(MAX_PARALLEL_SESSIONS);
 
-    public void performMining(WebDriver driver) {
+    public void performMining(WebDriver driver, Long id) {
         if (!tryAcquireMiningPermission()) {
-            log.warn("Max parallel mining sessions reached ({})", MAX_PARALLEL_SESSIONS);
+            log.warn("[{}]Max parallel mining sessions reached ({})", id, MAX_PARALLEL_SESSIONS);
             return;
         }
 
@@ -56,13 +56,13 @@ public class MineScheduler {
 
             try {
                 setupNetworkMonitoring(devTools, limitCheckFuture);
-                performMiningOperations(driver, limitCheckFuture);
+                performMiningOperations(driver, limitCheckFuture, id);
             } finally {
                 cleanupResources(devTools);
                 releaseMiningPermission();
             }
         } catch (Exception e) {
-            log.error("Critical mining error: {}", e.getMessage());
+            log.error("[{}]Critical mining error: {}", id, e.getMessage());
             driver.quit();
             releaseMiningPermission();
         }finally {
@@ -102,7 +102,7 @@ public class MineScheduler {
         }
     }
 
-    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture) {
+    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture, Long id) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         driver.get(MINE_PAGE_URL);
 
@@ -133,14 +133,14 @@ public class MineScheduler {
             }
         }
 
-        logMiningResult(clicksPerformed);
+        logMiningResult(clicksPerformed, id);
     }
 
-    private void logMiningResult(int clicksPerformed) {
+    private void logMiningResult(int clicksPerformed, Long id) {
         if (limitReached.get()) {
-            log.info("Mining stopped. Limit reached. Clicks: {}", clicksPerformed);
+            log.info("[{}]Mining stopped. Limit reached. Clicks: {}", id, clicksPerformed);
         } else {
-            log.info("Mining completed. Total clicks: {}", clicksPerformed);
+            log.info("[{}]Mining completed. Total clicks: {}", id, clicksPerformed);
         }
     }
 

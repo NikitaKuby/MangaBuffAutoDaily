@@ -35,6 +35,8 @@ public class MangaBuffAuth {
     private String mbPassword;
 
 
+    private final String mbLogin2="igorkubyshkin1211@gmail.com";
+
 
     public ChromeOptions setUpDriver() {
         WebDriverManager.chromedriver().setup();
@@ -79,7 +81,7 @@ public class MangaBuffAuth {
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
             log.debug("save new cookie");
-            cookieService.saveCookies(vkLogin, cookies, csrfToken);
+            cookieService.saveCookies(mbLogin2, cookies, csrfToken);
 
         } catch (Exception e) {
             log.error("Ошибка при аутентификации", e);

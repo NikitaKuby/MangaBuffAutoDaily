@@ -7,7 +7,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v135.network.Network;
+import org.openqa.selenium.devtools.v136.network.Network;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ public class QuizScheduler {
     private final int MAX_CLICKS = 15;
     private final int QUESTION_DELAY_MS = 3000;
 
-    public void monitorQuizRequests(WebDriver driverWeb) {
+    public void monitorQuizRequests(WebDriver driverWeb, Long id) {
         AtomicInteger clickCounter = new AtomicInteger(0);
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth
@@ -51,7 +51,7 @@ public class QuizScheduler {
                             String correctAnswer = root.path("question")
                                 .path("correct_text")
                                 .asText();
-                            responseToQuestion(correctAnswer, driver, clickCounter);
+                            responseToQuestion(correctAnswer, driver, clickCounter, id);
                             if(root.path("status").asText().equals("restart")){
                                 clickCounter.set(0);
                             }
@@ -82,7 +82,7 @@ public class QuizScheduler {
 
     }
 
-    private void responseToQuestion(String correctAnswer, ChromeDriver driver, AtomicInteger clickCounter) throws InterruptedException {
+    private void responseToQuestion(String correctAnswer, ChromeDriver driver, AtomicInteger clickCounter, Long id) throws InterruptedException {
         humanDelay();
         List<WebElement> answers = driver.findElements(
             By.cssSelector(".quiz__answer-item.button")
@@ -101,10 +101,10 @@ public class QuizScheduler {
                         clickCounter.incrementAndGet();
                         if(clickCounter.intValue() % 2==1){ log.info("[{}]"+"/[{}]", clickCounter.get(),MAX_CLICKS);}
                     } else {
-                        log.info("Лимит кликов достигнут, пропускаем ответ");
+                        log.info("[{}]Лимит кликов достигнут, пропускаем ответ", id);
                     }
                 } catch (Exception e) {
-                    log.error("Ошибка при клике на ответ {}", e.getMessage().substring(0, 250));
+                    log.error("[{}]Ошибка при клике на ответ {}", id, e.getMessage().substring(0, 250));
                 }
             }
         }

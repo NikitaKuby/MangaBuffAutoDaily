@@ -20,7 +20,7 @@ public class AdvertisingScheduler {
     private static final Integer COUNT_ADV = 3;
     private static final String ADV_PAGE_URL = "https://mangabuff.ru/balance";
 
-    public void performAdv(WebDriver driverWeb) {
+    public void performAdv(WebDriver driverWeb, Long id) {
         ChromeDriver driver = (ChromeDriver) driverWeb;
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         try {
@@ -39,14 +39,14 @@ public class AdvertisingScheduler {
 
                     if(adClosedSuccessfully) {
                         countNow++;
-                        log.info("Успешно закрыли рекламу {}/{}", countNow, COUNT_ADV);
+                        log.info("[{}]Успешно закрыли рекламу {}/{}", id, countNow, COUNT_ADV);
                     } else {
-                        log.warn("Не удалось закрыть рекламу, возможно лимит исчерпан");
+                        log.warn("[{}]Не удалось закрыть рекламу, возможно лимит исчерпан", id);
                         break;
                     }
 
                 } catch (Exception e) {
-                    log.error("Ошибка при обработке рекламы: " + e.getMessage());
+                    log.error("[{}]Ошибка при обработке рекламы: {}" , id, e.getMessage());
                     break;
                 }
             }

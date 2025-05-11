@@ -69,21 +69,21 @@ public class SchedulerService {
 
             log.info("--------SCHEDULER: START QUIZ--------");
             executeUserTasks(executor, userIds,
-                (driver, userId) -> quizScheduler.monitorQuizRequests(driver),
-                3, "Quiz");
+                quizScheduler::monitorQuizRequests,
+                4, "Quiz");
             log.info("--------SCHEDULER: STOP QUIZ--------");
 
 
             log.info("--------SCHEDULER: START MINE--------");
             executeUserTasks(executor, userIds,
-                (driver, userId) -> mineScheduler.performMining(driver),
-                3, "Mining");
+                mineScheduler::performMining,
+                4, "Mining");
             log.info("--------SCHEDULER: STOP MINE--------");
 
 
             log.info("--------SCHEDULER: START ADV--------");
             executeUserTasks(executor, userIds,
-                (driver, userId) -> advertisingScheduler.performAdv(driver),
+                advertisingScheduler::performAdv,
                 4, "ADV");
             log.info("--------SCHEDULER: STOP ADV--------");
 
@@ -93,11 +93,11 @@ public class SchedulerService {
                 20, "Comment");
             log.info("--------SCHEDULER: STOP COMMENT--------");
 
-//            log.info("--------SCHEDULER: START READER--------");
-//            executeUserTasks(executor, userIds,
-//                (driver, userId) ->
-//                    mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
-//                120, "READER");
+            log.info("--------SCHEDULER: START READER--------");
+            executeUserTasks(executor, userIds,
+                (driver, userId) ->
+                    mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
+                120, "READER");
 
             log.info("--------SCHEDULER: STOP READER--------");
             log.info("--------SCHEDULER: SUCCESSFULLY--------");
@@ -195,7 +195,7 @@ public class SchedulerService {
             return;
         }
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(6, 0))&& now.isBefore(LocalTime.of(22, 0))){
+        if (now.isAfter(LocalTime.of(3, 0))&& now.isBefore(LocalTime.of(23, 0))){
             killChromeDrivers();
             List<Long> userIds = userCookieRepository.findAll()
                 .stream()

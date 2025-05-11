@@ -1,6 +1,7 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -35,6 +36,7 @@ public class CommentScheduler {
     private static final int MIN_DELAY_SEC = 30;
     private static final int MAX_DELAY_SEC = 40;
 
+    @SneakyThrows
     @Transactional
     public void startDailyCommentSending(WebDriver driver, Long id){
         AtomicInteger counter = new AtomicInteger(0);
@@ -43,7 +45,7 @@ public class CommentScheduler {
 
         List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS, id);
         if (newIds.isEmpty()) {
-            log.warn("Нет новых глав для комментирования");
+            log.warn("[{}]Нет новых глав для комментирования", id);
             return;
         }
         log.info("{}: "+newIds.toString(), id);
@@ -54,6 +56,7 @@ public class CommentScheduler {
             scheduleComments(id, counter, commentIds);
             mangaChapterRepository.markMultipleAsCommented(newIds, id);
         }finally {
+            Thread.sleep(4000);
             driver.quit();
         }
     }
@@ -65,7 +68,7 @@ public class CommentScheduler {
         try {
             Thread.sleep((long) ((Math.random()*10+1)*15));
         } catch (InterruptedException e) {
-            log.info("все по пизде...");
+            log.info("[{}]все по пизде...", userId);
         }
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         try {
@@ -80,10 +83,10 @@ public class CommentScheduler {
                         String textMessage = chapterThanksGeneratorService.generateThanks();
                         log.debug("[{}]sendPostRequestWithCookies", userId);
                         commentService.sendPostRequestWithCookies(textMessage, idComment, userId);
-                        log.info("[User {}] Отправлен комментарий {}/{}",
+                        log.info("[{}] Отправлен комментарий {}/{}",
                             userId, currentCount + 1, COUNT_OF_COMMENTS);
                     } catch (Exception e) {
-                        log.error("[User {}] Ошибка: {}", userId, e.getMessage());
+                        log.error("[{}] Ошибка: {}", userId, e.getMessage());
                     }
                 }, delay * i, TimeUnit.SECONDS);
             }

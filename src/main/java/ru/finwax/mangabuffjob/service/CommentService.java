@@ -38,7 +38,7 @@ public class CommentService {
 
     public void sendPostRequestWithCookies(String commentText, String commentId, Long id) {
         try {
-            log.info("Пытаемся отправить коментарий");
+            log.info("[{}]Пытаемся отправить коментарий", id);
             // URL и тело запроса
             String url = "https://mangabuff.ru/comments";
             String encodedText = URLEncoder.encode(commentText, StandardCharsets.UTF_8);
@@ -51,16 +51,16 @@ public class CommentService {
             ResponseEntity<String> response = RequestModel.sendPostRequest(headers, requestBody, url);
 
             // Отправляем запрос
-            log.info("Ответ сервера: {}, комментарий отправленн", response.getStatusCode());
+            log.info("[{}]Ответ сервера: {}, комментарий отправленн", id, response.getStatusCode());
         } catch (HttpClientErrorException.UnprocessableEntity e) {
-            log.warn("Попытка: Лимит комментариев. Ждем...");
+            log.warn("[{}]Попытка: Лимит комментариев. Ждем...", id);
             try {
                 TimeUnit.SECONDS.sleep(10);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
         } catch (Exception e) {
-            log.error("Ошибка при отправке комментария", e);
+            log.error("[{}]Ошибка при отправке комментария",id, e);
             throw new RuntimeException("Failed to send comment", e);
         }
     }

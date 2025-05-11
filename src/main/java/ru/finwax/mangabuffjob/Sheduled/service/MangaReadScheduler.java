@@ -93,7 +93,7 @@ public class MangaReadScheduler {
                         id,
                         System.identityHashCode(remainingChapters),
                         remainingChapters.get());
-                    log.debug("Осталось глав: {}", newRemaining);
+                    log.debug("[{}]Осталось глав: {}", id, newRemaining);
 
                     // Немедленный выход при достижении 0
                     if (newRemaining <= 0) {
@@ -371,7 +371,7 @@ public class MangaReadScheduler {
 
         if (!gifts.isEmpty()) {
             WebElement gift = gifts.get(0);
-            log.info("Обнаружен активный подарок, обрабатываем...");
+            log.info("[{}]Обнаружен активный подарок, обрабатываем...", accountId);
 
             try {
                 // 1. Плавный скролл к элементу
@@ -388,7 +388,7 @@ public class MangaReadScheduler {
                 tryAlternativeCloseMethods(driver, accountId);
 
             } catch (Exception e) {
-                log.warn("Ошибка при взаимодействии с подарком: {}", e.getMessage());
+                log.warn("[{}]Ошибка при взаимодействии с подарком: {}", accountId, e.getMessage());
             }
         }
     }
@@ -398,15 +398,15 @@ public class MangaReadScheduler {
             boolean hasReaded = newChaptersRead >= manga.getCountChapters();
 
             if (newChaptersRead < 0 || newChaptersRead > manga.getCountChapters()) {
-                log.warn("Некорректное количество глав: {}", newChaptersRead);
+                log.warn("[{}]Некорректное количество глав: {}", id, newChaptersRead);
                 return;
             }
 
             progressRepository.upsertProgress(manga.getId(), id, newChaptersRead, hasReaded);
-            log.info("Обновлен прогресс для mangaId={}, userId={}: глав={}/{}",
-                manga.getId(), id, newChaptersRead, manga.getCountChapters());
+            log.info("[{}]Обновлен прогресс для mangaId={}: глав={}/{}",
+                id, manga.getId(), newChaptersRead, manga.getCountChapters());
         } catch (Exception e) {
-            log.error("Ошибка обновления прогресса: {}", e.getMessage());
+            log.error("[{}]Ошибка обновления прогресса: {}", id, e.getMessage());
         }
     }
 
@@ -418,11 +418,11 @@ public class MangaReadScheduler {
                 .moveByOffset(0, 0)
                 .click()
                 .perform();
-            log.info("Пытаемся закрыть окно подарка");
+            log.info("[{}]Пытаемся закрыть окно подарка", accountId);
             updateGift(accountId);
 
         } catch (Exception e) {
-            log.warn("Альтернативные методы закрытия не сработали");
+            log.warn("[{}]Альтернативные методы закрытия не сработали", accountId);
         }
     }
 

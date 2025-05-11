@@ -18,6 +18,7 @@ import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.service.ChapterThanksGeneratorService;
 import ru.finwax.mangabuffjob.service.CommentService;
+import ru.finwax.mangabuffjob.service.MangaParserService;
 import ru.finwax.mangabuffjob.service.ScanningProgress;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ public class MangaController {
     private final MangaReadScheduler mangaReadScheduler;
     private final SchedulerService schedulerService;
     private final AdvertisingScheduler advertisingScheduler;
+    private final MangaParserService mangaParserService;
 
 
     @GetMapping("/kill")
@@ -48,7 +50,10 @@ public class MangaController {
         mangaAuth.getActualDriver(id, "actual").quit();
     }
 
-
+    @GetMapping("/manga}")
+    public void parseManga(){
+        mangaParserService.createMangaList();
+    }
 
     @GetMapping("/update")
     public void createMangaDb(){
@@ -73,23 +78,23 @@ public class MangaController {
 
     @GetMapping("/mine/{id}")
     public void mine(@PathVariable Long id){
-        mineScheduler.performMining(mangaAuth.getActualDriver(id, "mine"));
+        mineScheduler.performMining(mangaAuth.getActualDriver(id, "mine"), id);
     }
 
     @GetMapping("/quiz/{id}")
     public void quiz(@PathVariable Long id){
-        quizScheduler.monitorQuizRequests(mangaAuth.getActualDriver(id, "quiz"));
+        quizScheduler.monitorQuizRequests(mangaAuth.getActualDriver(id, "quiz"), id);
     }
 
     @GetMapping("/read/{id}")
     public void startReading(@PathVariable Long id){
-        mangaReadScheduler.readMangaChapters(mangaAuth.getActualDriver(id, "reader"),id, 2);
+        mangaReadScheduler.readMangaChapters(mangaAuth.getActualDriver(id, "reader"),id, 45);
     }
 
 
     @GetMapping("/adv/{id}")
     public void advClick(@PathVariable Long id){
-        advertisingScheduler.performAdv(mangaAuth.getActualDriver(id, "adv"));
+        advertisingScheduler.performAdv(mangaAuth.getActualDriver(id, "adv"), id);
     }
 
     public static void killChromeDrivers() {
