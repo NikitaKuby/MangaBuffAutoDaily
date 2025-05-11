@@ -2,22 +2,18 @@ package ru.finwax.mangabuffjob.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.finwax.mangabuffjob.Sheduled.SchedulerService;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
-import ru.finwax.mangabuffjob.Sheduled.SchedulerService;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 import ru.finwax.mangabuffjob.auth.MbAuth;
-import ru.finwax.mangabuffjob.service.ChapterThanksGeneratorService;
-import ru.finwax.mangabuffjob.service.CommentService;
 import ru.finwax.mangabuffjob.service.MangaParserService;
 import ru.finwax.mangabuffjob.service.ScanningProgress;
 
@@ -50,7 +46,7 @@ public class MangaController {
         mangaAuth.getActualDriver(id, "actual").quit();
     }
 
-    @GetMapping("/manga}")
+    @GetMapping("/manga")
     public void parseManga(){
         mangaParserService.createMangaList();
     }

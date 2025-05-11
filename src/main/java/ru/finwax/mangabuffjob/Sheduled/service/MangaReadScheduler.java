@@ -23,6 +23,7 @@ import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -235,6 +236,16 @@ public class MangaReadScheduler {
             Dimension windowSize = driver.manage().window().getSize();
             int maxYOffset = windowSize.getHeight();
 
+            // Получаем общее количество глав
+            WebElement pageCounter = driver.findElement(By.cssSelector("div.reader-menu__item--page"));
+            String textAfterSpan = pageCounter.getText().substring(
+                pageCounter.findElement(By.tagName("span")).getText().length()
+            );
+            int totalChapters = Integer.parseInt(textAfterSpan.replace("/", "").trim());
+            // Если глав >40, то скроллим вдвое быстрее
+            double scrollMultiplier = totalChapters > 40 ? 2.0 : 1.0;
+
+
             // Оптимизированные параметры
             final int SCROLL_CYCLES = 15; // Уменьшаем количество циклов
             final int BASE_DELAY = 50;    // Увеличиваем задержку
@@ -260,7 +271,7 @@ public class MangaReadScheduler {
                         // Модифицированная синусоида (только положительные значения)
                         double progress = (double) i / SCROLL_CYCLES;
                         int scrollStep = (int) (Math.pow(Math.sin(progress * Math.PI), 2) *
-                            (maxYOffset * SCROLL_MULTIPLIER / SCROLL_CYCLES));
+                            (maxYOffset * SCROLL_MULTIPLIER * scrollMultiplier / SCROLL_CYCLES));
 
                         // Гарантируем минимальный скролл вниз
                         scrollStep = Math.max(3, scrollStep);

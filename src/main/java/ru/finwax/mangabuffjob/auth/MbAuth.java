@@ -16,10 +16,6 @@ import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.service.CookieService;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -32,9 +28,6 @@ public class MbAuth {
 
     private final CookieService cookieService;
 
-    @Value("${mb.password}")
-    private String mbPassword;
-
 
     public ChromeOptions setUpDriver(Long id) {
         WebDriverManager.chromedriver()
@@ -43,7 +36,13 @@ public class MbAuth {
             .setup();
 
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
+        if (id==3){
+            Proxy proxy = new Proxy();
+            proxy.setHttpProxy("222.92.76.4:8083");
+            options.setProxy(proxy);
+            options.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
+        } else {options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
+        }
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--disable-application-cache");
@@ -52,14 +51,10 @@ public class MbAuth {
         options.addArguments("--force-device-scale-factor=0.5");
         options.addArguments("--blink-setting=imagesEnabled=false");
 
-        if (id==3){
-            Proxy proxy = new Proxy();
-            proxy.setHttpProxy("222.92.76.4:8083");
-            options.setProxy(proxy);
-        }
-        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
-        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
-        options.addArguments("--window-size=1920,1080");
+
+//        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
+//        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
+//        options.addArguments("--window-size=1920,1080");
         return options;
     }
 
