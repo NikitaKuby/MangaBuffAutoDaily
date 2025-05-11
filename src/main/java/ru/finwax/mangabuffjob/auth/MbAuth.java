@@ -22,9 +22,6 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class MbAuth {
 
-    @Value("${mb.login}")
-    private String mbLogin;
-
 
     private final CookieService cookieService;
 

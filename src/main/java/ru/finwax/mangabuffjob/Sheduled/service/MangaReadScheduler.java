@@ -23,7 +23,6 @@ import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QuizScheduler {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
-    private final int QUESTION_DELAY_MS = 3000;
 
     public void monitorQuizRequests(WebDriver driverWeb, Long id) {
         AtomicInteger clickCounter = new AtomicInteger(0);
@@ -74,9 +73,7 @@ public class QuizScheduler {
             log.error("Error in quiz monitoring", e);
             throw new RuntimeException("Quiz monitoring failed", e);
         } finally {
-            if (devTools != null) {
             devTools.disconnectSession();  // Закрываем только DevTools
-            }
             driver.quit();
         }
 
@@ -87,7 +84,7 @@ public class QuizScheduler {
         List<WebElement> answers = driver.findElements(
             By.cssSelector(".quiz__answer-item.button")
         );
-        ;
+
         for (WebElement answer : answers) {
             if (answer.getText().equals(correctAnswer)) {
                 try {
@@ -111,6 +108,7 @@ public class QuizScheduler {
     }
 
     private void humanDelay() throws InterruptedException {
+        int QUESTION_DELAY_MS = 3000;
         Thread.sleep(QUESTION_DELAY_MS + (int)(Math.random() * 2000));
     }
 }
