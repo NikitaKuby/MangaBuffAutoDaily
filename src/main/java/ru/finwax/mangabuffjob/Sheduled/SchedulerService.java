@@ -67,31 +67,31 @@ public class SchedulerService {
         try {
 
 
-//            log.info("--------SCHEDULER: START QUIZ--------");
-//            executeUserTasks(executor, userIds,
-//                quizScheduler::monitorQuizRequests,
-//                4, "Quiz");
-//            log.info("--------SCHEDULER: STOP QUIZ--------");
-//
-//
-//            log.info("--------SCHEDULER: START MINE--------");
-//            executeUserTasks(executor, userIds,
-//                mineScheduler::performMining,
-//                4, "Mining");
-//            log.info("--------SCHEDULER: STOP MINE--------");
-//
-//
-//            log.info("--------SCHEDULER: START ADV--------");
-//            executeUserTasks(executor, userIds,
-//                advertisingScheduler::performAdv,
-//                4, "ADV");
-//            log.info("--------SCHEDULER: STOP ADV--------");
-//
-//            log.info("--------SCHEDULER: START COMMENT--------");
-//            executeUserTasks(executor, userIds,
-//                commentScheduler::startDailyCommentSending,
-//                20, "Comment");
-//            log.info("--------SCHEDULER: STOP COMMENT--------");
+            log.info("--------SCHEDULER: START QUIZ--------");
+            executeUserTasks(executor, userIds,
+                quizScheduler::monitorQuizRequests,
+                4, "Quiz");
+            log.info("--------SCHEDULER: STOP QUIZ--------");
+
+
+            log.info("--------SCHEDULER: START MINE--------");
+            executeUserTasks(executor, userIds,
+                mineScheduler::performMining,
+                4, "Mining");
+            log.info("--------SCHEDULER: STOP MINE--------");
+
+
+            log.info("--------SCHEDULER: START ADV--------");
+            executeUserTasks(executor, userIds,
+                advertisingScheduler::performAdv,
+                4, "ADV");
+            log.info("--------SCHEDULER: STOP ADV--------");
+
+            log.info("--------SCHEDULER: START COMMENT--------");
+            executeUserTasks(executor, userIds,
+                commentScheduler::startDailyCommentSending,
+                20, "Comment");
+            log.info("--------SCHEDULER: STOP COMMENT--------");
 
             log.info("--------SCHEDULER: START READER--------");
             executeUserTasks(executor, userIds,
