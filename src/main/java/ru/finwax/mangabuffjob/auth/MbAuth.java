@@ -9,20 +9,21 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.service.CookieService;
 
 import java.time.Duration;
+import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MbAuth {
 
-
+    private final Map<Long, String> userAgents;
     private final CookieService cookieService;
 
 
@@ -33,13 +34,13 @@ public class MbAuth {
             .setup();
 
         ChromeOptions options = new ChromeOptions();
-        if (id==3){
-            Proxy proxy = new Proxy();
-            proxy.setHttpProxy("222.92.76.4:8083");
-            options.setProxy(proxy);
-            options.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
-        } else {options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
-        }
+
+        // Получаем User-Agent для пользователя или используем дефолтный
+        String userAgent = userAgents.getOrDefault(id, userAgents.get(-1L));
+        options.addArguments("--user-agent="+userAgent);
+
+// Дополнительные настройки для анонимности
+        options.addArguments("--disable-webrtc");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--disable-application-cache");
@@ -58,7 +59,7 @@ public class MbAuth {
 
     public WebDriver getActualDriver(Long id, String taskname) {
         ChromeOptions options = setUpDriver(id);
-        options.addArguments("user-data-dir=/path/to/user/data/" + id+taskname+id);
+        options.addArguments("user-data-dir=C:\\path\\to\\dir" + id+taskname+id);
         WebDriver driver = new ChromeDriver(options);
 
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));

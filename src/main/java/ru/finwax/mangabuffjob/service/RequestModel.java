@@ -16,6 +16,7 @@ import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -24,6 +25,7 @@ import java.util.Set;
 public class RequestModel {
     private final UserCookieRepository userCookieRepository;
     private final CookieService cookieService;
+    private final Map<Long, String> userAgents;
 
     public HttpHeaders getHeaderBase(Long id){
         HttpHeaders headers = new HttpHeaders();
@@ -31,7 +33,8 @@ public class RequestModel {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.setAcceptCharset(Collections.singletonList(StandardCharsets.UTF_8));
         headers.setAccept(Collections.singletonList(MediaType.ALL));
-        headers.add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0");
+        String userAgent = userAgents.getOrDefault(id, userAgents.get(-1L));
+        headers.add("User-Agent", userAgent);
 
         try {
             UserCookie latestCookie = userCookieRepository.findById(id)

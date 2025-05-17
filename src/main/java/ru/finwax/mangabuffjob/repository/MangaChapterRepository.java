@@ -18,7 +18,7 @@ public interface MangaChapterRepository extends JpaRepository<MangaChapter, Long
     @Query("UPDATE MangaChapter c SET c.hasComment = true WHERE c.commentId IN :commentIds AND c.user.id = :userId")
     void markMultipleAsCommented(@Param("commentIds") List<String> commentIds,
                                  @Param("userId") Long userId);
-    boolean existsByMangaIdAndChapterNumberAndUserId(Long mangaId, Integer chapterNumber, Long userId);
+    boolean existsByMangaIdAndChapterNumberAndUserId(Long mangaId, Double chapterNumber, Long userId);
     @Query("SELECT COUNT(c) FROM MangaChapter c WHERE c.user.id = :userId")
     long countByUserId(@Param("userId") Long userId);
     @Query("SELECT mc.manga.id FROM MangaChapter mc WHERE mc.user.id = :userId ORDER BY mc.id DESC LIMIT 1")

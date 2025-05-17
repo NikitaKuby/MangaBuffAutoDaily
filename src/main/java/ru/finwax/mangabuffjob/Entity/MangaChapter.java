@@ -32,7 +32,7 @@ public class MangaChapter {
     private UserCookie user;
 
     @Column(name = "chapter_number", nullable = false)
-    private Integer chapterNumber;
+    private Double chapterNumber;
 
     private String commentId;
 

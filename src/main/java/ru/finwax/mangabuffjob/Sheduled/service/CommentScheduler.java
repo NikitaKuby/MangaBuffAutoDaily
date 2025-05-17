@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,14 +48,14 @@ public class CommentScheduler {
         }
         log.info("{}: "+newIds.toString(), id);
         CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>(newIds);
-        // Запускаем отправку комментариев через ThreadPool
         log.debug("try scheduleComments");
         try {
+
+            Thread.sleep((long) (getDelayForUser(id)));
             scheduleComments(id, counter, commentIds);
             mangaChapterRepository.markMultipleAsCommented(newIds, id);
         }finally {
             Thread.sleep(4000);
-            driver.quit();
         }
     }
 
@@ -62,11 +63,6 @@ public class CommentScheduler {
                                   AtomicInteger counter,
                                   CopyOnWriteArrayList<String> commentIds) {
         log.debug("[{}]start scheduleComments", userId);
-        try {
-            Thread.sleep((long) ((Math.random()*10+1)*15));
-        } catch (InterruptedException e) {
-            log.info("[{}]все по пизде...", userId);
-        }
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         try {
             for (int i = 0; i < COUNT_OF_COMMENTS; i++) {
@@ -92,6 +88,15 @@ public class CommentScheduler {
             executor.schedule(executor::shutdown,
                 COUNT_OF_COMMENTS * MAX_DELAY_SEC, TimeUnit.SECONDS);
         }
+    }
+
+    public long getDelayForUser(Long userId) {
+        // Формула: для id=N задержка от (2N-2) до (2N-1) секунд
+        long minDelaySec = 2 * userId - 2;
+        long maxDelaySec = 2 * userId - 1;
+
+        // Генерируем случайную задержку в этом диапазоне
+        return ThreadLocalRandom.current().nextLong(minDelaySec * 1000, maxDelaySec * 1000);
     }
 }
 

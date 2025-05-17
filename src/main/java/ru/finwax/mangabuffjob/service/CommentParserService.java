@@ -74,8 +74,7 @@ public class CommentParserService {
                 MangaChapter markerChapter = new MangaChapter();
                 markerChapter.setManga(mangaData);
                 markerChapter.setUser(userCookieRepository.getReferenceById(id));
-                markerChapter.setChapterNumber(-1); // Специальное значение для маркера
-                markerChapter.setCommentId("NO_CHAPTERS");
+                markerChapter.setChapterNumber((double)-1); // Специальное значение для маркера
                 markerChapter.setHasComment(true); // Помечаем как "обработанную"
 
                 mangaChapterRepository.save(markerChapter);
@@ -96,7 +95,8 @@ public class CommentParserService {
 
     private void processMangaElement(Element mangaElement, MangaData manga, Long id) {
         Element chapterValue = mangaElement.selectFirst("div.chapters__value span");
-        int chapterNumber = Integer.parseInt(Objects.requireNonNull(chapterValue).text());
+        log.info("chapter value = "+ Objects.requireNonNull(chapterValue).text());
+        double chapterNumber = Double.parseDouble(Objects.requireNonNull(chapterValue).text());
 
         Element likeButton = mangaElement.selectFirst("button.chapters__like-btn");
         String chapterId = Objects.requireNonNull(likeButton).attr("data-id");

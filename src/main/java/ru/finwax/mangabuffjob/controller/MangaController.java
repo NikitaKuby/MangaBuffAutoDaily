@@ -1,5 +1,6 @@
 package ru.finwax.mangabuffjob.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,16 @@ public class MangaController {
     @GetMapping("/kill")
     public void kill(){
         killChromeDrivers();
+    }
+
+    @GetMapping("/check")
+    public String check(HttpServletRequest request){
+        return "User-agent: " + request.getHeader("User-Agent") + "\nIP: " + request.getRemoteAddr();
+    }
+
+    @GetMapping("/check/{id}")
+    public void checkId(@PathVariable Long id){
+        mangaAuth.getActualDriver(id, "loh");
     }
 
     @GetMapping("/actual/{id}")

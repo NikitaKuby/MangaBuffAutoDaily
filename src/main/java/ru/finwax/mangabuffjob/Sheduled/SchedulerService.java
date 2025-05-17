@@ -38,8 +38,8 @@ public class SchedulerService {
     private final MbAuth mbAuth;
     private final UserCookieRepository userCookieRepository;
 
-    private static final int CHAPTERS_PER_HOUR = 2;
-    private static final int CHAPTERS_PER_DAY = 75;
+    private static final int CHAPTERS_PER_HOUR = 5;
+    private static final int CHAPTERS_PER_DAY = 50;
     private volatile boolean mainTaskInProgress = false;
 
     // Запускается каждый день в 00:01 ночи
@@ -52,20 +52,16 @@ public class SchedulerService {
             .stream()
             .map(UserCookie::getId)
             .collect(Collectors.toList());
-
         if (userIds.isEmpty()) {
             log.warn("No accounts found for scheduled tasks");
             return;
         }
-
         log.info("Starting scheduled tasks for {} active accounts", userIds.size());
-
         // 2. Ограничиваем количество одновременных потоков
         int maxParallelTasks = Math.min(userIds.size(), 5); // Не более 5 параллельных задач
         ExecutorService executor = Executors.newFixedThreadPool(maxParallelTasks);
-
+        ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         try {
-
 
             log.info("--------SCHEDULER: START QUIZ--------");
             executeUserTasks(executor, userIds,
@@ -87,19 +83,21 @@ public class SchedulerService {
                 4, "ADV");
             log.info("--------SCHEDULER: STOP ADV--------");
 
-            log.info("--------SCHEDULER: START COMMENT--------");
-            executeUserTasks(executor, userIds,
-                commentScheduler::startDailyCommentSending,
-                20, "Comment");
-            log.info("--------SCHEDULER: STOP COMMENT--------");
 
             log.info("--------SCHEDULER: START READER--------");
             executeUserTasks(executor, userIds,
                 (driver, userId) ->
                     mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
                 120, "READER");
-
             log.info("--------SCHEDULER: STOP READER--------");
+
+            log.info("--------SCHEDULER: START COMMENT--------");
+            executeUserTasks(executorService, userIds,
+                commentScheduler::startDailyCommentSending,
+                20, "Comment");
+            log.info("--------SCHEDULER: STOP COMMENT--------");
+
+
             log.info("--------SCHEDULER: SUCCESSFULLY--------");
 
         } catch (Exception e) {
@@ -188,14 +186,14 @@ public class SchedulerService {
         }
     }
 
-    @Scheduled(initialDelay = 2000, fixedRate = 60 * 60 * 1000)
+    @Scheduled(initialDelay = 5000, fixedRate = 60 * 60 * 1000)
     public void executeHourlyWithTimeCheck() {
         if (mainTaskInProgress) {
             log.info("Пропускаем hourly task, так как main task выполняется");
             return;
         }
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(3, 0))&& now.isBefore(LocalTime.of(23, 0))){
+        if (now.isAfter(LocalTime.of(3, 0))&& now.isBefore(LocalTime.of(23, 20))){
             killChromeDrivers();
             List<Long> userIds = userCookieRepository.findAll()
                 .stream()
