@@ -2,6 +2,8 @@ package ru.finwax.mangabuffjob.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class CommentService {
     private final RequestModel requestModel;
 
+
     public void sendPostRequestWithCookies(String commentText, String commentId, Long id) {
         try {
             log.info("[{}]Пытаемся отправить коментарий", id);
@@ -29,6 +32,8 @@ public class CommentService {
                 "&commentable_type=mangaChapter&parent_id=&gif_image=&is_trade=0&is_raffle=0";
 
             HttpHeaders headers = requestModel.getHeaderBase(id);
+            headers.add("x-csrf-token", requestModel.getValidCsrf(id));
+
             ResponseEntity<String> response = RequestModel.sendPostRequest(headers, requestBody, url);
 
             // Отправляем запрос

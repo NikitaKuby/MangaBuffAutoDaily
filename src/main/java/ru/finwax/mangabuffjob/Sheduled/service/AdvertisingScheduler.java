@@ -1,26 +1,28 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.auth.MbAuth;
 
 import java.time.Duration;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class AdvertisingScheduler {
 
-    private static final Integer COUNT_ADV = 3;
+    private final MbAuth mbAuth;
     private static final String ADV_PAGE_URL = "https://mangabuff.ru/balance";
 
-    public void performAdv(WebDriver driverWeb, Long id) {
-        ChromeDriver driver = (ChromeDriver) driverWeb;
+    public void performAdv(Long id, Integer COUNT_ADV, boolean checkViews) {
+        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "adv", checkViews);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         try {
             driver.get(ADV_PAGE_URL);

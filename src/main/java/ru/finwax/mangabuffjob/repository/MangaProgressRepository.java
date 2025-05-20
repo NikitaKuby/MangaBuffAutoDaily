@@ -14,12 +14,17 @@ import java.util.Optional;
 public interface MangaProgressRepository extends JpaRepository<MangaProgress, Long> {
     Optional<MangaProgress> findByUserId(Long userId);
     boolean existsByUserIdIs(Long userId);
+    
+    @Modifying
+    void deleteByUserId(Long userId);
 
     @Modifying
     @Query(value = """
         UPDATE mangabuff_progress m SET
         m.reader_done = :readerDone,
         m.comment_done = :commentDone,
+        m.total_reader_chapters = :totalReaderChapters,
+        m.total_comment_chapters = :totalCommentChapters,
         m.quiz_done = :quizDone,
         m.mine_done = :mineDone,
         m.adv_done = :advDone,
@@ -30,6 +35,8 @@ public interface MangaProgressRepository extends JpaRepository<MangaProgress, Lo
         @Param("userId") Long userId,
         @Param("readerDone") Integer readerDone,
         @Param("commentDone") Integer commentDone,
+        @Param("totalReaderChapters") Integer totalReaderChapters,
+        @Param("totalCommentChapters") Integer totalCommentChapters,
         @Param("quizDone") Boolean quizDone,
         @Param("mineDone") Boolean mineDone,
         @Param("advDone") Boolean advDone,
@@ -40,6 +47,8 @@ public interface MangaProgressRepository extends JpaRepository<MangaProgress, Lo
         UPDATE mangabuff_progress m SET
         m.reader_done = :readerDone,
         m.comment_done = :commentDone,
+        m.total_reader_chapters = :totalReaderChapters,
+        m.total_comment_chapters = :totalCommentChapters,
         m.lastUpdated = :lastUpdated
         WHERE m.user_id = :userId
         """, nativeQuery=true)
@@ -47,6 +56,8 @@ public interface MangaProgressRepository extends JpaRepository<MangaProgress, Lo
         @Param("userId") Long userId,
         @Param("readerDone") Integer readerDone,
         @Param("commentDone") Integer commentDone,
+        @Param("totalReaderChapters") Integer totalReaderChapters,
+        @Param("totalCommentChapters") Integer totalCommentChapters,
         @Param("lastUpdated") LocalDate lastUpdated);
 
 }

@@ -84,7 +84,7 @@ public class MangaReadScheduler {
                 int chaptersToRead = Math.min(unreadChapters, remainingChapters.get());
                 log.debug("[{}] chaptersToRead: {}", id, chaptersToRead);
                 actuallyRead = readMangaChaptersInternal(manga, id, chaptersToRead, chaptersRead, driver);
-                log.info("[{}] actuallyRead: {}", id, actuallyRead);
+                log.debug("[{}] actuallyRead: {}", id, actuallyRead);
 
                 if (actuallyRead > 0) {
                     // Атомарное обновление
@@ -104,7 +104,7 @@ public class MangaReadScheduler {
                     log.warn("[{}] Не удалось прочитать главы, воможно все главы прочитанны", id);
                 }
             }
-            log.info("[{}] Чтение глав завершено: {}/{} за {} мин",
+            log.debug("[{}] Чтение глав завершено: {}/{} за {} мин",
                 id,
                 actuallyRead,
                 countChapter,
@@ -345,7 +345,7 @@ public class MangaReadScheduler {
             long chapterStart = System.currentTimeMillis();
             // Читаем главу
             readChapter(driver, accountId);
-            log.info("[{}] Глава прочитана за {} сек",
+            log.debug("[{}] Глава прочитана за {} сек",
                 accountId,
                 (System.currentTimeMillis() - chapterStart)/1000 );
             return true;
@@ -381,7 +381,7 @@ public class MangaReadScheduler {
 
         if (!gifts.isEmpty()) {
             WebElement gift = gifts.get(0);
-            log.info("[{}]Обнаружен активный подарок, обрабатываем...", accountId);
+            log.debug("[{}]Обнаружен активный подарок", accountId);
 
             try {
                 // 1. Плавный скролл к элементу
@@ -413,7 +413,7 @@ public class MangaReadScheduler {
             }
 
             progressRepository.upsertProgress(manga.getId(), id, newChaptersRead, hasReaded);
-            log.info("[{}]Обновлен прогресс для mangaId={}: глав={}/{}",
+            log.debug("[{}]Обновлен прогресс для mangaId={}: глав={}/{}",
                 id, manga.getId(), newChaptersRead, manga.getCountChapters());
         } catch (Exception e) {
             log.error("[{}]Ошибка обновления прогресса: {}", id, e.getMessage());
@@ -428,7 +428,7 @@ public class MangaReadScheduler {
                 .moveByOffset(0, 0)
                 .click()
                 .perform();
-            log.info("[{}]Пытаемся закрыть окно подарка", accountId);
+            log.debug("[{}]Пытаемся закрыть окно подарка", accountId);
             updateGift(accountId);
 
         } catch (Exception e) {

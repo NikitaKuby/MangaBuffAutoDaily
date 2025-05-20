@@ -13,7 +13,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -22,50 +30,156 @@ import java.util.concurrent.TimeUnit;
 public class ScanningProgress {
     private final RequestModel requestModel;
     private final MangaProgressRepository mangaProgressRepository;
+    private static final String AVATARS_DIR = "avatars";
+
+    private Document fetchDocument(Long id, String url)  {
+        HttpHeaders headers = requestModel.getHeaderBase(id);
+        ResponseEntity<String> response = RequestModel.sendGetRequest(headers, url);
+        String html = response.getBody();
+        String baseUrl = "https://mangabuff.ru"; // Базовый URL для абсолютных ссылок
+        return Jsoup.parse(html, baseUrl);
+    }
+
     public void sendGetRequestWithCookies(Long id) {
         try {
-            log.info("Пытаемся проверить статус глав/комментариев");
+            log.info("Пытаемся проверить статус глав/комментариев, прогресс шахты и скачать аватар для пользователя {}", id);
 
-            String url = "https://mangabuff.ru/balance";
+            // Сканируем страницу баланса
+            Document balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
+            log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
+            Document balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
+            // Получаем текущую дату
+            LocalDate today = LocalDate.now();
+            String todayStr = today.getDayOfMonth() + " " + getMonthName(today.getMonthValue()) + " " + today.getYear();
 
-            HttpHeaders headers = requestModel.getHeaderBase(id);
-            ResponseEntity<String> response = RequestModel.sendGetRequest(headers, url);
-            // Отправляем запрос
+            // Парсим транзакции со страницы баланса
+            Elements transactions = balanceDoc.select(".user-transactions__item");
+            Elements transactions2 = balanceDocPage2.select(".user-transactions__item");
+            Elements allTransactions = new Elements();
+            allTransactions.addAll(transactions);
+            if (!transactions2.isEmpty()) {
+                allTransactions.addAll(transactions2);
+            }
+            boolean quizDoneToday = false;
+            int advWatchedToday = 0;
 
-            String html = response.getBody();
-            log.info("Ответ сервера: {}", response.getStatusCode());
+            for (Element transaction : allTransactions) {
+                String date = transaction.select(".user-transactions__date").text();
+                if (date.contains(todayStr)) {
+                    String info = transaction.select(".user-transactions__info").text();
+                    if (info.contains("Ежедневное прохождение квиза")) {
+                        quizDoneToday = true;
+                    } else if (info.contains("Просмотр рекламы")) {
+                        advWatchedToday++;
+                    }
+                }
+            }
 
-            Document doc = Jsoup.parse(html);
+            // Извлекаем информацию об аватаре со страницы баланса
+            Element avatarImg = balanceDoc.selectFirst(".header-profile img");
+            String avatarUrl = null;
+            String avatarAltText = null;
+            if (avatarImg != null) {
+                avatarAltText = avatarImg.attr("alt");
+                String srcAttr = avatarImg.attr("src");
+                log.info("Найден элемент аватара. Атрибут src: {}", srcAttr);
+                if (srcAttr != null && !srcAttr.isEmpty()) {
+                    avatarUrl = avatarImg.absUrl("src");
+                }
+                log.info("Найден аватар: URL = {}, Alt Text = {}", avatarUrl, avatarAltText);
+            }
 
-            // Ищем блоки с прогрессом
-            Elements questItems = doc.select(".user-quest__item");
+            // Изменяем размер аватара в URL с x35 на 150
+            if (avatarUrl != null && avatarUrl.contains("/x35/")) {
+                avatarUrl = avatarUrl.replace("/x35/", "/x150/");
+                log.info("URL аватара изменен на: {}", avatarUrl);
+            }
+
+            // Ищем блоки с прогрессом со страницы баланса
+            Elements questItems = balanceDoc.select(".user-quest__item");
 
             int commentsDone = 0;
             int chaptersDone = 0;
+            int totalComments = 0;
+            int totalChapters = 0;
 
             for (Element item : questItems) {
                 String text = item.select(".user-quest__text").text();
 
                 if (text.contains("Комментариев")) {
-                    commentsDone = Integer.parseInt(text.split(" ")[1]); // "14 из 13" → берем "14"
+                    String[] parts = text.split(" из ");
+                    if (parts.length == 2) {
+                        commentsDone = Integer.parseInt(parts[0].split(" ")[1]);
+                        totalComments = Integer.parseInt(parts[1]);
+                    }
                 } else if (text.contains("Глав")) {
-                    chaptersDone = Integer.parseInt(text.split(" ")[1]); // "75 из 75" → берем "75"
+                    String[] parts = text.split(" из ");
+                    if (parts.length == 2) {
+                        chaptersDone = Integer.parseInt(parts[0].split(" ")[1]);
+                        totalChapters = Integer.parseInt(parts[1]);
+                    }
                 }
             }
-            if(mangaProgressRepository.existsByUserIdIs(id)){
-                mangaProgressRepository.updateProgressComAndRead(id, chaptersDone, commentsDone, LocalDate.now());
+
+            // Сканируем страницу шахты
+            Document mineDoc = fetchDocument(id, "https://mangabuff.ru/mine");
+            log.info("Ответ сервера для /mine: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/mine").getStatusCode());
+
+            // Парсим количество оставшихся ударов
+            Element hitsLeftElement = mineDoc.selectFirst(".main-mine__game-hits-left");
+            int mineHitsLeft = 100; // По умолчанию 100 ударов
+            if (hitsLeftElement != null) {
+                try {
+                    mineHitsLeft = Integer.parseInt(hitsLeftElement.text());
+                    log.info("Оставшиеся удары в шахте: {}", mineHitsLeft);
+                } catch (NumberFormatException e) {
+                    log.error("Не удалось распарсить количество ударов в шахте для пользователя {}", id, e);
+                }
+            }
+
+            Optional<MangaProgress> existingProgress = mangaProgressRepository.findByUserId(id);
+
+            if(existingProgress.isPresent()){
+                MangaProgress progress = existingProgress.get();
+                progress.setReaderDone(chaptersDone);
+                progress.setCommentDone(commentsDone);
+                progress.setTotalReaderChapters(totalChapters);
+                progress.setTotalCommentChapters(totalComments);
+                progress.setQuizDone(quizDoneToday);
+                progress.setAdvDone(advWatchedToday);
+                progress.setMineHitsLeft(mineHitsLeft);
+                progress.setLastUpdated(LocalDate.now());
+                if (avatarUrl != null && !avatarUrl.isEmpty() && progress.getAvatarPath() == null) { // Скачиваем только если аватара еще нет и URL не пустой
+                    try {
+                        String savedAvatarPath = saveAvatar(avatarUrl, id);
+                        progress.setAvatarPath(savedAvatarPath);
+                        progress.setAvatarAltText(avatarAltText);
+                        log.info("Аватар сохранен: {}", savedAvatarPath);
+                    } catch (IOException e) {
+                        log.error("Ошибка при сохранении аватара для пользователя {}", id, e);
+                    }
+                }
+                mangaProgressRepository.save(progress);
             } else {
                 MangaProgress mangaProgress = MangaProgress.builder()
                     .userId(id)
                     .commentDone(commentsDone)
                     .readerDone(chaptersDone)
+                    .totalReaderChapters(totalChapters)
+                    .totalCommentChapters(totalComments)
+                    .quizDone(quizDoneToday)
+                    .advDone(advWatchedToday)
+                    .mineHitsLeft(mineHitsLeft)
                     .lastUpdated(LocalDate.now())
+                    .avatarPath(avatarUrl != null && !avatarUrl.isEmpty() ? saveAvatar(avatarUrl, id) : null) // Скачиваем и сохраняем при создании, если URL не пустой
+                    .avatarAltText(avatarAltText)
                     .build();
                 mangaProgressRepository.save(mangaProgress);
             }
 
-            log.info("Комментариев выполнено: {}, Глав прочитано: {}", commentsDone, chaptersDone);
-
+            log.info("Статус для пользователя {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
+                     id, commentsDone, totalComments, chaptersDone, totalChapters,
+                     quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
 
         } catch (HttpClientErrorException.UnprocessableEntity e) {
             log.warn("Попытка: Лимит комментариев. Ждем...");
@@ -78,5 +192,26 @@ public class ScanningProgress {
             log.error("Ошибка при сканинге", e);
             throw new RuntimeException("Failed to send comment", e);
         }
+    }
+
+    private String saveAvatar(String avatarUrl, Long userId) throws IOException {
+        Path avatarsDir = Paths.get(AVATARS_DIR);
+        if (!Files.exists(avatarsDir)) {
+            Files.createDirectories(avatarsDir);
+        }
+        String fileExtension = avatarUrl.substring(avatarUrl.lastIndexOf('.'));
+        String fileName = userId + fileExtension;
+        Path filePath = avatarsDir.resolve(fileName);
+
+        try (InputStream in = new URL(avatarUrl).openStream()) {
+            Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return filePath.toString();
+    }
+
+    private String getMonthName(int month) {
+        String[] months = {"января", "февраля", "марта", "апреля", "мая", "июня",
+            "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+        return months[month - 1];
     }
 }

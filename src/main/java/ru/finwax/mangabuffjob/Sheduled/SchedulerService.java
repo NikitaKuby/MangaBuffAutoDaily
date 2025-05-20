@@ -62,26 +62,26 @@ public class SchedulerService {
         ExecutorService executor = Executors.newFixedThreadPool(maxParallelTasks);
         ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         try {
-
-            log.info("--------SCHEDULER: START QUIZ--------");
-            executeUserTasks(executor, userIds,
-                quizScheduler::monitorQuizRequests,
-                4, "Quiz");
-            log.info("--------SCHEDULER: STOP QUIZ--------");
-
-
-            log.info("--------SCHEDULER: START MINE--------");
-            executeUserTasks(executor, userIds,
-                mineScheduler::performMining,
-                4, "Mining");
-            log.info("--------SCHEDULER: STOP MINE--------");
+//
+//            log.info("--------SCHEDULER: START QUIZ--------");
+//            executeUserTasks(executor, userIds,
+//                quizScheduler::monitorQuizRequests,
+//                4, "Quiz");
+//            log.info("--------SCHEDULER: STOP QUIZ--------");
 
 
-            log.info("--------SCHEDULER: START ADV--------");
-            executeUserTasks(executor, userIds,
-                advertisingScheduler::performAdv,
-                4, "ADV");
-            log.info("--------SCHEDULER: STOP ADV--------");
+//            log.info("--------SCHEDULER: START MINE--------");
+//            executeUserTasks(executor, userIds,
+//                mineScheduler::performMining,
+//                4, "Mining");
+//            log.info("--------SCHEDULER: STOP MINE--------");
+
+
+//            log.info("--------SCHEDULER: START ADV--------");
+//            executeUserTasks(executor, userIds,
+//                advertisingScheduler::performAdv,
+//                4, "ADV");
+//            log.info("--------SCHEDULER: STOP ADV--------");
 
 
             log.info("--------SCHEDULER: START READER--------");
@@ -91,11 +91,12 @@ public class SchedulerService {
                 120, "READER");
             log.info("--------SCHEDULER: STOP READER--------");
 
-            log.info("--------SCHEDULER: START COMMENT--------");
-            executeUserTasks(executorService, userIds,
-                commentScheduler::startDailyCommentSending,
-                20, "Comment");
-            log.info("--------SCHEDULER: STOP COMMENT--------");
+//            log.info("--------SCHEDULER: START COMMENT--------");
+//            executeUserTasks(executorService, userIds,
+//                (driver, userId) ->
+//                    commentScheduler.startDailyCommentSending(driver, userId),
+//                20, "Comment");
+//            log.info("--------SCHEDULER: STOP COMMENT--------");
 
 
             log.info("--------SCHEDULER: SUCCESSFULLY--------");
@@ -119,7 +120,7 @@ public class SchedulerService {
                 long taskStartTime = System.currentTimeMillis();
                 try {
                     // 1. Создаем драйвер
-                    driver = mbAuth.getActualDriver(userId, taskName);
+                    driver = mbAuth.getActualDriver(userId, taskName, true);
                     log.info("{} started for user ID: {}", taskName, userId);
 
                     // 2. Засекаем время выполнения
@@ -186,14 +187,14 @@ public class SchedulerService {
         }
     }
 
-    @Scheduled(initialDelay = 5000, fixedRate = 60 * 60 * 1000)
+    @Scheduled(initialDelay = 5000, fixedRate = 90 * 60 * 1000)
     public void executeHourlyWithTimeCheck() {
         if (mainTaskInProgress) {
             log.info("Пропускаем hourly task, так как main task выполняется");
             return;
         }
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(3, 0))&& now.isBefore(LocalTime.of(23, 20))){
+        if (now.isAfter(LocalTime.of(2, 0))&& now.isBefore(LocalTime.of(23, 50))){
             killChromeDrivers();
             List<Long> userIds = userCookieRepository.findAll()
                 .stream()
@@ -209,7 +210,7 @@ public class SchedulerService {
             executeUserTasks(executor, userIds,
                 (driver, userId) ->
                     mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_HOUR),
-                6, "SHADOW READER");
+                7, "SHADOW READER");
             log.info("--------[SCHEDULER: STOP SHADOW READER]--------");
         }
     }
@@ -224,5 +225,111 @@ public class SchedulerService {
         }
     }
 
+    public void executeMainTask(List<Long> userIds, boolean periodicReading, boolean checkViews) {
+        if (mainTaskInProgress) {
+            log.info("Пропускаем main task, так как он уже выполняется");
+            return;
+        }
+        mainTaskInProgress = true;
 
+        int maxParallelTasks = Math.min(userIds.size(), 5); // Не более 5 параллельных задач
+        ExecutorService executor = Executors.newFixedThreadPool(maxParallelTasks);
+        ExecutorService executorService = Executors.newFixedThreadPool(maxParallelTasks);
+
+        try {
+//            log.info("--------SCHEDULER: START QUIZ--------");
+//            executeUserTasks(executor, userIds,
+//                quizScheduler::monitorQuizRequests,
+//                4, "Quiz", checkViews);
+//            log.info("--------SCHEDULER: STOP QUIZ--------");
+
+            log.info("--------SCHEDULER: START READER--------");
+            executeUserTasks(executor, userIds,
+                (driver, userId) ->
+                    mangaReadScheduler.readMangaChapters(driver,userId,CHAPTERS_PER_DAY),
+                120, "READER", checkViews);
+            log.info("--------SCHEDULER: STOP READER--------");
+
+//            log.info("--------SCHEDULER: START COMMENT--------");
+//            executeUserTasks(executorService, userIds,
+//                commentScheduler::startDailyCommentSending,
+//                20, "Comment", checkViews);
+//            log.info("--------SCHEDULER: STOP COMMENT--------");
+
+            log.info("--------SCHEDULER: SUCCESSFULLY--------");
+
+        } catch (Exception e) {
+            log.error("Error in scheduled task execution", e);
+        } finally {
+            mainTaskInProgress = false;
+        }
+    }
+
+    private void executeUserTasks(ExecutorService executor,
+                                  List<Long> userIds,
+                                  BiConsumer<WebDriver, Long> task,
+                                  long timeout,
+                                  String taskName,
+                                  boolean checkViews) {
+
+        List<Future<?>> futures = userIds.stream()
+            .map(userId -> executor.submit(() -> {
+                WebDriver driver = null;
+                long taskStartTime = System.currentTimeMillis();
+                try {
+                    // 1. Создаем драйвер
+                    driver = mbAuth.getActualDriver(userId, taskName, checkViews);
+                    log.info("{} started for user ID: {}", taskName, userId);
+
+                    // 2. Засекаем время выполнения
+                    long startTime = System.currentTimeMillis();
+                    long endTime = startTime + TimeUnit.MINUTES.toMillis(timeout);
+
+                    // 3. Выполняем задачу в цикле (для периодических операций)
+                    while (mangaReadScheduler.isDriverAlive((ChromeDriver) driver)) {
+                        task.accept(driver, userId);
+
+                        // Для квизов добавляем паузу между проверками
+                        if ("Quiz".equals(taskName)) {
+                            long remainingTime = endTime - System.currentTimeMillis();
+                            if (remainingTime <= 0) break;
+                            Thread.sleep(Math.min(remainingTime, 30_000)); // Не более 30 сек
+                        }
+                    }
+
+                    double durationMin = (System.currentTimeMillis() - taskStartTime) / 60000.0;
+                    String formattedDuration = String.format("%.1f", durationMin);
+                    log.info("{} completed for user ID: {} in {} minutes", taskName, userId, formattedDuration);
+
+                } catch (Exception e) {
+                    log.error("Error in {} task for user ID: {}", taskName, userId, e);
+                } finally {
+                    if (driver != null) {
+                        try {
+                            driver.quit();
+                        } catch (Exception e) {
+                            log.error("Error closing driver for user ID: {}", userId, e);
+                        }
+                    }
+                }
+            }))
+            .collect(Collectors.toList());
+
+        long startTime = System.currentTimeMillis();
+        long timeoutMillis = TimeUnit.MINUTES.toMillis(timeout);
+
+        for (Future<?> future : futures) {
+            try {
+                long remainingTime = timeoutMillis - (System.currentTimeMillis() - startTime);
+                if (remainingTime > 0) {
+                    future.get(remainingTime, TimeUnit.MILLISECONDS);
+                }
+            } catch (TimeoutException e) {
+                future.cancel(true);
+                log.warn("{} task timed out for a user", taskName);
+            } catch (Exception e) {
+                log.error("Error waiting for {} task completion", taskName, e);
+            }
+        }
+    }
 }

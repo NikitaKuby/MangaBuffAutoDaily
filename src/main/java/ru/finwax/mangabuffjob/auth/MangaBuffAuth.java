@@ -15,6 +15,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.service.CookieService;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 import java.time.Duration;
 import java.util.Set;
@@ -24,17 +26,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class MangaBuffAuth {
-
     private final CookieService cookieService;
-
-    @Value("${vk.login}")
-    private String vkLogin;
-    @Value("${mb.login}")
-    private String mbLogin;
-
-
-
-    private final String mbLogin2="igorkubyshkin1211@gmail.com";
+    private final UserCookieRepository userCookieRepository;
 
 
     public ChromeOptions setUpDriver() {
@@ -46,51 +39,49 @@ public class MangaBuffAuth {
         options.addArguments("--disable-application-cache");
         options.addArguments("--disk-cache-size=0");
         options.addArguments("--disable-cache");
-        options.addArguments("--force-device-scale-factor=0.5");
+        options.addArguments("--force-device-scale-factor=0.8");
         options.addArguments("--blink-setting=imagesEnabled=false");
-//
-//        options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)
-//        options.addArguments("--disable-gpu"); // В новых версиях необязателен, но можно оставить
-//        options.addArguments("--window-size=1920,1080");
         return options;
     }
 
-    public void authenticate() {
+    public UserCookie authenticate(String login){
         WebDriver driver = new ChromeDriver(setUpDriver());
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        UserCookie userCookie = null;
         try {
             // Переход на страницу логина
             driver.get("https://mangabuff.ru/login");
 
-            // Клик по кнопке VK
-            WebElement vkButton = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(@class, 'social__vk') and contains(@href, 'vkontakte')]")
-            ));
-            vkButton.click();
+            // Ожидание появления элемента, который виден только после успешной авторизации (например, аватар)
+            // Используем более надежный селектор для аватара
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".header__item.header-profile img")));
 
-            // Ожидание завершения авторизации
-            wait.until(ExpectedConditions.urlContains("mangabuff.ru"));
-            try {
-                Thread.sleep(30000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
+            // Получение куки и CSRF токена
             Set<Cookie> cookies = driver.manage().getCookies();
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name='csrf-token']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
-            log.debug("save new cookie");
-            cookieService.saveCookies(mbLogin2, cookies, csrfToken);
+
+            // Проверка существования пользователя и сохранение/обновление
+            userCookie = userCookieRepository.findByUsername(login)
+                .map(existingUser -> {
+                    existingUser.setCookiesJson(cookieService.cookiesToJson(cookies));
+                    existingUser.setCsrfToken(csrfToken);
+                    return existingUser;
+                })
+                .orElseGet(() -> UserCookie.builder()
+                    .username(login)
+                    .cookiesJson(cookieService.cookiesToJson(cookies))
+                    .csrfToken(csrfToken)
+                    .build());
+
+            userCookie = userCookieRepository.save(userCookie);
 
         } catch (Exception e) {
             log.error("Ошибка при аутентификации", e);
             throw e;
-        }
-        finally {
+        } finally {
             driver.quit();
         }
+        return userCookie;
     }
-
-
-
 }

@@ -31,30 +31,35 @@ public class MangaParserService {
     private int counterChp;
 
     public void createMangaList() {
-        try {
-            Document doc = fetchWithRetry(BASE_URL);
-            if (doc == null) return;
+        log.info("Начинаем создание списка манги");
+        // Очищаем существующие данные
+        mangaRepository.deleteAll();
+        log.info("Существующие данные очищены");
 
-            int maxPage = calculateMaxPage(doc);
+        // Парсим первую страницу
+        createMangaPage(BASE_URL);
+        log.info("Первая страница обработана");
 
-            for (int i = 1; i <= maxPage; i++) {
-                String pageUrl = BASE_URL + "?page=" + i;
-                log.info("Обработка страницы {}/{}", i, maxPage);
-
-                try {
-                    createMangaPage(pageUrl);
-                    TimeUnit.MILLISECONDS.sleep(DELAY_BETWEEN_REQUESTS_MS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("Парсинг прерван");
-                    return;
-                } catch (Exception e) {
-                    log.error("Ошибка при обработке страницы {}: {}", i, e.getMessage());
-                }
+        // Парсим следующие страницы
+        int page = 2;
+        while (true) {
+            String pageUrl = BASE_URL + "?page=" + page;
+            Document pageDoc = fetchWithRetry(pageUrl);
+            if (pageDoc == null || pageDoc.select(".cards__item").isEmpty()) {
+                break;
             }
-        } catch (Exception e) {
-            log.error("Критическая ошибка в createMangaList: {}", e.getMessage());
+            createMangaPage(pageUrl);
+            log.info("Страница {} обработана", page);
+            page++;
+            try {
+                Thread.sleep(DELAY_BETWEEN_REQUESTS_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Прерывание во время задержки между запросами: {}", e.getMessage());
+                break;
+            }
         }
+        log.info("Создание списка манги завершено. Всего страниц обработано: {}", page - 1);
     }
 
     private int calculateMaxPage(Document doc) {
@@ -142,41 +147,27 @@ public class MangaParserService {
     private Document fetchWithRetry(String url) {
         for (int attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
             try {
-                Connection connection = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(5000)
-                    .ignoreHttpErrors(true); // Важно: разрешаем получать страницы с ошибками
+                Connection.Response response = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                    .timeout(10000)
+                    .execute();
 
-                Connection.Response response = connection.execute();
-                int statusCode = response.statusCode();
-
-                if (statusCode == HttpURLConnection.HTTP_OK) {
-                    return connection.get();
-                } else {
-                    log.warn("Попытка {} из {}: URL {} вернул статус {}",
-                        attempt, RETRY_ATTEMPTS, url, statusCode);
-
-                    if (statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                        // Для 404 нет смысла повторять запрос
-                        log.error("Страница не найдена (404), пропускаем: {}", url);
-                        return null;
-                    }
+                if (response.statusCode() == HttpURLConnection.HTTP_OK) {
+                    return response.parse();
                 }
+                log.warn("Попытка {} не удалась для URL {}, код статуса: {}", attempt, url, response.statusCode());
             } catch (IOException e) {
-                log.warn("Попытка {} из {} не удалась для URL {}: {}",
-                    attempt, RETRY_ATTEMPTS, url, e.getMessage());
+                log.error("Ошибка при попытке {} для URL {}: {}", attempt, url, e.getMessage());
             }
-
-            if (attempt < RETRY_ATTEMPTS) {
-                try {
-                    TimeUnit.SECONDS.sleep(attempt * 2L);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
+            try {
+                Thread.sleep(DELAY_BETWEEN_REQUESTS_MS * attempt);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                log.error("Прерывание во время задержки между попытками: {}", ie.getMessage());
+                return null;
             }
         }
-        log.error("Не удалось загрузить URL после {} попыток: {}", RETRY_ATTEMPTS, url);
+        log.error("Все попытки для URL {} исчерпаны", url);
         return null;
     }
 }

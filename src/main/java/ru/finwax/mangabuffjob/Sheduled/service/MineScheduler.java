@@ -1,62 +1,62 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v133.network.Network;
-import org.openqa.selenium.devtools.v133.network.model.Response;
+import org.openqa.selenium.devtools.v136.network.Network;
+import org.openqa.selenium.devtools.v136.network.model.Response;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.auth.MbAuth;
 
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MineScheduler {
+    private final MbAuth mbAuth;
     private static final String MINE_PAGE_URL = "https://mangabuff.ru/mine";
-    private static final String MINE_BUTTON_CSS = "button.main-mine__game-tap";
     private static final String MINE_HIT_URL = "https://mangabuff.ru/mine/hit";
-    private static final int TOTAL_CLICKS = 100;
+    private static final String MINE_BUTTON_CSS = "button.main-mine__game-tap";
     private static final int CLICK_INTERVAL_MS = 1000;
-    private static final int MAX_PARALLEL_SESSIONS = 5;
+    private static final int MAX_PARALLEL_SESSIONS = 8;
 
     private final AtomicBoolean limitReached = new AtomicBoolean(false);
     private final AtomicInteger activeMiningSessions = new AtomicInteger(0);
     private final ReentrantLock miningLock = new ReentrantLock(true);
     private final Semaphore concurrentSessionsSemaphore = new Semaphore(MAX_PARALLEL_SESSIONS);
 
-    public void performMining(WebDriver driver, Long id) {
+
+    public void performMining(Long id, Integer TOTAL_CLICKS, boolean checkViews) {
+        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "mining", checkViews);
         if (!tryAcquireMiningPermission()) {
             log.warn("[{}]Max parallel mining sessions reached ({})", id, MAX_PARALLEL_SESSIONS);
             return;
         }
-
         try {
-            if (!(driver instanceof ChromeDriver chromeDriver)) {
-                throw new IllegalArgumentException("Only ChromeDriver is supported for mining");
-            }
 
             limitReached.set(false);
-            CompletableFuture<Void> limitCheckFuture = new CompletableFuture<>();
+             CompletableFuture<Void> limitCheckFuture = new CompletableFuture<>();
 
-            DevTools devTools = chromeDriver.getDevTools();
-            devTools.createSession();
+             DevTools devTools = driver.getDevTools();
+             devTools.createSession();
 
             try {
                 setupNetworkMonitoring(devTools, limitCheckFuture);
-                performMiningOperations(driver, limitCheckFuture, id);
+                performMiningOperations(driver,  limitCheckFuture,  id, TOTAL_CLICKS);
             } finally {
                 cleanupResources(devTools);
                 releaseMiningPermission();
@@ -102,7 +102,7 @@ public class MineScheduler {
         }
     }
 
-    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture, Long id) {
+    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture, Long id, Integer TOTAL_CLICKS) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         driver.get(MINE_PAGE_URL);
 
@@ -116,18 +116,17 @@ public class MineScheduler {
                 mineButton.click();
                 clicksPerformed++;
                 Thread.sleep(CLICK_INTERVAL_MS);
-                try {
-                    limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
-                    break;
-                } catch (TimeoutException e) {
-                    // Continue mining
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+                 try {
+                     limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
+                     break;
+                 } catch (InterruptedException e) {
+                     Thread.currentThread().interrupt();
+                     break;
+                 }
             } catch (Exception e) {
-                log.error("Click error: {}", e.getMessage());
-                if (e.getMessage().contains("element is not attached")) {
+                //log.error("[{}] Click error. Exception type: {}, Message: {}", id, e.getClass().getName(), e.getMessage());
+                if (e.getMessage() != null && e.getMessage().contains("element is not attached") || e.getClass().getName().contains("StaleElementReferenceException")) {
+                   log.warn("[{}] Element is stale or detached, stopping mining for this session.", id);
                     break;
                 }
             }
@@ -144,26 +143,26 @@ public class MineScheduler {
         }
     }
 
-    private void setupNetworkMonitoring(DevTools devTools, CompletableFuture<Void> limitCheckFuture) {
-        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+     private void setupNetworkMonitoring(DevTools devTools, CompletableFuture<Void> limitCheckFuture) {
+         devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
 
-        // Обработка ответов сервера
-        devTools.addListener(Network.responseReceived(), response -> {
-            Response receivedResponse = response.getResponse();
-            if (receivedResponse.getUrl().contains(MINE_HIT_URL)) {
-                if (receivedResponse.getStatus() == 403) {
-                    handleLimitReached(limitCheckFuture, "403 status code received");
-                }
-            }
-        });
+         // Обработка ответов сервера
+         devTools.addListener(Network.responseReceived(), response -> {
+             Response receivedResponse = response.getResponse();
+             if (receivedResponse.getUrl().contains(MINE_HIT_URL)) {
+                 if (receivedResponse.getStatus() == 403) {
+                     handleLimitReached(limitCheckFuture, "403 status code received");
+                 }
+             }
+         });
 
-        // Обработка ошибок загрузки
-        devTools.addListener(Network.loadingFailed(), event -> {
-            if (event.getRequestId() != null && event.getErrorText().toLowerCase().contains("blocked")) {
-                handleLimitReached(limitCheckFuture, "Request blocked: " + event.getErrorText());
-            }
-        });
-    }
+         // Обработка ошибок загрузки
+         devTools.addListener(Network.loadingFailed(), event -> {
+             if (event.getRequestId() != null && event.getErrorText().toLowerCase().contains("blocked")) {
+                 handleLimitReached(limitCheckFuture, "Request blocked: " + event.getErrorText());
+             }
+         });
+     }
 
     private void handleLimitReached(CompletableFuture<Void> limitCheckFuture, String reason) {
         log.info("Limit detected: {}", reason);
@@ -171,13 +170,13 @@ public class MineScheduler {
         limitCheckFuture.complete(null);
     }
 
-    private void cleanupResources(DevTools devTools) {
-        try {
-            if (devTools != null) {
-                devTools.disconnectSession();
-            }
-        } catch (Exception e) {
-            log.error("DevTools cleanup error: {}", e.getMessage());
-        }
-    }
+     private void cleanupResources(DevTools devTools) {
+         try {
+             if (devTools != null) {
+                 devTools.disconnectSession();
+             }
+         } catch (Exception e) {
+             log.error("DevTools cleanup error: {}", e.getMessage());
+         }
+     }
 }

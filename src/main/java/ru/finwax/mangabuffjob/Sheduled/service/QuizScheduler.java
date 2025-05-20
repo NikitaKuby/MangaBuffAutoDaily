@@ -1,6 +1,7 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -10,6 +11,7 @@ import org.openqa.selenium.devtools.DevTools;
 import org.openqa.selenium.devtools.v136.network.Network;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.auth.MbAuth;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,16 +19,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class QuizScheduler {
+    private final MbAuth mbAuth;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
 
-    public void monitorQuizRequests(WebDriver driverWeb, Long id) {
+    public void monitorQuizRequests(Long id, boolean checkViews) {
+        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "mining", checkViews);
         AtomicInteger clickCounter = new AtomicInteger(0);
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth
 
-        ChromeDriver driver = (ChromeDriver) driverWeb;
         DevTools devTools = driver.getDevTools();
         devTools.createSession();
 

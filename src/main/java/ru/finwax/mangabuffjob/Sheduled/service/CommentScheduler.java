@@ -30,13 +30,12 @@ public class CommentScheduler {
     private final CommentService commentService;
     private final CommentParserService commentParserService;
     private final MbAuth mbAuth;
-    private static final int COUNT_OF_COMMENTS = 13;
     private static final int MIN_DELAY_SEC = 30;
     private static final int MAX_DELAY_SEC = 40;
 
     @SneakyThrows
     @Transactional
-    public void startDailyCommentSending(WebDriver driver, Long id){
+    public void startDailyCommentSending(Long id, Integer COUNT_OF_COMMENTS){
         AtomicInteger counter = new AtomicInteger(0);
 
         log.debug("startDailyCommentSending");
@@ -46,13 +45,12 @@ public class CommentScheduler {
             log.warn("[{}]Нет новых глав для комментирования", id);
             return;
         }
-        log.info("{}: "+newIds.toString(), id);
         CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>(newIds);
         log.debug("try scheduleComments");
         try {
 
             Thread.sleep((long) (getDelayForUser(id)));
-            scheduleComments(id, counter, commentIds);
+            scheduleComments(id, counter, commentIds, COUNT_OF_COMMENTS);
             mangaChapterRepository.markMultipleAsCommented(newIds, id);
         }finally {
             Thread.sleep(4000);
@@ -61,7 +59,7 @@ public class CommentScheduler {
 
     private void scheduleComments(Long userId,
                                   AtomicInteger counter,
-                                  CopyOnWriteArrayList<String> commentIds) {
+                                  CopyOnWriteArrayList<String> commentIds, Integer COUNT_OF_COMMENTS) {
         log.debug("[{}]start scheduleComments", userId);
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         try {
@@ -98,6 +96,7 @@ public class CommentScheduler {
         // Генерируем случайную задержку в этом диапазоне
         return ThreadLocalRandom.current().nextLong(minDelaySec * 1000, maxDelaySec * 1000);
     }
+
 }
 
 

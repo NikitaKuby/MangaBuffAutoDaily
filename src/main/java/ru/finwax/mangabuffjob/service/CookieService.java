@@ -23,13 +23,22 @@ public class CookieService {
     private final UserCookieRepository userCookieRepository;
     private final ObjectMapper objectMapper; // Jackson
 
-    public void saveCookies(String username, Set<Cookie> seleniumCookies, String csrfToken) {
+    public String cookiesToJson(Set<Cookie> seleniumCookies) {
         try {
             Set<CookieDTO> cookieDTOs = seleniumCookies.stream()
                 .map(CookieDTO::fromSeleniumCookie)
                 .collect(Collectors.toSet());
 
-            String cookiesJson = objectMapper.writeValueAsString(cookieDTOs);
+            return objectMapper.writeValueAsString(cookieDTOs);
+        } catch (JsonProcessingException e) {
+            log.error("Ошибка сериализации кук", e);
+            throw new RuntimeException("Ошибка сериализации кук", e);
+        }
+    }
+
+    public void saveCookies(String username, Set<Cookie> seleniumCookies, String csrfToken) {
+        try {
+            String cookiesJson = cookiesToJson(seleniumCookies);
 
             userCookieRepository.findByUsername(username)
                 .ifPresentOrElse(
@@ -47,18 +56,14 @@ public class CookieService {
                     }
                 );
 
-        } catch (JsonProcessingException e) {
-            log.error("Ошибка сериализации кук", e);
+        } catch (Exception e) {
+            log.error("Ошибка сохранения кук", e);
         }
     }
 
     public void saveCookies(Long id, Set<Cookie> seleniumCookies, String csrfToken) {
         try {
-            Set<CookieDTO> cookieDTOs = seleniumCookies.stream()
-                .map(CookieDTO::fromSeleniumCookie)
-                .collect(Collectors.toSet());
-
-            String cookiesJson = objectMapper.writeValueAsString(cookieDTOs);
+            String cookiesJson = cookiesToJson(seleniumCookies);
 
             userCookieRepository.findById(id)
                 .ifPresentOrElse(
@@ -76,8 +81,8 @@ public class CookieService {
                     }
                 );
 
-        } catch (JsonProcessingException e) {
-            log.error("Ошибка сериализации кук", e);
+        } catch (Exception e) {
+            log.error("Ошибка сохранения кук", e);
         }
     }
 

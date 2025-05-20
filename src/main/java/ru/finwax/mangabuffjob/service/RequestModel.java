@@ -2,6 +2,9 @@ package ru.finwax.mangabuffjob.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openqa.selenium.Cookie;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -81,6 +84,16 @@ public class RequestModel {
             cookiesBuilder.setLength(cookiesBuilder.length() - 2);
         }
         return cookiesBuilder.toString();
+    }
+
+    public String getValidCsrf(Long id)  {
+        String baseUrl = "https://mangabuff.ru"; // Базовый URL для абсолютных ссылок
+        HttpHeaders headers = getHeaderBase(id);
+        ResponseEntity<String> response = RequestModel.sendGetRequest(headers, baseUrl);
+        String html = response.getBody();
+        Document mainPage = Jsoup.parse(html, baseUrl);
+        Element csrfMeta = mainPage.select("meta[name=csrf-token]").first();
+        return csrfMeta != null ? csrfMeta.attr("content") : "";
     }
 
 
