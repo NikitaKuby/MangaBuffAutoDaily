@@ -1,19 +1,19 @@
 package ru.finwax.mangabuffjob.controller;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import lombok.Getter;
-import org.springframework.stereotype.Component;
-import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
-import ru.finwax.mangabuffjob.service.ScanningProgress;
-import ru.finwax.mangabuffjob.service.CookieService;
-import ru.finwax.mangabuffjob.Entity.UserCookie;
-import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
-import javafx.scene.control.Alert;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.service.CookieService;
+import ru.finwax.mangabuffjob.service.ScanningProgress;
 
 @Component
 @RequiredArgsConstructor

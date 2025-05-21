@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
@@ -14,9 +14,9 @@ import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service

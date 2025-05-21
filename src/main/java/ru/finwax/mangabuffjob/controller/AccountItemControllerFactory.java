@@ -3,11 +3,11 @@ package ru.finwax.mangabuffjob.controller;
 import javafx.fxml.FXMLLoader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
-import ru.finwax.mangabuffjob.service.AccountService;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
+import ru.finwax.mangabuffjob.service.AccountService;
 
 import java.io.IOException;
 

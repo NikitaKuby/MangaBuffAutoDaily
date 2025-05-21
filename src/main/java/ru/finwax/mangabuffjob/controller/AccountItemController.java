@@ -1,26 +1,25 @@
 package ru.finwax.mangabuffjob.controller;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.model.AccountProgress;
 import ru.finwax.mangabuffjob.service.AccountService;
-import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
-import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
-import org.springframework.stereotype.Component;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.util.Duration;
-import javafx.concurrent.Task;
-import javafx.application.Platform;
 
 import java.io.File;
 import java.util.Objects;

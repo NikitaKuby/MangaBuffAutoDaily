@@ -1,41 +1,35 @@
 package ru.finwax.mangabuffjob.controller;
 
-import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.layout.VBox;
-import javafx.collections.ObservableList;
-import javafx.collections.FXCollections;
-import ru.finwax.mangabuffjob.model.AccountProgress;
-import javafx.fxml.Initializable;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import javafx.scene.Scene;
-import org.springframework.stereotype.Component;
-import ru.finwax.mangabuffjob.Entity.UserCookie;
-import ru.finwax.mangabuffjob.repository.UserCookieRepository;
-import ru.finwax.mangabuffjob.Entity.MangaProgress;
-import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
-import java.time.LocalDateTime;
-import java.time.LocalDate;
-import ru.finwax.mangabuffjob.service.ScanningProgress;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.util.Duration;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.Entity.MangaProgress;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.model.AccountProgress;
+import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.service.ScanningProgress;
 
-
-import java.net.URL;
-import java.util.ResourceBundle;
 import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.ResourceBundle;
 
 @Component
 @RequiredArgsConstructor

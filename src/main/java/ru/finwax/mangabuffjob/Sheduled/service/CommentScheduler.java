@@ -3,7 +3,6 @@ package ru.finwax.mangabuffjob.Sheduled.service;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.WebDriver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.finwax.mangabuffjob.auth.MbAuth;

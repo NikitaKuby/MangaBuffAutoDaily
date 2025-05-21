@@ -2,8 +2,8 @@ package ru.finwax.mangabuffjob.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
 @Service
 public class AccountService {

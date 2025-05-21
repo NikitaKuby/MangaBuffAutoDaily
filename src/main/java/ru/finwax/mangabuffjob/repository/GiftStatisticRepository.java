@@ -5,7 +5,6 @@ import org.springframework.stereotype.Repository;
 import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
