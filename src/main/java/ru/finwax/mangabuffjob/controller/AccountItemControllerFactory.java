@@ -1,0 +1,31 @@
+package ru.finwax.mangabuffjob.controller;
+
+import javafx.fxml.FXMLLoader;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.service.AccountService;
+import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+public class AccountItemControllerFactory {
+    private final AccountService accountService;
+    private final AdvertisingScheduler advertisingScheduler;
+    private final MineScheduler mineScheduler;
+    private final QuizScheduler quizScheduler;
+    private final CommentScheduler commentScheduler;
+
+
+    public AccountItemController createController(MangaBuffJobViewController parentController) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountItem.fxml"));
+        AccountItemController controller = new AccountItemController(accountService, parentController, advertisingScheduler, mineScheduler, quizScheduler, commentScheduler);
+        loader.setController(controller);
+        loader.load();
+        return controller;
+    }
+} 

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.ScrollPane?>
+
+<?import java.net.URL?>
+<AnchorPane minHeight="400.0" minWidth="300.0" prefHeight="600.0" prefWidth="675.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+   <stylesheets>
+      <URL value="@styles.css"/>
+   </stylesheets>
+   <children>
+      <VBox layoutX="20.0" layoutY="20.0" spacing="0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="60.0">
+        <children>
+          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="450.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+            <children>
+              <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="50.0" VBox.vgrow="ALWAYS">
+                <content>
+                  <VBox fx:id="accountsVBox" spacing="10.0" fillWidth="true" VBox.vgrow="ALWAYS">
+                    <padding>
+                      <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                  </VBox>
+                </content>
+              </ScrollPane>
+              <HBox alignment="CENTER_RIGHT" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="10.0">
+                <padding>
+                  <Insets top="10" right="20" bottom="0" left="10"/>
+                </padding>
+                <children>
+                    <Button fx:id="updateMangaListButton" mnemonicParsing="false" text="Обновить список манги" style="-fx-background-color: white;">
+                        <tooltip>
+                            <Tooltip text="Загрузить список манги с сайта" showDelay="50ms" />
+                        </tooltip>
+                    </Button>
+                    <Button fx:id="refreshButton" mnemonicParsing="false" text="↻" >
+                        <tooltip>
+                            <Tooltip text="Обновить все аккаунты" showDelay="50ms" />
+                        </tooltip>
+                    </Button>
+                    <Button fx:id="addAccountButton" mnemonicParsing="false" text="+ account" />
+                </children>
+              </HBox>
+            </children>
+          </AnchorPane>
+          <HBox spacing="20.0" alignment="CENTER_LEFT">
+            <children>
+              <CheckBox fx:id="periodicReadingCheckBox" mnemonicParsing="false" text="Запускать периодическое чтение" />
+              <CheckBox fx:id="viewsCheckBox" mnemonicParsing="false" text="Views">
+                 <tooltip>
+                    <Tooltip text="Отображение браузера" showDelay="50ms" />
+                 </tooltip>
+              </CheckBox>
+
+            </children>
+          </HBox>
+        </children>
+      </VBox>
+      <Button fx:id="runBotButton" mnemonicParsing="false" text="Запустить бота" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="10.0" maxWidth="1.0E7" />
+   </children>
+</AnchorPane> 
