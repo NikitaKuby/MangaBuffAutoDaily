@@ -28,7 +28,6 @@ public class CommentScheduler {
     private final MangaChapterRepository mangaChapterRepository;
     private final CommentService commentService;
     private final CommentParserService commentParserService;
-    private final MbAuth mbAuth;
     private static final int MIN_DELAY_SEC = 30;
     private static final int MAX_DELAY_SEC = 40;
 

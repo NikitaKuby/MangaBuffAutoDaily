@@ -34,7 +34,7 @@
                   <Insets top="10" right="20" bottom="0" left="10"/>
                 </padding>
                 <children>
-                    <Button fx:id="updateMangaListButton" mnemonicParsing="false" text="Обновить список манги" style="-fx-background-color: white;">
+                    <Button fx:id="updateMangaListButton" mnemonicParsing="false" text="Обновить список манги">
                         <tooltip>
                             <Tooltip text="Загрузить список манги с сайта" showDelay="50ms" />
                         </tooltip>
@@ -64,4 +64,4 @@
       </VBox>
       <Button fx:id="runBotButton" mnemonicParsing="false" text="Запустить бота" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="10.0" maxWidth="1.0E7" />
    </children>
-</AnchorPane> 
+</AnchorPane>

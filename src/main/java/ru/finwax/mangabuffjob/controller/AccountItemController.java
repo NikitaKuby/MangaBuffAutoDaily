@@ -279,7 +279,6 @@ public class AccountItemController {
 
     private void handleStartMining() {
         if (isButtonGreen(startMiningButton)) return;
-        System.out.println("Start Mining button clicked for account: " + account.getUsername());
         setButtonState(startMiningButton, "blue");
 
         Task<Void> task = new Task<>() {

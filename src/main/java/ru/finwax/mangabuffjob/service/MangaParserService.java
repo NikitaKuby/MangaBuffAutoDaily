@@ -10,13 +10,18 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.List;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -178,5 +183,69 @@ public class MangaParserService {
         }
         log.error("Не удалось загрузить URL после {} попыток: {}", RETRY_ATTEMPTS, url);
         return null;
+    }
+
+    public boolean hasMangaData() {
+        return mangaRepository.count() > 0;
+    }
+
+    @Transactional
+    public void importMangaFromCSV() {
+        log.info("Начинаем импорт манги из CSV файла");
+        try {
+            // Читаем CSV файл
+            try (BufferedReader reader = new BufferedReader(new FileReader("manga_parsing_data.csv"))) {
+                String line;
+                // Пропускаем заголовок
+                reader.readLine();
+                
+                while ((line = reader.readLine()) != null) {
+                    try {
+                        // Парсим CSV строку с учетом кавычек
+                        String[] data = parseCSVLine(line);
+                        if (data.length >= 4) {
+                            String title = data[1].trim().replaceAll("^\"|\"$", ""); // Удаляем кавычки
+                            String url = data[2].trim();
+                            int chapters = Integer.parseInt(data[3].trim());
+                                // Создаем новую запись
+                                MangaData mangaData = new MangaData();
+                                mangaData.setTitle(title);
+                                mangaData.setUrl(url);
+                                mangaData.setCountChapters(chapters);
+                                mangaData.setLastUpdated(LocalDateTime.now());
+                                mangaRepository.save(mangaData);
+                            }
+                    } catch (Exception e) {
+                        log.warn("Пропущена строка с некорректным форматом данных: {}", line);
+                        continue;
+                    }
+                }
+            }
+            log.info("Импорт манги из CSV файла завершен успешно");
+        } catch (Exception e) {
+            log.error("Ошибка при импорте манги из CSV файла: " + e.getMessage());
+            throw new RuntimeException("Ошибка при импорте манги из CSV файла", e);
+        }
+    }
+
+    private String[] parseCSVLine(String line) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                result.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        result.add(current.toString());
+        
+        return result.toArray(new String[0]);
     }
 }

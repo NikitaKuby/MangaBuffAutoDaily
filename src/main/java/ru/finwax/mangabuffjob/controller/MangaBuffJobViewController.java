@@ -24,8 +24,10 @@ import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.model.AccountProgress;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.service.MangaParserService;
 import ru.finwax.mangabuffjob.service.ScanningProgress;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
@@ -37,6 +39,8 @@ public class MangaBuffJobViewController implements Initializable {
 
     @FXML
     public CheckBox viewsCheckBox;
+    @FXML
+    public Button updateMangaListButton;
     @FXML
     private VBox accountsVBox;
 
@@ -56,6 +60,7 @@ public class MangaBuffJobViewController implements Initializable {
     private final ApplicationContext applicationContext;
     private final AccountItemControllerFactory accountItemControllerFactory;
     private final ScanningProgress scanningProgress;
+    private final MangaParserService mangaParserService;
     private Timeline loadingTimelineRefresh;
 
     private ObservableList<AccountProgress> accountData = FXCollections.observableArrayList();
@@ -85,6 +90,12 @@ public class MangaBuffJobViewController implements Initializable {
             addAccountButton.setOnAction(event -> handleAddAccount());
             runBotButton.setOnAction(event -> handleRunBot());
             refreshButton.setOnAction(event -> handleRefreshAccounts());
+            updateMangaListButton.setOnAction(event -> handleUpdateMLB());
+            
+            // Проверяем наличие данных в таблице манги
+            if (mangaParserService.hasMangaData()) {
+                setButtonState(updateMangaListButton, "green");
+            }
             
             System.out.println("Controller initialization finished successfully");
         } catch (Exception e) {
@@ -92,6 +103,110 @@ public class MangaBuffJobViewController implements Initializable {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    private void handleUpdateMLB() {
+        setButtonState(updateMangaListButton, "blue");
+
+        Task<Void> updateTask = new Task<>() {
+            @Override
+            protected Void call(){
+                try {
+                    File csvFile = new File("manga_parsing_data.csv");
+                    if (csvFile.exists()) {
+                        mangaParserService.importMangaFromCSV();
+                    } else {
+                        mangaParserService.createMangaList();
+                    }
+                    Platform.runLater(() -> setButtonState(updateMangaListButton, "green"));
+                } catch (Exception e) {
+                    Platform.runLater(() -> setButtonState(updateMangaListButton, "red"));
+                    System.err.println("Ошибка при обновлении списка манги: " + e.getMessage());
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+
+        new Thread(updateTask).start();
+    }
+
+    private void startLoadingAnimationRefresh(Button button) {
+        if (loadingTimelineRefresh != null) {
+            loadingTimelineRefresh.stop();
+        }
+        loadingTimelineRefresh = new Timeline(
+            new KeyFrame(Duration.ZERO, e -> button.setText("↻.")),
+            new KeyFrame(Duration.seconds(0.5), e -> button.setText("↻..")),
+            new KeyFrame(Duration.seconds(1), e -> button.setText("↻..."))
+        );
+        loadingTimelineRefresh.setCycleCount(Timeline.INDEFINITE);
+        loadingTimelineRefresh.play();
+        button.getStyleClass().add("btn-blue");
+        button.setDisable(true);
+    }
+
+    private void stopLoadingAnimationRefresh(Button button) {
+        if (loadingTimelineRefresh != null) {
+            loadingTimelineRefresh.stop();
+            loadingTimelineRefresh = null;
+        }
+        button.setText("↻");
+        button.getStyleClass().remove("btn-blue");
+        button.setDisable(false);
+    }
+
+
+    private void setButtonState(Button button, String state) {
+        Platform.runLater(() -> {
+            button.getStyleClass().removeAll("btn-green", "btn-white", "btn-red", "btn-blue", "btn-loading");
+            stopLoadingAnimation(button);
+            switch (state) {
+                case "green":
+                    button.getStyleClass().add("btn-green");
+                    button.setText("готово");
+                    button.setDisable(true);
+                    break;
+                case "white":
+                    button.getStyleClass().add("btn-white");
+                    button.setText("начать");
+                    button.setDisable(false);
+                    break;
+                case "red":
+                    button.getStyleClass().add("btn-red");
+                    button.setText("ошибка");
+                    button.setDisable(false);
+                    break;
+                case "blue":
+                    button.getStyleClass().add("btn-blue");
+                    button.getStyleClass().add("btn-loading");
+                    button.setDisable(true);
+                    startLoadingAnimation(button);
+                    break;
+            }
+        });
+    }
+
+    private void startLoadingAnimation(Button button) {
+        if (loadingTimelineRefresh != null) {
+            loadingTimelineRefresh.stop();
+        }
+        loadingTimelineRefresh = new Timeline(
+            new KeyFrame(Duration.ZERO, e -> button.setText("Загрузка")),
+            new KeyFrame(Duration.seconds(0.5), e -> button.setText("Загрузка.")),
+            new KeyFrame(Duration.seconds(1), e -> button.setText("Загрузка..")),
+            new KeyFrame(Duration.seconds(1.5), e -> button.setText("Загрузка..."))
+        );
+        loadingTimelineRefresh.setCycleCount(Timeline.INDEFINITE);
+        loadingTimelineRefresh.play();
+    }
+
+    private void stopLoadingAnimation(Button button) {
+        if (loadingTimelineRefresh != null) {
+            loadingTimelineRefresh.stop();
+            loadingTimelineRefresh = null;
+        }
+        button.setText("Обновить список манги");
     }
 
     public void loadAccountsFromDatabase() {
@@ -241,32 +356,8 @@ public class MangaBuffJobViewController implements Initializable {
         }
     }
 
-    private void startLoadingAnimation(Button button) {
-        if (loadingTimelineRefresh != null) {
-            loadingTimelineRefresh.stop();
-        }
-        loadingTimelineRefresh = new Timeline(
-            new KeyFrame(Duration.ZERO, e -> button.setText("↻.")),
-            new KeyFrame(Duration.seconds(0.5), e -> button.setText("↻..")),
-            new KeyFrame(Duration.seconds(1), e -> button.setText("↻..."))
-        );
-        loadingTimelineRefresh.setCycleCount(Timeline.INDEFINITE);
-        loadingTimelineRefresh.play();
-        button.getStyleClass().add("btn-blue");
-        button.setDisable(true);
-    }
-
-    private void stopLoadingAnimation(Button button) {
-        if (loadingTimelineRefresh != null) {
-            loadingTimelineRefresh.stop();
-            loadingTimelineRefresh = null;
-        }
-        button.setText("↻");
-        button.getStyleClass().remove("btn-blue");
-        button.setDisable(false);
-    }
     private void handleRefreshAccounts() {
-        startLoadingAnimation(refreshButton);
+        startLoadingAnimationRefresh(refreshButton);
 
         Task<Void> refreshTask = new Task<>() {
             @Override
@@ -298,13 +389,13 @@ public class MangaBuffJobViewController implements Initializable {
 
             @Override
             protected void succeeded() {
-                Platform.runLater(() -> stopLoadingAnimation(refreshButton));
+                Platform.runLater(() -> stopLoadingAnimationRefresh(refreshButton));
             }
 
             @Override
             protected void failed() {
                 Platform.runLater(() -> {
-                    stopLoadingAnimation(refreshButton);
+                    stopLoadingAnimationRefresh(refreshButton);
                     System.err.println("Ошибка при обновлении аккаунтов: " + getException().getMessage());
                 });
             }

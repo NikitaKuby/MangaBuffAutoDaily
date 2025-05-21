@@ -1,17 +1,4 @@
 
-.button {
-    -fx-background-radius: 5;
-    -fx-padding: 5 10;
-    -fx-cursor: hand;
-}
-
-.button:hover {
-    -fx-opacity: 0.9;
-}
-
-.button:pressed {
-    -fx-opacity: 0.8;
-}
 /* Цветные кнопки */
 .btn-green {
     -fx-background-color: #4CAF50;
