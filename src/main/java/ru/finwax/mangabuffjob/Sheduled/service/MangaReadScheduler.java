@@ -1,33 +1,31 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
+import javafx.application.Platform;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.controller.AccountItemController;
+import ru.finwax.mangabuffjob.controller.MangaBuffJobViewController;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
-import javafx.application.Platform;
-import org.springframework.transaction.annotation.Transactional;
-import ru.finwax.mangabuffjob.controller.MangaBuffJobViewController;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -573,34 +571,6 @@ public class MangaReadScheduler {
         }
     }
 
-
-
-//    public void updateGift(Long accountId) {
-//        try {
-//            // Получаем текущую дату (без времени)
-//            LocalDate today = LocalDate.now(ZoneId.systemDefault());
-//            Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(accountId, today);
-//
-//            if (existingStat.isPresent()) {
-//                GiftStatistic stat = existingStat.get();
-//                stat.setCountGift(stat.getCountGift() + 1);
-//                giftRepository.save(stat);
-//                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}",
-//                    accountId, stat.getCountGift());
-//            } else {
-//                // Создаем новую запись
-//                GiftStatistic newStat = new GiftStatistic();
-//                UserCookie userRef = userRepository.getReferenceById(accountId);
-//                newStat.setUser(userRef);
-//                newStat.setCountGift(1);
-//                giftRepository.save(newStat);
-//                log.info("Создана новая статистика подарков для userId={}: {} подарков", accountId, newStat.getCountGift());
-//            }
-//        } catch (Exception e) {
-//            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
-//        }
-//    }
-
     public boolean isDriverAlive(ChromeDriver driver) {
         try {
             driver.getTitle(); // Простая проверка активности драйвера
@@ -645,7 +615,7 @@ public class MangaReadScheduler {
                         readMangaChapters(userId, CHAPTERS_PER_READ, false);
                         completedReaders.incrementAndGet();
                         log.info("[{}] Аккаунт прочитал {} глав. Всего прочитано: {}/{}", 
-                            userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size());
+                            userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size()+completedReaders.get()-1);
                     } finally {
                         activeReaders.remove(userId);
                     }

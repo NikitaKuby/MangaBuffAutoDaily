@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.service.CookieService;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 
@@ -46,7 +45,7 @@ public class MbAuth {
         ChromeOptions options = new ChromeOptions();
 
         // Получаем User-Agent для пользователя или используем дефолтный
-        String userAgent = userAgents.getOrDefault(id, userAgents.get(-1L));
+        String userAgent = userAgents.getOrDefault(id%10, userAgents.get(-1L));
         options.addArguments("--user-agent="+userAgent);
         log.info("[{}] Использован User-Agent: {}", id, userAgent);
 
