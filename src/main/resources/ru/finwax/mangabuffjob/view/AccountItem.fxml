@@ -14,6 +14,7 @@
    <children>
       <HBox fx:id="accountItem" alignment="CENTER_LEFT" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
          <children>
+            <Button fx:id="deleteButton" mnemonicParsing="false" text="🗑" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px;" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="12.0" />
             <VBox alignment="CENTER">
                <children>
                   <ImageView fx:id="avatarImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" />
@@ -65,11 +66,21 @@
                         <Button fx:id="startAdvButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" />
                      </children>
                   </VBox>
+                  <VBox alignment="CENTER">
+                     <children>
+                        <Label text="Gifts" />
+                        <HBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <ImageView fx:id="giftImageView" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" />
+                              <Label fx:id="giftCountLabel" text="0" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                </children>
             </HBox>
          </children>
       </HBox>
-      <Button fx:id="deleteButton" mnemonicParsing="false" text="Удалить" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-min-width: 70px; -fx-min-height: 28px; -fx-max-width: 90px; -fx-max-height: 32px;" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="12.0" />
    </children>
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

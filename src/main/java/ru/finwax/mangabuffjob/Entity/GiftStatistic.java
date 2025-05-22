@@ -15,7 +15,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "gift_stat")
+@Table(name = "GIFT_STAT")
 @Data
 public class GiftStatistic {
     @Id
@@ -26,11 +26,14 @@ public class GiftStatistic {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private UserCookie user;
 
-    @Column(name = "count_gift", nullable = false)
-    private Integer countGift = 0;
+    @Column(name = "path_image", nullable = false)
+    private String pathImage;
 
     @Column(name = "date", nullable = false, updatable = false)
     private LocalDate date;
+
+    @Column(name = "count_gift", nullable = false)
+    private Integer countGift = 0;
 
     @PrePersist
     protected void onCreate() {

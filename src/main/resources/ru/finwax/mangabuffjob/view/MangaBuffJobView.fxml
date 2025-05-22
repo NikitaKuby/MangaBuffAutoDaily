@@ -11,14 +11,14 @@
 <?import javafx.scene.control.ScrollPane?>
 
 <?import java.net.URL?>
-<AnchorPane minHeight="400.0" minWidth="300.0" prefHeight="600.0" prefWidth="675.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+<AnchorPane minHeight="400.0" minWidth="300.0" prefHeight="690.0" prefWidth="700.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
    <stylesheets>
       <URL value="@styles.css"/>
    </stylesheets>
    <children>
       <VBox layoutX="20.0" layoutY="20.0" spacing="0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="60.0">
         <children>
-          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="450.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="600.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
             <children>
               <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="50.0" VBox.vgrow="ALWAYS">
                 <content>
@@ -51,7 +51,7 @@
           </AnchorPane>
           <HBox spacing="20.0" alignment="CENTER_LEFT">
             <children>
-              <CheckBox fx:id="periodicReadingCheckBox" mnemonicParsing="false" text="Запускать периодическое чтение" />
+              <Button fx:id="periodicReadingButton" mnemonicParsing="false" text="Запускать периодическое чтение" />
               <CheckBox fx:id="viewsCheckBox" mnemonicParsing="false" text="Views">
                  <tooltip>
                     <Tooltip text="Отображение браузера" showDelay="50ms" />

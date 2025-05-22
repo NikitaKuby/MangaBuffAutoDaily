@@ -82,17 +82,14 @@ public class ScanningProgress {
             if (avatarImg != null) {
                 avatarAltText = avatarImg.attr("alt");
                 String srcAttr = avatarImg.attr("src");
-                log.info("Найден элемент аватара. Атрибут src: {}", srcAttr);
                 if (srcAttr != null && !srcAttr.isEmpty()) {
                     avatarUrl = avatarImg.absUrl("src");
                 }
-                log.info("Найден аватар: URL = {}, Alt Text = {}", avatarUrl, avatarAltText);
             }
 
             // Изменяем размер аватара в URL с x35 на 150
             if (avatarUrl != null && avatarUrl.contains("/x35/")) {
                 avatarUrl = avatarUrl.replace("/x35/", "/x150/");
-                log.info("URL аватара изменен на: {}", avatarUrl);
             }
 
             // Ищем блоки с прогрессом со страницы баланса
@@ -131,7 +128,6 @@ public class ScanningProgress {
             if (hitsLeftElement != null) {
                 try {
                     mineHitsLeft = Integer.parseInt(hitsLeftElement.text());
-                    log.info("Оставшиеся удары в шахте: {}", mineHitsLeft);
                 } catch (NumberFormatException e) {
                     log.error("Не удалось распарсить количество ударов в шахте для пользователя {}", id, e);
                 }
@@ -154,7 +150,6 @@ public class ScanningProgress {
                         String savedAvatarPath = saveAvatar(avatarUrl, id);
                         progress.setAvatarPath(savedAvatarPath);
                         progress.setAvatarAltText(avatarAltText);
-                        log.info("Аватар сохранен: {}", savedAvatarPath);
                     } catch (IOException e) {
                         log.error("Ошибка при сохранении аватара для пользователя {}", id, e);
                     }
@@ -177,7 +172,7 @@ public class ScanningProgress {
                 mangaProgressRepository.save(mangaProgress);
             }
 
-            log.info("Статус для пользователя {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
+            log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
                      id, commentsDone, totalComments, chaptersDone, totalChapters,
                      quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
 

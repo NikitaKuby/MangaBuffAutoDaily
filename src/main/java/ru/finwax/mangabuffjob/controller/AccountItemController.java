@@ -5,13 +5,16 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
@@ -21,13 +24,21 @@ import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.model.AccountProgress;
 import ru.finwax.mangabuffjob.service.AccountService;
+import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
+import ru.finwax.mangabuffjob.Entity.GiftStatistic;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import javafx.stage.Popup;
 
 @Component
-@RequiredArgsConstructor
+@Getter
 public class AccountItemController {
 
     @FXML
@@ -44,6 +55,10 @@ public class AccountItemController {
     private Label mineProgressLabel;
     @FXML
     private Label advProgressLabel;
+    @FXML
+    private Label giftCountLabel;
+    @FXML
+    private ImageView giftImageView;
 
     @FXML
     private Button startChaptersButton;
@@ -67,6 +82,7 @@ public class AccountItemController {
     private final QuizScheduler quizScheduler;
     private final CommentScheduler commentScheduler;
     private final MangaReadScheduler mangaReadScheduler;
+    private final GiftStatisticRepository giftRepository;
     private CheckBox viewsCheckBox;
 
     private AccountProgress account;
@@ -77,6 +93,27 @@ public class AccountItemController {
     private Timeline loadingTimelineMining;
     private Timeline loadingTimelineAdv;
 
+    private Popup giftImagesPopup;
+
+    public AccountItemController(
+        AccountService accountService,
+        MangaBuffJobViewController parentController,
+        AdvertisingScheduler advertisingScheduler,
+        MineScheduler mineScheduler,
+        QuizScheduler quizScheduler,
+        CommentScheduler commentScheduler,
+        MangaReadScheduler mangaReadScheduler,
+        GiftStatisticRepository giftRepository
+    ) {
+        this.accountService = accountService;
+        this.parentController = parentController;
+        this.advertisingScheduler = advertisingScheduler;
+        this.mineScheduler = mineScheduler;
+        this.quizScheduler = quizScheduler;
+        this.commentScheduler = commentScheduler;
+        this.mangaReadScheduler = mangaReadScheduler;
+        this.giftRepository = giftRepository;
+    }
 
     public void setAccount(AccountProgress account) {
         this.account = account;
@@ -85,6 +122,9 @@ public class AccountItemController {
         quizProgressLabel.setText(String.valueOf(account.getQuizDone()));
         mineProgressLabel.setText(account.getMineProgress());
         advProgressLabel.setText(account.getAdvProgress());
+        
+        // Установка количества подарков
+        updateGiftCount();
 
         // Автоматическая установка цвета кнопок
         updateButtonStates();
@@ -102,7 +142,15 @@ public class AccountItemController {
             avatarImageView.setImage(null);
         }
 
+        // Установка иконки подарка
+        Image giftImage = new Image(getClass().getResourceAsStream("/static/card-gift.png"));
+        giftImageView.setImage(giftImage);
+
         avatarAltTextLabel.setText(account.getAvatarAltText());
+
+        // Добавляем обработчики событий мыши для показа подарков
+        giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());
+        giftImageView.setOnMouseExited(event -> hideGiftImagesPopup());
 
         startChaptersButton.setOnAction(event -> handleStartChapters());
         startCommentsButton.setOnAction(event -> handleStartComments());
@@ -110,6 +158,14 @@ public class AccountItemController {
         startMiningButton.setOnAction(event -> handleStartMining());
         startAdvButton.setOnAction(event -> handleStartAdv());
         deleteButton.setOnAction(event -> handleDeleteAccount());
+    }
+
+    @Transactional
+    public void updateGiftCount() {
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        List<GiftStatistic> gifts = giftRepository.findByUserIdAndDate(account.getUserId(), today);
+        int giftCount = gifts.size();
+        Platform.runLater(() -> giftCountLabel.setText(String.valueOf(giftCount)));
     }
 
     public void updateButtonStates() {
@@ -129,7 +185,7 @@ public class AccountItemController {
         setButtonState(startAdvButton, advDone ? "green" : "white");
     }
 
-    private void setButtonState(Button button, String state) {
+    void setButtonState(Button button, String state) {
         button.getStyleClass().removeAll("btn-green", "btn-white", "btn-red", "btn-blue", "btn-loading");
         stopLoadingAnimation(button);
         switch (state) {
@@ -388,6 +444,46 @@ public class AccountItemController {
     }
     public HBox getAccountItem() {
         return accountItem;
+    }
+
+    private void showGiftImagesPopup() {
+        try {
+            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+            List<GiftStatistic> gifts = giftRepository.findByUserIdAndDate(account.getUserId(), today);
+            if (gifts.isEmpty()) {
+                return; // Нет подарков для отображения
+            }
+
+            List<String> imagePaths = gifts.stream()
+                                          .map(GiftStatistic::getPathImage)
+                                          .filter(path -> path != null && !path.isEmpty())
+                                          .collect(Collectors.toList());
+
+            if (imagePaths.isEmpty()) {
+                return; // Нет изображений для отображения
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/GiftImagesPopup.fxml"));
+            VBox popupContent = loader.load();
+            GiftImagesPopupController controller = loader.getController();
+            controller.setGiftImages(imagePaths);
+
+            giftImagesPopup = new Popup();
+            giftImagesPopup.getContent().add(popupContent);
+            giftImagesPopup.setAutoHide(true);
+            giftImagesPopup.show(giftImageView.getScene().getWindow(),
+                                  giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMinX(),
+                                  giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMaxY());
+        } catch (Exception e) {
+            System.err.println("Ошибка при показе окна подарков: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void hideGiftImagesPopup() {
+        if (giftImagesPopup != null && giftImagesPopup.isShowing()) {
+            giftImagesPopup.hide();
+        }
     }
 }
 

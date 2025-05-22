@@ -28,8 +28,8 @@ public class CommentScheduler {
     private final MangaChapterRepository mangaChapterRepository;
     private final CommentService commentService;
     private final CommentParserService commentParserService;
-    private static final int MIN_DELAY_SEC = 30;
-    private static final int MAX_DELAY_SEC = 40;
+    private static final int MIN_DELAY_SEC = 40;
+    private static final int MAX_DELAY_SEC = 50;
 
     @SneakyThrows
     @Transactional
@@ -89,8 +89,8 @@ public class CommentScheduler {
 
     public long getDelayForUser(Long userId) {
         // Формула: для id=N задержка от (2N-2) до (2N-1) секунд
-        long minDelaySec = 2 * userId - 2;
-        long maxDelaySec = 2 * userId - 1;
+        long minDelaySec = 2 * (userId % 10) - 2;
+        long maxDelaySec = 2 * (userId % 10) - 1;
 
         // Генерируем случайную задержку в этом диапазоне
         return ThreadLocalRandom.current().nextLong(minDelaySec * 1000, maxDelaySec * 1000);

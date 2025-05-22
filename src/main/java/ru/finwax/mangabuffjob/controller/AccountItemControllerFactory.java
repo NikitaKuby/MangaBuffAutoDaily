@@ -9,6 +9,7 @@ import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.service.AccountService;
+import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 
 import java.io.IOException;
 
@@ -21,13 +22,23 @@ public class AccountItemControllerFactory {
     private final QuizScheduler quizScheduler;
     private final CommentScheduler commentScheduler;
     private final MangaReadScheduler mangaReadScheduler;
-
+    private final GiftStatisticRepository giftRepository;
 
     public AccountItemController createController(MangaBuffJobViewController parentController) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountItem.fxml"));
-        AccountItemController controller = new AccountItemController(accountService, parentController, advertisingScheduler, mineScheduler, quizScheduler, commentScheduler, mangaReadScheduler);
+        AccountItemController controller = new AccountItemController(
+            accountService,
+            parentController,
+            advertisingScheduler,
+            mineScheduler,
+            quizScheduler,
+            commentScheduler,
+            mangaReadScheduler,
+            giftRepository
+        );
         loader.setController(controller);
         loader.load();
+        mangaReadScheduler.setAccountItemController(controller);
         return controller;
     }
 } 

@@ -16,20 +16,40 @@ import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MbAuth;
+import ru.finwax.mangabuffjob.controller.AccountItemController;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import javafx.application.Platform;
+import org.springframework.transaction.annotation.Transactional;
+import ru.finwax.mangabuffjob.controller.MangaBuffJobViewController;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -38,14 +58,33 @@ public class MangaReadScheduler {
 
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
+    private MangaBuffJobViewController viewController;
     private static final int CHAPTER_READ_TIME_MS =  80 * 1000;
     private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
+    private static final int CHAPTERS_PER_READ = 4;
+    private static final int MAX_PARALLEL_TASKS = 3;
+    private static final int SCHEDULE_INTERVAL_MINUTES = 90;
 
     private final MangaDataRepository mangaRepository;
     private final UserCookieRepository userRepository;
     private final MangaReadingProgressRepository progressRepository;
     private final MbAuth mbAuth;
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private volatile boolean isPeriodicReadingActive = false;
+    private final BlockingQueue<Long> readingQueue = new LinkedBlockingQueue<>();
+    private final ExecutorService readingExecutor = Executors.newFixedThreadPool(MAX_PARALLEL_TASKS);
+    private final Set<Long> activeReaders = Collections.synchronizedSet(new HashSet<>());
+    private final AtomicInteger completedReaders = new AtomicInteger(0);
+
+    public void setAccountItemController(AccountItemController controller) {
+        // Удален
+    }
+
+    public void setViewController(MangaBuffJobViewController viewController) {
+        this.viewController = viewController;
+    }
 
     public void readMangaChapters(Long id, int countChapter,boolean checkViews) {
 
@@ -119,7 +158,7 @@ public class MangaReadScheduler {
                         break;
                     }
                 } else {
-                    log.warn("[{}] Не удалось прочитать главы, воможно все главы прочитанны", id);
+                    log.warn("[{}] Не удалось прочитать главы, возможно все главы прочитанны", id);
                 }
             }
             log.debug("[{}] Чтение глав завершено: {}/{} за {} мин",
@@ -401,10 +440,7 @@ public class MangaReadScheduler {
     }
 
     private void handleGiftIfPresent(ChromeDriver driver, Long accountId) {
-        // Универсальный селектор для подарков (учитывает все возможные варианты)
         String giftSelector = "div.card-notification, div[class*='card-notification']";
-
-        // Поиск ВИДИМЫХ подарков (без ожидания)
         List<WebElement> gifts = driver.findElements(By.cssSelector(giftSelector))
             .stream()
             .filter(WebElement::isDisplayed)
@@ -421,17 +457,80 @@ public class MangaReadScheduler {
                     gift
                 );
 
-                // 2. Клик через JavaScript (наиболее надежный способ)
+                // 2. Клик через JavaScript
                 ((JavascriptExecutor)driver).executeScript("arguments[0].click();", gift);
 
+                // 3. Ждем появления модального окна и получаем изображение
+                Thread.sleep(1000);
+                WebElement modalImage = driver.findElement(By.cssSelector(".manga-cards__placeholder img"));
+                String imageUrl = modalImage.getAttribute("src");
+                String imageName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
-                // 3. Обработка возможного popup (если появится)
-                Thread.sleep(500);
+                // 4. Создаем структуру папок и сохраняем изображение
+                String basePath = "gifts";
+                String accountPath = basePath + "/account_" + accountId;
+                String datePath = accountPath + "/" + LocalDate.now(ZoneId.systemDefault());
+                
+                // Создаем директории если их нет
+                new File(accountPath).mkdirs();
+                new File(datePath).mkdirs();
+                
+                // Полный путь для сохранения
+                String fullPath = datePath + "/" + imageName;
+                
+                // Скачиваем и сохраняем изображение
+                try (InputStream in = new URL(imageUrl).openStream();
+                     OutputStream out = new FileOutputStream(fullPath)) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                // 5. Обновляем статистику
+                updateGiftWithImage(accountId, fullPath);
+
+                // 6. Закрываем модальное окно
                 tryAlternativeCloseMethods(driver, accountId);
 
             } catch (Exception e) {
                 log.warn("[{}]Ошибка при взаимодействии с подарком: {}", accountId, e.getMessage());
             }
+        }
+    }
+
+    @Transactional
+    public void updateGiftWithImage(Long accountId, String imagePath) {
+        try {
+            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+            List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(accountId, today);
+
+            if (!existingStats.isEmpty()) {
+                GiftStatistic stat = existingStats.get(0);
+                stat.setCountGift(stat.getCountGift() + 1);
+                stat.setPathImage(imagePath);
+                giftRepository.save(stat);
+                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}, путь к изображению: {}",
+                    accountId, stat.getCountGift(), imagePath);
+            } else {
+                GiftStatistic newStat = new GiftStatistic();
+                UserCookie user = userRepository.findById(accountId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + accountId));
+                newStat.setUser(user);
+                newStat.setCountGift(1);
+                newStat.setPathImage(imagePath);
+                newStat.setDate(today);
+                giftRepository.save(newStat);
+                log.info("Создана новая статистика подарков для userId={}: {} подарков, путь к изображению: {}", 
+                    accountId, newStat.getCountGift(), imagePath);
+            }
+            // Обновляем UI после успешного сохранения
+            if (viewController != null) {
+                Platform.runLater(() -> viewController.updateGiftCountForAccount(accountId));
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
         }
     }
 
@@ -453,7 +552,7 @@ public class MangaReadScheduler {
     }
 
 
-    private void tryAlternativeCloseMethods(ChromeDriver driver,Long accountId) {
+    private void tryAlternativeCloseMethods(ChromeDriver driver, Long accountId) {
         try {
             // Способ 2: Клик вне модального окна
             new Actions(driver)
@@ -461,7 +560,7 @@ public class MangaReadScheduler {
                 .click()
                 .perform();
             log.debug("[{}]Пытаемся закрыть окно подарка", accountId);
-            updateGift(accountId);
+            // Обновляем UI
 
         } catch (Exception e) {
             log.warn("[{}]Альтернативные методы закрытия не сработали", accountId);
@@ -470,31 +569,31 @@ public class MangaReadScheduler {
 
 
 
-    public void updateGift(Long accountId) {
-        try {
-            // Получаем текущую дату (без времени)
-            LocalDate today = LocalDate.now(ZoneId.systemDefault());
-            Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(accountId, today);
-
-            if (existingStat.isPresent()) {
-                GiftStatistic stat = existingStat.get();
-                stat.setCountGift(stat.getCountGift() + 1);
-                giftRepository.save(stat);
-                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}",
-                    accountId, stat.getCountGift());
-            } else {
-                // Создаем новую запись
-                GiftStatistic newStat = new GiftStatistic();
-                UserCookie userRef = userRepository.getReferenceById(accountId);
-                newStat.setUser(userRef);
-                newStat.setCountGift(1);
-                giftRepository.save(newStat);
-                log.info("Создана новая статистика подарков для userId={}: {} подарков", accountId, newStat.getCountGift());
-            }
-        } catch (Exception e) {
-            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
-        }
-    }
+//    public void updateGift(Long accountId) {
+//        try {
+//            // Получаем текущую дату (без времени)
+//            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+//            Optional<GiftStatistic> existingStat = giftRepository.findByUserIdAndDate(accountId, today);
+//
+//            if (existingStat.isPresent()) {
+//                GiftStatistic stat = existingStat.get();
+//                stat.setCountGift(stat.getCountGift() + 1);
+//                giftRepository.save(stat);
+//                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}",
+//                    accountId, stat.getCountGift());
+//            } else {
+//                // Создаем новую запись
+//                GiftStatistic newStat = new GiftStatistic();
+//                UserCookie userRef = userRepository.getReferenceById(accountId);
+//                newStat.setUser(userRef);
+//                newStat.setCountGift(1);
+//                giftRepository.save(newStat);
+//                log.info("Создана новая статистика подарков для userId={}: {} подарков", accountId, newStat.getCountGift());
+//            }
+//        } catch (Exception e) {
+//            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
+//        }
+//    }
 
     public boolean isDriverAlive(ChromeDriver driver) {
         try {
@@ -503,6 +602,102 @@ public class MangaReadScheduler {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void startPeriodicReading() {
+        if (isPeriodicReadingActive) {
+            log.info("Периодическое чтение уже активно");
+            return;
+        }
+
+        isPeriodicReadingActive = true;
+        log.info("Запуск периодического чтения");
+
+        // Заполняем очередь всеми аккаунтами
+        List<Long> userIds = userRepository.findAll()
+            .stream()
+            .map(UserCookie::getId)
+            .collect(Collectors.toList());
+        readingQueue.addAll(userIds);
+
+        // Запускаем обработчики очереди
+        for (int i = 0; i < MAX_PARALLEL_TASKS; i++) {
+            readingExecutor.submit(this::processReadingQueue);
+        }
+
+        // Запускаем планировщик
+        scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0, SCHEDULE_INTERVAL_MINUTES, TimeUnit.MINUTES);
+    }
+
+    private void processReadingQueue() {
+        while (isPeriodicReadingActive) {
+            try {
+                Long userId = readingQueue.poll(1, TimeUnit.SECONDS);
+                if (userId != null && !activeReaders.contains(userId)) {
+                    activeReaders.add(userId);
+                    try {
+                        readMangaChapters(userId, CHAPTERS_PER_READ, false);
+                        completedReaders.incrementAndGet();
+                        log.info("[{}] Аккаунт прочитал {} глав. Всего прочитано: {}/{}", 
+                            userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size());
+                    } finally {
+                        activeReaders.remove(userId);
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                log.error("Ошибка при обработке очереди чтения: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void scheduleNextReading() {
+        LocalTime now = LocalTime.now();
+        if (now.isAfter(LocalTime.of(3, 0)) && now.isBefore(LocalTime.of(20, 0))) {
+            // Проверяем, все ли аккаунты прочитаны
+            if (completedReaders.get() >= readingQueue.size() + activeReaders.size()) {
+                log.info("Все аккаунты прочитаны, запускаем новый цикл");
+                // Сбрасываем счетчик
+                completedReaders.set(0);
+                // Очищаем очередь и добавляем все аккаунты заново
+                readingQueue.clear();
+                List<Long> userIds = userRepository.findAll()
+                    .stream()
+                    .map(UserCookie::getId)
+                    .collect(Collectors.toList());
+                readingQueue.addAll(userIds);
+            } else {
+                log.info("Не все аккаунты прочитаны, пропускаем новый цикл");
+            }
+        } else {
+            log.info("Пропуск чтения вне рабочего времени");
+        }
+    }
+
+    public void stopPeriodicReading() {
+        if (!isPeriodicReadingActive) {
+            return;
+        }
+
+        isPeriodicReadingActive = false;
+        log.info("Остановка периодического чтения");
+
+        // Очищаем очередь и счетчики
+        readingQueue.clear();
+        activeReaders.clear();
+        completedReaders.set(0);
+        
+        // Останавливаем планировщик
+        scheduler.shutdown();
+        
+        // Останавливаем исполнителей
+        readingExecutor.shutdown();
+    }
+
+    public boolean isPeriodicReadingActive() {
+        return isPeriodicReadingActive;
     }
 
 }
