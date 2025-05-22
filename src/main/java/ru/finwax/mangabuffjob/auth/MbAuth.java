@@ -37,8 +37,10 @@ public class MbAuth {
                 .clearDriverCache()
                 .clearResolutionCache()
                 .setup();
-        } catch (Exception e) {
+        } catch (Exception e){
             log.warn("Не удалось очистить кэш драйвера: {}", id);
+            WebDriverManager.chromedriver()
+                .setup();
         }
 
         ChromeOptions options = new ChromeOptions();

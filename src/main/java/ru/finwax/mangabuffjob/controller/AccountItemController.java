@@ -56,6 +56,10 @@ public class AccountItemController {
     @FXML
     private Label advProgressLabel;
     @FXML
+    private Label diamondCountLabel;
+    @FXML
+    private ImageView diamondImageView;
+    @FXML
     private Label giftCountLabel;
     @FXML
     private ImageView giftImageView;
@@ -146,7 +150,12 @@ public class AccountItemController {
         Image giftImage = new Image(getClass().getResourceAsStream("/static/card-gift.png"));
         giftImageView.setImage(giftImage);
 
-        avatarAltTextLabel.setText(account.getAvatarAltText());
+        Image diamondImage = new Image(getClass().getResourceAsStream("/static/diamond.png"));
+        diamondImageView.setImage(diamondImage);
+
+        diamondCountLabel.setText(String.valueOf(account.getDiamond()));
+
+        avatarAltTextLabel.setText(account.getAvatarAltText().substring(0,6));
 
         // Добавляем обработчики событий мыши для показа подарков
         giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());

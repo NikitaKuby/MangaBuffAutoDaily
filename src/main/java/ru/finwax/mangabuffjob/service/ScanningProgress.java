@@ -40,12 +40,34 @@ public class ScanningProgress {
         return Jsoup.parse(html, baseUrl);
     }
 
+    // Новый метод для парсинга баланса алмазов
+    private Long parseDiamondBalance(Document doc) {
+        try {
+            Element balanceElement = doc.selectFirst(".menu__balance");
+            if (balanceElement != null) {
+                // Удаляем все дочерние элементы (включая div.diamond) и оставляем только текст
+                String balanceText = balanceElement.text()
+                    .replaceAll("[^0-9]", "") // Оставляем только цифры
+                    .trim();
+
+                if (!balanceText.isEmpty()) {
+                    return Long.parseLong(balanceText);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге баланса алмазов", e);
+        }
+        return 0L; // Возвращаем 0 если не удалось распарсить
+    }
+
     public void sendGetRequestWithCookies(Long id) {
         try {
             log.info("Пытаемся проверить статус глав/комментариев, прогресс шахты и скачать аватар для пользователя {}", id);
 
             // Сканируем страницу баланса
             Document balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
+
+            Long diamondBalance = parseDiamondBalance(balanceDoc);
             log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
             Document balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
             // Получаем текущую дату
@@ -145,6 +167,7 @@ public class ScanningProgress {
                 progress.setAdvDone(advWatchedToday);
                 progress.setMineHitsLeft(mineHitsLeft);
                 progress.setLastUpdated(LocalDate.now());
+                progress.setDiamond(diamondBalance);
                 if (avatarUrl != null && !avatarUrl.isEmpty() && progress.getAvatarPath() == null) { // Скачиваем только если аватара еще нет и URL не пустой
                     try {
                         String savedAvatarPath = saveAvatar(avatarUrl, id);
@@ -165,6 +188,7 @@ public class ScanningProgress {
                     .quizDone(quizDoneToday)
                     .advDone(advWatchedToday)
                     .mineHitsLeft(mineHitsLeft)
+                    .diamond(diamondBalance)
                     .lastUpdated(LocalDate.now())
                     .avatarPath(avatarUrl != null && !avatarUrl.isEmpty() ? saveAvatar(avatarUrl, id) : null) // Скачиваем и сохраняем при создании, если URL не пустой
                     .avatarAltText(avatarAltText)

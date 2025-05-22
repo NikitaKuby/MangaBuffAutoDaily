@@ -68,6 +68,9 @@ public class MangaProgress {
     @Column(name = "avatar_alt_text")
     private String avatarAltText;
 
+    @Column(name = "diamond")
+    private Long diamond;
+
     @Builder.Default
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

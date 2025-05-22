@@ -507,12 +507,18 @@ public class MangaReadScheduler {
             List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(accountId, today);
 
             if (!existingStats.isEmpty()) {
-                GiftStatistic stat = existingStats.get(0);
-                stat.setCountGift(stat.getCountGift() + 1);
-                stat.setPathImage(imagePath);
-                giftRepository.save(stat);
-                log.info("Обновлена статистика подарков для userId={}: текущее кол-во подарков: {}, путь к изображению: {}",
-                    accountId, stat.getCountGift(), imagePath);
+                existingStats.forEach(stat->{stat.setCountGift(stat.getCountGift() + 1);
+                    stat.setPathImage(stat.getPathImage());
+                    giftRepository.save(stat);});
+                GiftStatistic newStat = new GiftStatistic();
+                UserCookie user = userRepository.findById(accountId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + accountId));
+                newStat.setUser(user);
+                newStat.setCountGift(existingStats.get(0).getCountGift()+1);
+                newStat.setPathImage(imagePath);
+                newStat.setDate(today);
+                giftRepository.save(newStat);
+                log.info("Обновлена новая статистика подарков для UserId={}: {} подарков", accountId, existingStats.get(0).getCountGift()+1);
             } else {
                 GiftStatistic newStat = new GiftStatistic();
                 UserCookie user = userRepository.findById(accountId)

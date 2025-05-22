@@ -21,23 +21,10 @@ public class AccountProgress {
     private Long userId;
     private Integer totalReaderChapters;
     private Integer totalCommentChapters;
+    private Long diamond;
 
-    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters) {
-        this.username = username;
-        this.readerProgress = readerProgress;
-        this.commentProgress = commentProgress;
-        this.quizDone = quizDone;
-        this.mineProgress = mineProgress;
-        this.advProgress = advProgress;
-        this.advDone = advDone;
-        this.avatarPath = avatarPath;
-        this.avatarAltText = avatarAltText;
-        this.userId = userId;
-        this.totalReaderChapters = totalReaderChapters;
-        this.totalCommentChapters = totalCommentChapters;
-    }
 
-    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft) {
+    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft, Long diamond) {
         this.username = username;
         this.readerProgress = readerProgress;
         this.commentProgress = commentProgress;
@@ -51,5 +38,6 @@ public class AccountProgress {
         this.totalReaderChapters = totalReaderChapters;
         this.totalCommentChapters = totalCommentChapters;
         this.mineHitsLeft = mineHitsLeft;
+        this.diamond = diamond;
     }
 } 

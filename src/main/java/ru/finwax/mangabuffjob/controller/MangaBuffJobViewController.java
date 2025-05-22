@@ -276,10 +276,14 @@ public class MangaBuffJobViewController implements Initializable{
                     userCookie.getId(),
                     progress.getTotalReaderChapters(),
                     progress.getTotalCommentChapters(),
-                    mineHitsLeftForDisplay
+                    mineHitsLeftForDisplay,
+                    progress.getDiamond()
                 ));
             });
+
+            // Обновляем отображение аккаунтов после загрузки данных
             displayAccounts();
+
         } catch (Exception e) {
             System.err.println("Error loading accounts from database: " + e.getMessage());
             e.printStackTrace();
