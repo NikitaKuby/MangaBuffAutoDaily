@@ -45,13 +45,12 @@ public class MangaBuffAuth {
 
     public UserCookie authenticate(String login){
         WebDriver driver = new ChromeDriver(setUpDriver());
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(120));
         UserCookie userCookie = null;
         try {
             // Переход на страницу логина
             driver.get("https://mangabuff.ru/login");
 
-            // Ожидание появления элемента, который виден только после успешной авторизации (например, аватар)
             // Используем более надежный селектор для аватара
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".header__item.header-profile img")));
 

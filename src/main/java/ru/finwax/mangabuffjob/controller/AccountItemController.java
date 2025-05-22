@@ -155,7 +155,11 @@ public class AccountItemController {
 
         diamondCountLabel.setText(String.valueOf(account.getDiamond()));
 
-        avatarAltTextLabel.setText(account.getAvatarAltText().substring(0,6));
+        if(account.getAvatarAltText().length()>6) {
+            avatarAltTextLabel.setText(account.getAvatarAltText().substring(0, 6));
+        }else {
+            avatarAltTextLabel.setText(account.getAvatarAltText());
+        }
 
         // Добавляем обработчики событий мыши для показа подарков
         giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());
