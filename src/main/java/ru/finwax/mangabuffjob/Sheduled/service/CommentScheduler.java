@@ -5,13 +5,13 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.repository.MangaChapterRepository;
 import ru.finwax.mangabuffjob.service.ChapterThanksGeneratorService;
 import ru.finwax.mangabuffjob.service.CommentParserService;
 import ru.finwax.mangabuffjob.service.CommentService;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,7 +33,8 @@ public class CommentScheduler {
 
     @SneakyThrows
     @Transactional
-    public void startDailyCommentSending(Long id, Integer COUNT_OF_COMMENTS){
+    public CompletableFuture<Void> startDailyCommentSending(Long id, Integer COUNT_OF_COMMENTS){
+        CompletableFuture<Void> future = new CompletableFuture<>();
         AtomicInteger counter = new AtomicInteger(0);
 
         log.debug("startDailyCommentSending");
@@ -41,50 +42,50 @@ public class CommentScheduler {
         List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS, id);
         if (newIds.isEmpty()) {
             log.warn("[{}]Нет новых глав для комментирования", id);
-            return;
+            future.complete(null);
+            return future;
         }
         CopyOnWriteArrayList<String> commentIds = new CopyOnWriteArrayList<>(newIds);
         log.debug("try scheduleComments");
-        try {
 
+        try {
             Thread.sleep((long) (getDelayForUser(id)));
-            scheduleComments(id, counter, commentIds, COUNT_OF_COMMENTS);
-            mangaChapterRepository.markMultipleAsCommented(newIds, id);
-        }finally {
-            Thread.sleep(4000);
-        }
-    }
+            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+            AtomicInteger completedCount = new AtomicInteger(0);
 
-    private void scheduleComments(Long userId,
-                                  AtomicInteger counter,
-                                  CopyOnWriteArrayList<String> commentIds, Integer COUNT_OF_COMMENTS) {
-        log.debug("[{}]start scheduleComments", userId);
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        try {
             for (int i = 0; i < COUNT_OF_COMMENTS; i++) {
                 int delay = MIN_DELAY_SEC + (int)(Math.random() * (MAX_DELAY_SEC - MIN_DELAY_SEC));
                 executor.schedule(() -> {
-                    int currentCount = counter.getAndIncrement();
-                    if (currentCount >= COUNT_OF_COMMENTS) return;
-
                     try {
+                        int currentCount = counter.getAndIncrement();
+                        if (currentCount >= COUNT_OF_COMMENTS) return;
+
                         String idComment = commentIds.get(currentCount);
                         String textMessage = chapterThanksGeneratorService.generateThanks();
-                        log.debug("[{}]sendPostRequestWithCookies", userId);
-                        commentService.sendPostRequestWithCookies(textMessage, idComment, userId);
-                        log.info("[{}] Отправлен комментарий {}/{}",
-                            userId, currentCount + 1, COUNT_OF_COMMENTS);
+                        log.debug("[{}]sendPostRequestWithCookies", id);
+                        commentService.sendPostRequestWithCookies(textMessage, idComment, id);
+                        log.info("[{}] Отправлен комментарий {}/{}", id, currentCount + 1, COUNT_OF_COMMENTS);
+
+                        if (completedCount.incrementAndGet() == COUNT_OF_COMMENTS) {
+                            future.complete(null);
+                        }
                     } catch (Exception e) {
-                        log.error("[{}] Ошибка: {}", userId, e.getMessage());
+                        log.error("[{}] Ошибка: {}", id, e.getMessage());
+                        if (completedCount.incrementAndGet() == COUNT_OF_COMMENTS) {
+                            future.complete(null);
+                        }
                     }
                 }, delay * i, TimeUnit.SECONDS);
             }
-        } finally {
-            // Гарантированное завершение
-            executor.schedule(executor::shutdown,
-                COUNT_OF_COMMENTS * MAX_DELAY_SEC, TimeUnit.SECONDS);
+
+            executor.schedule(executor::shutdown, COUNT_OF_COMMENTS * MAX_DELAY_SEC, TimeUnit.SECONDS);
+            mangaChapterRepository.markMultipleAsCommented(newIds, id);
+        } catch (Exception e) {
+            future.completeExceptionally(e);
         }
+        return future;
     }
+
 
     public long getDelayForUser(Long userId) {
         // Формула: для id=N задержка от (2N-2) до (2N-1) секунд

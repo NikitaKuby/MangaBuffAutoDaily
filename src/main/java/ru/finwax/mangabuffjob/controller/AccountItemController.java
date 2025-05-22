@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.model.AccountProgress;
@@ -23,6 +24,7 @@ import ru.finwax.mangabuffjob.service.AccountService;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
@@ -64,6 +66,7 @@ public class AccountItemController {
     private final MineScheduler mineScheduler;
     private final QuizScheduler quizScheduler;
     private final CommentScheduler commentScheduler;
+    private final MangaReadScheduler mangaReadScheduler;
     private CheckBox viewsCheckBox;
 
     private AccountProgress account;
@@ -196,12 +199,14 @@ public class AccountItemController {
             @Override
             protected Void call() {
                 try {
-                    boolean allRead = account.getReaderProgress() != null && account.getReaderProgress().split("/")[0].equals(account.getReaderProgress().split("/")[1]);
-                    // Здесь должна быть ваша долгая операция чтения глав (если есть)
-                    // Например: mangaReadScheduler.readMangaChapters(...)
-                    // Имитация задержки:
-                    // Thread.sleep(2000);
+                    Integer countOfChapters = Integer.parseInt(Objects.requireNonNull(account.getReaderProgress()).split("/")[1]) -
+                        Integer.parseInt(account.getReaderProgress().split("/")[0]);
+                    System.out.println(countOfChapters);
+
+                    mangaReadScheduler.readMangaChapters(account.getUserId(), countOfChapters, viewsCheckBox.isSelected());
                     Platform.runLater(() -> {
+                        parentController.scanAccount(account.getUserId());
+                        boolean allRead = account.getReaderProgress() != null && account.getReaderProgress().split("/")[0].equals(account.getReaderProgress().split("/")[1]);
                         if (allRead) {
                             setButtonState(startChaptersButton, "green");
                         } else {
@@ -227,11 +232,19 @@ public class AccountItemController {
             @Override
             protected Void call() {
                 try {
-                    boolean allComments = account.getCommentProgress() != null && account.getCommentProgress().split("/")[0].equals(account.getCommentProgress().split("/")[1]);
-                    Integer countOfComments = Integer.parseInt(Objects.requireNonNull(account.getCommentProgress()).split("/")[1]) - Integer.parseInt(account.getCommentProgress().split("/")[0]);
-                    System.out.println(countOfComments);
-                    commentScheduler.startDailyCommentSending(account.getUserId(), countOfComments);
+                    Integer countOfComments = Integer.parseInt(Objects.requireNonNull(account.getCommentProgress()).split("/")[1]) -
+                        Integer.parseInt(account.getCommentProgress().split("/")[0]);
+
+                    CompletableFuture<Void> future = commentScheduler.startDailyCommentSending(account.getUserId(), countOfComments);
+
+                    // Ждем завершения всех комментариев
+                    future.get();
+
                     Platform.runLater(() -> {
+
+                        parentController.scanAccount(account.getUserId());
+                        boolean allComments = account.getCommentProgress() != null &&
+                            account.getCommentProgress().split("/")[0].equals(account.getCommentProgress().split("/")[1]);
                         if (allComments) {
                             setButtonState(startCommentsButton, "green");
                         } else {

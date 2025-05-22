@@ -35,7 +35,7 @@ import java.util.ResourceBundle;
 
 @Component
 @RequiredArgsConstructor
-public class MangaBuffJobViewController implements Initializable {
+public class MangaBuffJobViewController implements Initializable{
 
     @FXML
     public CheckBox viewsCheckBox;
@@ -85,6 +85,9 @@ public class MangaBuffJobViewController implements Initializable {
             
             // Загрузка данных из базы данных
             loadAccountsFromDatabase();
+            handleRefreshAccounts();
+            killChromeDrivers();
+
 
             // Настройка обработчиков событий для кнопок
             addAccountButton.setOnAction(event -> handleAddAccount());
@@ -212,16 +215,12 @@ public class MangaBuffJobViewController implements Initializable {
     public void loadAccountsFromDatabase() {
         try {
             accountData.clear();
-            System.out.println("Loading accounts from database...");
             var accounts = userCookieRepository.findAll();
-            System.out.println("Accounts found in database: " + accounts.size());
 
             accounts.forEach(userCookie -> {
-                System.out.println("Processing account: " + userCookie.getUsername());
                 // Получаем прогресс из базы данных
                 MangaProgress progress = mangaProgressRepository.findByUserId(userCookie.getId())
                     .orElseGet(() -> {
-                        System.out.println("Creating new progress for account: " + userCookie.getUsername());
                         // Создаем новый прогресс только если его нет в базе
                         MangaProgress newProgress = MangaProgress.builder()
                             .userId(userCookie.getId())
@@ -237,7 +236,6 @@ public class MangaBuffJobViewController implements Initializable {
                     });
 
                 // Добавляем аккаунт в список только если он существует в базе
-                System.out.println("mineHitsLeft value from DB for user " + userCookie.getId() + ": " + progress.getMineHitsLeft());
                 Integer mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
 
                 accountData.add(new AccountProgress(
@@ -256,7 +254,6 @@ public class MangaBuffJobViewController implements Initializable {
                     mineHitsLeftForDisplay
                 ));
             });
-            System.out.println("Accounts loaded to UI: " + accountData.size());
             displayAccounts();
         } catch (Exception e) {
             System.err.println("Error loading accounts from database: " + e.getMessage());
@@ -266,25 +263,20 @@ public class MangaBuffJobViewController implements Initializable {
 
     private void displayAccounts() {
         try {
-            System.out.println("Start displaying accounts...");
             Platform.runLater(() -> {
                 try {
                     accountsVBox.getChildren().clear();
 
                     for (AccountProgress account : accountData) {
                         try {
-                            System.out.println("Loading FXML for account: " + account.getUsername());
                             AccountItemController controller = accountItemControllerFactory.createController(this);
-                            System.out.println("Controller created successfully");
 
                             controller.setAccount(account);
                             controller.setViewsCheckBox(viewsCheckBox);
-                            System.out.println("Account set to controller");
 
                             HBox accountItem = controller.getAccountItem();
                             accountItem.setUserData(controller);
                             accountsVBox.getChildren().add(accountItem);
-                            System.out.println("Account successfully added to UI: " + account.getUsername());
                         } catch (IOException e) {
                             System.err.println("Error loading FXML for account " + account.getUsername() + ": " + e.getMessage());
                             e.printStackTrace();
@@ -293,7 +285,6 @@ public class MangaBuffJobViewController implements Initializable {
                             e.printStackTrace();
                         }
                     }
-                    System.out.println("Accounts display finished. Total displayed: " + accountsVBox.getChildren().size());
                 } catch (Exception e) {
                     System.err.println("Critical error displaying accounts: " + e.getMessage());
                     e.printStackTrace();
@@ -402,6 +393,16 @@ public class MangaBuffJobViewController implements Initializable {
         };
 
         new Thread(refreshTask).start();
+    }
+
+    public static void killChromeDrivers() {
+        try {
+            Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe /T");
+            Runtime.getRuntime().exec("taskkill /F /IM chrome.exe /T");
+            System.out.println("Убили драйвера");
+        } catch (IOException e) {
+            System.err.print("Failed to kill chrome processes");
+        }
     }
 
 

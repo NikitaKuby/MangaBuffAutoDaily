@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.service.CookieService;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 
@@ -31,11 +32,14 @@ public class MbAuth {
 
     public ChromeOptions setUpDriver(Long id) {
         log.info("[{}] Настройка драйвера...", id);
-        WebDriverManager.chromedriver()
-//            .driverVersion("136.0.7103.94")
-            .clearDriverCache()
-            .setup();
-        log.info("[{}] WebDriverManager setup завершен.", id);
+        try {
+            WebDriverManager.chromedriver()
+                .clearDriverCache()
+                .clearResolutionCache()
+                .setup();
+        } catch (Exception e) {
+            log.warn("Не удалось очистить кэш драйвера: {}", id);
+        }
 
         ChromeOptions options = new ChromeOptions();
 
@@ -58,8 +62,7 @@ public class MbAuth {
     }
 
 
-    public WebDriver getActualDriver(Long id, String taskname, boolean checkViews) {
-        log.info("[{}] Попытка получить драйвер для задачи: {}", id, taskname);
+    public ChromeDriver getActualDriver(Long id, String taskname, boolean checkViews) {
         ChromeOptions options = setUpDriver(id);
 
         if(!checkViews){
@@ -70,46 +73,34 @@ public class MbAuth {
 
         String userDataDir = "C:\\path\\to\\dir" + id + taskname + id;
         options.addArguments("user-data-dir=" + userDataDir);
-        log.info("[{}] Установлен user-data-dir: {}", id, userDataDir);
-        
+
         WebDriver driver = null;
         try {
-            log.info("[{}] Создание экземпляра ChromeDriver...", id);
             WebDriver tempDriver = new ChromeDriver(options);
             driver = tempDriver;
-            log.info("[{}] ChromeDriver успешно создан.", id);
 
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30)); // Увеличил время ожидания
-            log.info("[{}] Установлено ожидание WebDriver до 30 секунд.", id);
 
-            log.info("[{}] Переход на https://mangabuff.ru", id);
             driver.get("https://mangabuff.ru");
-            log.info("[{}] Страница https://mangabuff.ru загружена.", id);
 
-            log.info("[{}] Загрузка и добавление куки...", id);
             cookieService.loadCookies(id).ifPresent(cookies -> {
                 cookies.forEach(tempDriver.manage()::addCookie);
                 log.info("[{}] Куки добавлены.", id);
             });
 
-            log.info("[{}] Обновление страницы после добавления куки...", id);
             driver.navigate().refresh();
-            log.info("[{}] Страница обновлена.", id);
 
-            log.info("[{}] Ожидание состояния 'complete' документа...", id);
             wait.until(ExpectedConditions.jsReturnsValue("return document.readyState === 'complete'"));
-            log.info("[{}] Документ в состоянии 'complete'.", id);
 
-            log.info("[{}] Получение CSRF токена...", id);
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name=\'csrf-token\']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
-            log.info("[{}] CSRF токен получен.", id);
 
             log.info("[{}] Сохранение куки и CSRF токена в БД...", id);
             cookieService.saveCookies(id, driver.manage().getCookies(), csrfToken);
             log.info("[{}] Куки и CSRF токен сохранены.", id);
 
-            return driver;
+
+            return (ChromeDriver)driver;
         } catch (Exception e) {
             log.error("[{}] Ошибка при получении драйвера: {}", id, e.getMessage(), e);
             if (driver != null) {
@@ -117,6 +108,35 @@ public class MbAuth {
                 log.info("[{}] Драйвер закрыт после ошибки.", id);
             }
             throw new RuntimeException("Не удалось получить драйвер для пользователя " + id + ": " + e.getMessage(), e);
+        }
+    }
+
+    public void killUserDriver(Long userId, String taskname) {
+        String userDataDir = "C:\\path\\to\\dir" + userId + taskname + userId;
+        String escapedPath = userDataDir.replace("\\", "\\\\");
+
+        // Команды для выполнения
+        String[] commands = {
+            // Убить chrome.exe
+            "taskkill /F /FI \"CommandLine like '%" + escapedPath + "%'\" /T",
+
+            // Убить chromedriver.exe (более агрессивно)
+            "wmic process where \"CommandLine like '%" + escapedPath + "%'\" delete"
+        };
+
+        for (String cmd : commands) {
+            try {
+                Process process = Runtime.getRuntime().exec(cmd);
+                process.waitFor(); // Ждем завершения
+
+                if (process.exitValue() != 0) {
+                    log.debug("[user{}:{}] Команда завершилась с кодом {}: {}",
+                        userId, taskname, process.exitValue(), cmd);
+                }
+            } catch (Exception e) {
+                log.warn("[user{}:{}] Ошибка выполнения команды '{}': {}",
+                    userId, taskname, cmd, e.getMessage());
+            }
         }
     }
 

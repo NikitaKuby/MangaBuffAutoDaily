@@ -19,10 +19,26 @@ import java.time.Duration;
 public class AdvertisingScheduler {
 
     private final MbAuth mbAuth;
+    private static final String TASK_NAME = "adv";
     private static final String ADV_PAGE_URL = "https://mangabuff.ru/balance";
 
     public void performAdv(Long id, Integer COUNT_ADV, boolean checkViews) {
-        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "adv", checkViews);
+
+        try {
+            Thread.sleep(500); // 0.5 секунды
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        mbAuth.killUserDriver(id, TASK_NAME);
+
+        try {
+            Thread.sleep(1000); // 1 секунда
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         try {
             driver.get(ADV_PAGE_URL);

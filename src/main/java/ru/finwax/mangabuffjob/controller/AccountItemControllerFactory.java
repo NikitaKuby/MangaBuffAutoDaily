@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
+import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.service.AccountService;
@@ -19,11 +20,12 @@ public class AccountItemControllerFactory {
     private final MineScheduler mineScheduler;
     private final QuizScheduler quizScheduler;
     private final CommentScheduler commentScheduler;
+    private final MangaReadScheduler mangaReadScheduler;
 
 
     public AccountItemController createController(MangaBuffJobViewController parentController) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountItem.fxml"));
-        AccountItemController controller = new AccountItemController(accountService, parentController, advertisingScheduler, mineScheduler, quizScheduler, commentScheduler);
+        AccountItemController controller = new AccountItemController(accountService, parentController, advertisingScheduler, mineScheduler, quizScheduler, commentScheduler, mangaReadScheduler);
         loader.setController(controller);
         loader.load();
         return controller;

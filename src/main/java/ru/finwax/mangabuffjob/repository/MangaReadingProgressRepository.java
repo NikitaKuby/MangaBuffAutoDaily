@@ -17,15 +17,19 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
     @Modifying
     @Transactional
     @Query(value = """
-        INSERT INTO manga_reading_progress
-        (manga_id, user_id, chapter_readed, has_readed, last_updated)
-        VALUES (:mangaId, :userId, :chapterReaded, :hasReaded, NOW())
-        ON CONFLICT (manga_id, user_id)
-        DO UPDATE SET
-            chapter_readed = EXCLUDED.chapter_readed,
-            has_readed = EXCLUDED.has_readed,
-            last_updated = EXCLUDED.last_updated
-        """, nativeQuery = true)
+    UPDATE MANGA_READING_PROGRESS
+    SET chapter_readed = :chapterReaded,
+        has_readed = :hasReaded,
+        last_updated = CURRENT_TIMESTAMP
+    WHERE manga_id = :mangaId AND user_id = :userId;
+    
+    INSERT INTO MANGA_READING_PROGRESS(manga_id, user_id, chapter_readed, has_readed, last_updated)
+    SELECT :mangaId, :userId, :chapterReaded, :hasReaded, CURRENT_TIMESTAMP
+    WHERE NOT EXISTS (
+        SELECT 1 FROM MANGA_READING_PROGRESS
+        WHERE manga_id = :mangaId AND user_id = :userId
+    );
+    """, nativeQuery = true)
     void upsertProgress(@Param("mangaId") Long mangaId,
                         @Param("userId") Long userId,
                         @Param("chapterReaded") Integer chapterReaded,

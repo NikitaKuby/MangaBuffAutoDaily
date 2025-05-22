@@ -22,11 +22,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class QuizScheduler {
     private final MbAuth mbAuth;
+    private static final String TASK_NAME = "quiz";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
 
     public void monitorQuizRequests(Long id, boolean checkViews) {
-        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "mining", checkViews);
+
+        try {
+            Thread.sleep(500); // 0.5 секунды
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        mbAuth.killUserDriver(id, TASK_NAME);
+
+        try {
+            Thread.sleep(1000); // 1 секунда
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         AtomicInteger clickCounter = new AtomicInteger(0);
         clickCounter.set(0);
         // Получаем готовый driver из MangaBuffAuth

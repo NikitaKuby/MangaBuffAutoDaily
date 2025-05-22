@@ -15,6 +15,7 @@ import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.MangaData;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
@@ -38,15 +39,32 @@ public class MangaReadScheduler {
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
     private static final int CHAPTER_READ_TIME_MS =  80 * 1000;
+    private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
 
     private final MangaDataRepository mangaRepository;
     private final UserCookieRepository userRepository;
     private final MangaReadingProgressRepository progressRepository;
+    private final MbAuth mbAuth;
 
-    public void readMangaChapters(WebDriver driverWeb, Long id, int countChapter) {
+    public void readMangaChapters(Long id, int countChapter,boolean checkViews) {
+
+        try {
+            Thread.sleep(500); // 0.5 секунды
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        mbAuth.killUserDriver(id, TASK_NAME);
+
+        try {
+            Thread.sleep(1000); // 1 секунда
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         long startTime = System.currentTimeMillis();
-        ChromeDriver driver = (ChromeDriver) driverWeb;
         remainingChaptersMap.putIfAbsent(id, new AtomicInteger(countChapter));
         AtomicInteger remainingChapters = remainingChaptersMap.get(id);
 
@@ -55,7 +73,7 @@ public class MangaReadScheduler {
             System.identityHashCode(remainingChapters),
             remainingChapters.get());
 
-        if (!isDriverAlive((ChromeDriver)driverWeb)) {
+        if (!isDriverAlive(driver)) {
             log.error("[{}] Драйвер не активен", id);
             return;
         }
@@ -113,7 +131,13 @@ public class MangaReadScheduler {
         } catch (Exception e) {
             log.error("[{}] Ошибка: {}", id, e.getMessage());
         } finally {
-            driver.quit();
+            if (driver != null) {
+                try {
+                    driver.quit();
+                } catch (Exception e) {
+                    log.error("[{}] Ошибка при закрытии драйвера: {}", id, e.getMessage());
+                }
+            }
             remainingChaptersMap.remove(id);
         }
     }
@@ -335,6 +359,9 @@ public class MangaReadScheduler {
             String chapterUrl = chapterItem.getAttribute("href");
             ((JavascriptExecutor)driver).executeScript("window.open(arguments[0])", chapterUrl);
 
+            // Ждём открытия новой вкладки (защита от race condition)
+            Thread.sleep(500);
+
             // Переключаемся на новую вкладку
             for (String windowHandle : driver.getWindowHandles()) {
                 if (!originalWindow.contentEquals(windowHandle)) {
@@ -345,7 +372,7 @@ public class MangaReadScheduler {
             long chapterStart = System.currentTimeMillis();
             // Читаем главу
             readChapter(driver, accountId);
-            log.debug("[{}] Глава прочитана за {} сек",
+            log.info("[{}] Глава прочитана за {} сек",
                 accountId,
                 (System.currentTimeMillis() - chapterStart)/1000 );
             return true;
@@ -353,13 +380,17 @@ public class MangaReadScheduler {
             log.error("[{}] Ошибка при чтении главы: {}", accountId, e.getMessage());
             return false;
         } finally {
-            // Закрываем вкладку с главой
-            driver.close();
+            for (String windowHandle : driver.getWindowHandles()) {
+                if (!originalWindow.equals(windowHandle)) {
+                    driver.switchTo().window(windowHandle);
+                    driver.close();
+                }
+            }
             driver.switchTo().window(originalWindow);
         }
     }
 
-    private void resetScrollPosition(ChromeDriver driver) throws InterruptedException {
+    private void resetScrollPosition(ChromeDriver driver) {
         try {
             ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, -50)");
         } catch (Exception e) {
@@ -392,6 +423,7 @@ public class MangaReadScheduler {
 
                 // 2. Клик через JavaScript (наиболее надежный способ)
                 ((JavascriptExecutor)driver).executeScript("arguments[0].click();", gift);
+
 
                 // 3. Обработка возможного popup (если появится)
                 Thread.sleep(500);

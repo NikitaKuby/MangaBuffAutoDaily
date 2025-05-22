@@ -1029,3 +1029,2117 @@ java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supporte
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
 	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:12:30 jdbc[3]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:12:35 jdbc[4]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 02:33:03.760483+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:07.531512+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:11.230663+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:14.871620+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:18.464301+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:22.228505+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:26.181677+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:29.818704+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:33.380519+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:37.088122+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:40.639044+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:44.213678+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:47.740936+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:51.475646+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:55.042091+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:33:58.641998+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:02.228083+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:06.637718+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:10.200397+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:14.146230+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:17.700381+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:21.664070+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:25.253358+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:28.874848+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:32.431704+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:36.032268+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:39.591895+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:43.198759+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:47.893585+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:51.906358+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:55.618379+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:34:59.118228+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:02.591490+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:06.120175+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:09.709536+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:13.360549+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:17.589291+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:21.205933+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:25.206203+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:28.841779+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:32.437675+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:35.983008+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:39.546073+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:43.198092+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:47.169490+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:50.772305+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:54.642214+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:35:58.309371+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:01.921530+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:05.493971+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:09.107162+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:12.585002+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:16.360342+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:20.026916+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:23.809010+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:27.358635+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:32.122234+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:35.679911+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:39.147571+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:42.651764+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:46.168499+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:49.706688+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:53.403525+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:36:56.895392+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:00.768686+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:04.319595+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:07.837104+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:11.497367+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:14.997741+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:18.554469+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:22.509444+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:26.023346+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:29.537684+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:33.047681+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:36.523472+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:39.999799+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:43.489513+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:46.978875+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:50.654798+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:54.309365+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:37:58.316112+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:01.802026+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:05.291611+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:08.762873+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:12.257518+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:15.858731+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:19.358953+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:23.125372+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:26.617720+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:30.070315+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:33.555466+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:37.000335+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:40.532072+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:44.007598+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:47.847785+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:51.373690+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:54.910957+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:38:58.788520+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:39:02.504213+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-22 02:39:06.001903+03:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"
+Syntax error in SQL statement "INSERT INTO manga_reading_progress\000a(manga_id, user_id, chapter_readed, has_readed, last_updated)\000aVALUES (?, ?, ?, ?, NOW())\000a[*]ON CONFLICT (manga_id, user_id)\000aDO UPDATE SET\000a    chapter_readed = EXCLUDED.chapter_readed,\000a    has_readed = EXCLUDED.has_readed,\000a    last_updated = EXCLUDED.last_updated\000a"; SQL statement:
+INSERT INTO manga_reading_progress
+(manga_id, user_id, chapter_readed, has_readed, last_updated)
+VALUES (?, ?, ?, ?, NOW())
+ON CONFLICT (manga_id, user_id)
+DO UPDATE SET
+    chapter_readed = EXCLUDED.chapter_readed,
+    has_readed = EXCLUDED.has_readed,
+    last_updated = EXCLUDED.last_updated
+ [42000-232]
+2025-05-21 23:41:56 jdbc[3]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:46:38 jdbc[35]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:46:42 jdbc[36]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:46:54 jdbc[37]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:47:33 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Ограничение "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" не найдено
+Constraint "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" not found; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    DROP CONSTRAINT UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9 [90057-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.command.ddl.AlterTableDropConstraint.update(AlterTableDropConstraint.java:51)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:47:33 jdbc[38]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:48:17 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Ограничение "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" не найдено
+Constraint "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" not found; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    DROP CONSTRAINT UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9 [90057-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.command.ddl.AlterTableDropConstraint.update(AlterTableDropConstraint.java:51)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:48:17 jdbc[39]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:50:14 jdbc[75]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:50:16 jdbc[76]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:50:29 jdbc[77]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:50:30 jdbc[78]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:51:30 jdbc[115]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:52:28 jdbc[116]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:56:25 jdbc[117]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:13 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Ограничение "UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9" не найдено
+Constraint "UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9" not found; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    DROP CONSTRAINT UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9 [90057-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.command.ddl.AlterTableDropConstraint.update(AlterTableDropConstraint.java:51)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:13 jdbc[163]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:20 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Попытка создания второго первичного ключа
+Attempt to define a second primary key; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    ADD PRIMARY KEY (manga_id, user_id) [90017-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.command.ddl.AlterTableAddConstraint.tryUpdate(AlterTableAddConstraint.java:127)
+	at org.h2.command.ddl.AlterTableAddConstraint.update(AlterTableAddConstraint.java:74)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:21 jdbc[164]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:25 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Попытка создания второго первичного ключа
+Attempt to define a second primary key; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    ADD PRIMARY KEY (manga_id, user_id) [90017-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.command.ddl.AlterTableAddConstraint.tryUpdate(AlterTableAddConstraint.java:127)
+	at org.h2.command.ddl.AlterTableAddConstraint.update(AlterTableAddConstraint.java:74)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-21 23:58:25 jdbc[165]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:07 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Ограничение "UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9" не найдено
+Constraint "UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9" not found; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    DROP CONSTRAINT UKEDYE852M08YF5NF3PYG3WBNNK_INDEX_9 [90057-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.command.ddl.AlterTableDropConstraint.update(AlterTableDropConstraint.java:51)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:07 jdbc[166]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:09 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Ограничение "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" не найдено
+Constraint "UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9" not found; SQL statement:
+ALTER TABLE MANGA_READING_PROGRESS
+    DROP CONSTRAINT UK3LY0YSK3OA6NUWS6BC7TQELDI_INDEX_9 [90057-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:644)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.command.ddl.AlterTableDropConstraint.update(AlterTableDropConstraint.java:51)
+	at org.h2.command.ddl.AlterTable.update(AlterTable.java:46)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:252)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:252)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:09 jdbc[167]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:44 jdbc[168]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:47 jdbc[169]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:50 jdbc[170]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:00:53 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Неверное количество столбцов
+Column count does not match; SQL statement:
+INSERT INTO MANGA_READING_PROGRESS
+SELECT * FROM MANGA_READING_PROGRESS_TEMP [21002-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.command.dml.Insert.doPrepare(Insert.java:312)
+	at org.h2.command.dml.DataChangeStatement.prepare(DataChangeStatement.java:37)
+	at org.h2.command.Parser.prepareCommand(Parser.java:583)
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:634)
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:557)
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1116)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:237)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:01:04 jdbc[37]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Неверное количество столбцов
+Column count does not match; SQL statement:
+INSERT INTO MANGA_READING_PROGRESS
+SELECT * FROM MANGA_READING_PROGRESS_TEMP [21002-220]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.command.dml.Insert.doPrepare(Insert.java:312)
+	at org.h2.command.dml.DataChangeStatement.prepare(DataChangeStatement.java:37)
+	at org.h2.command.Parser.prepareCommand(Parser.java:583)
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:634)
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:557)
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1116)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:237)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:223)
+	at com.intellij.database.remote.jdbc.impl.RemoteStatementImpl.execute(RemoteStatementImpl.java:79)
+	at jdk.internal.reflect.GeneratedMethodAccessor25.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:01:10 jdbc[171]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:02:15 jdbc[208]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:02:16 jdbc[209]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:02:19 jdbc[215]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:02:21 jdbc[216]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 00:31:53 jdbc[1150]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-05-22 01:40:31 jdbc[1971]: exception
+java.sql.SQLClientInfoException: Client info name 'ApplicationName' not supported.
+	at org.h2.jdbc.JdbcConnection.setClientInfo(JdbcConnection.java:1573)
+	at com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl.setClientInfo(RemoteConnectionImpl.java:469)
+	at jdk.internal.reflect.GeneratedMethodAccessor57.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
