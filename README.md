@@ -1,3 +1,8 @@
+
+<meta name="google-site-verification" content="googleed1cb8ac46692945.html" />
+<meta name="description" content="Автоматизация ежедневных задач для MangaBuff: чтение глав, комментирование, сбор бонусов">
+<meta name="keywords" content="mangabuff, selenium, автоматизация, java, maven">
+
 # MangaBuff AutoDaily 🤖✨  PRE-ALPHA!!!
 ### *Ваш персональный бот для автоматического чтения манги на MangaBuff*
 
@@ -105,10 +110,4 @@ _Идеально подходит для тех, кто хочет эконом
  - ЮMoney: 4100119154518148
  - СБП: +7(995)-391-56-59
 
-
-<meta name="google-site-verification" content="googleed1cb8ac46692945.html" />
-
-  <!-- SEO-метаданные -->
-<meta name="description" content="Автоматизация ежедневных задач для MangaBuff: чтение глав, комментирование, сбор бонусов">
-<meta name="keywords" content="mangabuff, selenium, автоматизация, java, maven">
 
