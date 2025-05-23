@@ -1,5 +1,6 @@
 
 <meta name="google-site-verification" content="googleed1cb8ac46692945.html" />
+<meta name="google-site-verification" content="EaFXk_MJt3yNzBvmLHrdPL8lqhGlqjJE3x825SBzr6A" />
 <meta name="description" content="Автоматизация ежедневных задач для MangaBuff: чтение глав, комментирование, сбор бонусов">
 <meta name="keywords" content="mangabuff, selenium, автоматизация, java, maven">
 
