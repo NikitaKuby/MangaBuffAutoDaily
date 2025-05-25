@@ -83,6 +83,7 @@ public class CommentParserService {
             for (int i = chapterItems.size() - 1; i >= 0; i--) {
                 try {
                     processMangaElement(chapterItems.get(i), mangaData, id);
+                    log.info("Прошли ");
                 } catch (Exception e) {
                     log.error("Ошибка при обработке элемента манги: {}", e.getMessage());
                 }

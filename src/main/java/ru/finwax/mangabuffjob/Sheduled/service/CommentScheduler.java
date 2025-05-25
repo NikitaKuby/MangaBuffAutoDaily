@@ -37,7 +37,6 @@ public class CommentScheduler {
         CompletableFuture<Void> future = new CompletableFuture<>();
         AtomicInteger counter = new AtomicInteger(0);
 
-        log.debug("startDailyCommentSending");
 
         List<String> newIds = commentParserService.getNewChapterIds(COUNT_OF_COMMENTS, id);
         if (newIds.isEmpty()) {
@@ -62,7 +61,7 @@ public class CommentScheduler {
 
                         String idComment = commentIds.get(currentCount);
                         String textMessage = chapterThanksGeneratorService.generateThanks();
-                        log.debug("[{}]sendPostRequestWithCookies", id);
+                        log.info("[{}]sendPostRequestWithCookies", id);
                         commentService.sendPostRequestWithCookies(textMessage, idComment, id);
                         log.info("[{}] Отправлен комментарий {}/{}", id, currentCount + 1, COUNT_OF_COMMENTS);
 
@@ -88,9 +87,10 @@ public class CommentScheduler {
 
 
     public long getDelayForUser(Long userId) {
-        // Формула: для id=N задержка от (2N-2) до (2N-1) секунд
-        long minDelaySec = 2 * (userId % 10) - 2;
-        long maxDelaySec = 2 * (userId % 10) - 1;
+        long remainder = userId % 10;
+        // Корректируем формулу, чтобы minDelaySec всегда был >= 0
+        long minDelaySec = Math.max(0, 2 * remainder - 2);
+        long maxDelaySec = Math.max(1, 2 * remainder - 1);  // Не меньше 1 мс
 
         // Генерируем случайную задержку в этом диапазоне
         return ThreadLocalRandom.current().nextLong(minDelaySec * 1000, maxDelaySec * 1000);

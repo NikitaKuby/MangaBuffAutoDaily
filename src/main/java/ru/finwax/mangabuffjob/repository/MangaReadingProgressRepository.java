@@ -47,4 +47,5 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
         """, nativeQuery = true)
     Optional<MangaReadingProgress> findMangaProgress(@Param("userId") Long userId);
 
+
 }

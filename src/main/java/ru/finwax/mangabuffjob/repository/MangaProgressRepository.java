@@ -14,7 +14,9 @@ import java.util.Optional;
 public interface MangaProgressRepository extends JpaRepository<MangaProgress, Long> {
     Optional<MangaProgress> findByUserId(Long userId);
     boolean existsByUserIdIs(Long userId);
-    
+
+
+
     @Modifying
     void deleteByUserId(Long userId);
 

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.MangaData;
+import ru.finwax.mangabuffjob.Entity.MangaProgress;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MbAuth;
@@ -21,6 +22,7 @@ import ru.finwax.mangabuffjob.controller.AccountItemController;
 import ru.finwax.mangabuffjob.controller.MangaBuffJobViewController;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.MangaDataRepository;
+import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 
@@ -67,6 +69,7 @@ public class MangaReadScheduler {
     private final MangaDataRepository mangaRepository;
     private final UserCookieRepository userRepository;
     private final MangaReadingProgressRepository progressRepository;
+    private final MangaProgressRepository mangaProgressRepository;
     private final MbAuth mbAuth;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -516,7 +519,9 @@ public class MangaReadScheduler {
                 newStat.setPathImage(imagePath);
                 newStat.setDate(today);
                 giftRepository.save(newStat);
-                log.info("Обновлена новая статистика подарков для UserId={}: {} подарков", accountId, existingStats.get(0).getCountGift()+1);
+                log.info("Обновлена новая статистика подарков для User={}: {} подарков", mangaProgressRepository.findByUserId(user.getId())
+                    .map(MangaProgress::getAvatarAltText)
+                    .orElse("Def_avatar.png"), existingStats.get(0).getCountGift()+1);
             } else {
                 GiftStatistic newStat = new GiftStatistic();
                 UserCookie user = userRepository.findById(accountId)
@@ -526,8 +531,10 @@ public class MangaReadScheduler {
                 newStat.setPathImage(imagePath);
                 newStat.setDate(today);
                 giftRepository.save(newStat);
-                log.info("Создана новая статистика подарков для userId={}: {} подарков, путь к изображению: {}", 
-                    accountId, newStat.getCountGift(), imagePath);
+                log.info("Создана новая статистика подарков для userId={}: {} подарков, путь к изображению: {}",
+                    mangaProgressRepository.findByUserId(user.getId())
+                        .map(MangaProgress::getAvatarAltText)
+                        .orElse("Def_avatar.png"), newStat.getCountGift(), imagePath);
             }
             // Обновляем UI после успешного сохранения
             if (viewController != null) {
@@ -631,7 +638,7 @@ public class MangaReadScheduler {
 
     private void scheduleNextReading() {
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(3, 0)) && now.isBefore(LocalTime.of(20, 0))) {
+        if (now.isAfter(LocalTime.of(2, 0)) && now.isBefore(LocalTime.of(23, 0))) {
             // Проверяем, все ли аккаунты прочитаны
             if (completedReaders.get() >= readingQueue.size() + activeReaders.size()) {
                 log.info("Все аккаунты прочитаны, запускаем новый цикл");

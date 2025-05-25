@@ -38,8 +38,9 @@ public class CommentService {
             log.info("[{}]Ответ сервера: {}, комментарий отправленн", id, response.getStatusCode());
         } catch (HttpClientErrorException.UnprocessableEntity e) {
             log.warn("[{}]Попытка: Лимит комментариев. Ждем...", id);
+            int timeout = 5000;
             try {
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(timeout);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }

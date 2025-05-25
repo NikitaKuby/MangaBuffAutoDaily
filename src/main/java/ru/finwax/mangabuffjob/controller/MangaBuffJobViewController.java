@@ -143,6 +143,7 @@ public class MangaBuffJobViewController implements Initializable{
                     File csvFile = new File("manga_parsing_data.csv");
                     if (csvFile.exists()) {
                         mangaParserService.importMangaFromCSV();
+                        Platform.runLater(() -> setButtonState(updateMangaListButton, "green"));
                     } else {
                         mangaParserService.createMangaList();
                     }
@@ -164,9 +165,9 @@ public class MangaBuffJobViewController implements Initializable{
             loadingTimelineRefresh.stop();
         }
         loadingTimelineRefresh = new Timeline(
-            new KeyFrame(Duration.ZERO, e -> button.setText("↻.")),
-            new KeyFrame(Duration.seconds(0.5), e -> button.setText("↻..")),
-            new KeyFrame(Duration.seconds(1), e -> button.setText("↻..."))
+            new KeyFrame(Duration.ZERO, e -> button.setText("↻")),
+            new KeyFrame(Duration.seconds(0.5), e -> button.setText("..")),
+            new KeyFrame(Duration.seconds(1), e -> button.setText("↻"))
         );
         loadingTimelineRefresh.setCycleCount(Timeline.INDEFINITE);
         loadingTimelineRefresh.play();

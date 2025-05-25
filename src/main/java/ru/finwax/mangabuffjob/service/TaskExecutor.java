@@ -1,5 +1,6 @@
 package ru.finwax.mangabuffjob.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.model.MangaTask;
@@ -17,12 +18,9 @@ public class TaskExecutor {
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final BlockingQueue<MangaTask> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentHashMap<Long, TaskStatus> taskStatuses = new ConcurrentHashMap<>();
+    @Getter
     private final TaskExecutionService taskExecutionService;
     private volatile boolean isRunning = false;
-
-    public TaskExecutionService getTaskExecutionService() {
-        return taskExecutionService;
-    }
 
     public void executeTasks(List<MangaTask> tasks, Consumer<MangaTask> statusCallback) {
         if (isRunning) {
