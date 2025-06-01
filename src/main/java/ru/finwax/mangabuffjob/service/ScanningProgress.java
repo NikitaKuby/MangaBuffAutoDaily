@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
+import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
+import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.Entity.GiftStatistic;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 public class ScanningProgress {
     private final RequestModel requestModel;
     private final MangaProgressRepository mangaProgressRepository;
+    private final GiftStatisticRepository giftRepository;
+    private final UserCookieRepository userRepository;
     private static final String AVATARS_DIR = "avatars";
 
     private Document fetchDocument(Long id, String url)  {
@@ -60,16 +67,48 @@ public class ScanningProgress {
         return 0L; // Возвращаем 0 если не удалось распарсить
     }
 
+    private Integer parseEventGiftCount(Long id) {
+        try {
+            Document eventDoc = fetchDocument(id, "https://mangabuff.ru/event/pack");
+            Element eventGiftElement = eventDoc.selectFirst(".halloween-pack__sweets div:contains(Мои арбузики:) span");
+            if (eventGiftElement != null) {
+                String countText = eventGiftElement.text().trim();
+                if (!countText.isEmpty()) {
+                    return Integer.parseInt(countText);
+                }
+            }
+        } catch (NumberFormatException e) {
+            log.error("Ошибка парсинга количества event-gift: Нечисловое значение", e);
+            return -1; // Возвращаем -1 при ошибке парсинга
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге количества event-gift", e);
+        }
+        return null; // Возвращаем null если элемент не найден или другая ошибка
+    }
+
     public void sendGetRequestWithCookies(Long id) {
         try {
             log.info("Пытаемся проверить статус глав/комментариев, прогресс шахты и скачать аватар для пользователя {}", id);
 
             // Сканируем страницу баланса
-            Document balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
+            Document balanceDoc = null;
+            try {
+                balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
+            } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
+                log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
+                return;
+            }
 
             Long diamondBalance = parseDiamondBalance(balanceDoc);
+            Integer eventGiftCount = parseEventGiftCount(id);
             log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
-            Document balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
+            Document balanceDocPage2 = null;
+            try {
+                balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
+            } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
+                log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
+                return;
+            }
             // Получаем текущую дату
             LocalDate today = LocalDate.now();
             String todayStr = today.getDayOfMonth() + " " + getMonthName(today.getMonthValue()) + " " + today.getYear();
@@ -141,7 +180,13 @@ public class ScanningProgress {
             }
 
             // Сканируем страницу шахты
-            Document mineDoc = fetchDocument(id, "https://mangabuff.ru/mine");
+            Document mineDoc = null;
+            try {
+                mineDoc = fetchDocument(id, "https://mangabuff.ru/mine");
+            } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
+                log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
+                return;
+            }
             log.info("Ответ сервера для /mine: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/mine").getStatusCode());
 
             // Парсим количество оставшихся ударов
@@ -178,6 +223,27 @@ public class ScanningProgress {
                     }
                 }
                 mangaProgressRepository.save(progress);
+
+                // Обновляем количество event-gift в базе данных
+                if (eventGiftCount != null && eventGiftCount != -1) { // Пропускаем обновление, если была ошибка парсинга или значение null
+                    List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(id, today);
+                    if (!existingStats.isEmpty()) {
+                        existingStats.forEach(stat -> {
+                            stat.setCountEventGift(eventGiftCount);
+                            giftRepository.save(stat);
+                        });
+                    } else {
+                        GiftStatistic newStat = new GiftStatistic();
+                        UserCookie user = userRepository.findById(id)
+                            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                        newStat.setUser(user);
+                        newStat.setCountEventGift(eventGiftCount);
+                        newStat.setDate(today);
+                        giftRepository.save(newStat);
+                    }
+                } else {
+                     log.warn("[{}] Пропущено обновление event-gift в БД из-за ошибки парсинга или null значения", id);
+                }
             } else {
                 MangaProgress mangaProgress = MangaProgress.builder()
                     .userId(id)

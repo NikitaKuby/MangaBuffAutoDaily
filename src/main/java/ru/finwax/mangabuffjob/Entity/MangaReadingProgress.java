@@ -1,14 +1,11 @@
 package ru.finwax.mangabuffjob.Entity;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,17 +16,16 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "manga_reading_progress")
+@IdClass(MangaReadingProgressId.class)
 public class MangaReadingProgress {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne
-    @JoinColumn(name = "manga_id", referencedColumnName = "id")
+    @JoinColumn(name = "manga_id", nullable = false)
     private MangaData manga;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private UserCookie userCookie;
 
     @Column(name = "chapter_readed")

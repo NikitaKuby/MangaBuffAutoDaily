@@ -36,30 +36,7 @@ public class CookieService {
         }
     }
 
-    public void saveCookies(String username, Set<Cookie> seleniumCookies, String csrfToken) {
-        try {
-            String cookiesJson = cookiesToJson(seleniumCookies);
 
-            userCookieRepository.findByUsername(username)
-                .ifPresentOrElse(
-                    cookie -> {
-                        cookie.setCookiesJson(cookiesJson);
-                        cookie.setCsrfToken(csrfToken);
-                        userCookieRepository.save(cookie);
-                    },
-                    () -> {
-                        UserCookie newCookie = new UserCookie();
-                        newCookie.setUsername(username);
-                        newCookie.setCookiesJson(cookiesJson);
-                        newCookie.setCsrfToken(csrfToken);
-                        userCookieRepository.save(newCookie);
-                    }
-                );
-
-        } catch (Exception e) {
-            log.error("Ошибка сохранения кук", e);
-        }
-    }
 
     public void saveCookies(Long id, Set<Cookie> seleniumCookies, String csrfToken) {
         try {

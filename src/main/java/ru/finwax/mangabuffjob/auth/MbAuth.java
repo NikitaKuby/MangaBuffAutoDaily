@@ -28,6 +28,7 @@ public class MbAuth {
     private final CookieService cookieService;
     private final UserCookieRepository userCookieRepository;
 
+    private static final String CARDS_TASK_NAME = "cards";
 
     public ChromeOptions setUpDriver(Long id) {
         log.info("[{}] Настройка драйвера...", id);
@@ -65,6 +66,10 @@ public class MbAuth {
 
     public ChromeDriver getActualDriver(Long id, String taskname, boolean checkViews) {
         ChromeOptions options = setUpDriver(id);
+
+        if(taskname.equals(CARDS_TASK_NAME)){
+            options.addArguments("--force-device-scale-factor=1");
+        }
 
         if(!checkViews){
             options.addArguments("--headless=new"); // Новый headless-режим (Chrome 109+)

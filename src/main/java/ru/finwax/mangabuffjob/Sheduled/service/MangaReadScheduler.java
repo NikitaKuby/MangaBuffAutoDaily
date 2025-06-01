@@ -59,12 +59,12 @@ public class MangaReadScheduler {
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
     private MangaBuffJobViewController viewController;
-    private static final int CHAPTER_READ_TIME_MS =  80 * 1000;
+    private static final int CHAPTER_READ_TIME_MS =  90 * 1000;
     private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
-    private static final int CHAPTERS_PER_READ = 4;
-    private static final int MAX_PARALLEL_TASKS = 3;
-    private static final int SCHEDULE_INTERVAL_MINUTES = 90;
+    private static final int CHAPTERS_PER_READ = 2;
+    private static final int MAX_PARALLEL_TASKS = 4;
+    private static final int SCHEDULE_INTERVAL_MINUTES = 9;
 
     private final MangaDataRepository mangaRepository;
     private final UserCookieRepository userRepository;
@@ -312,20 +312,21 @@ public class MangaReadScheduler {
             // Оптимизированные параметры
             final int SCROLL_CYCLES = 15; // Уменьшаем количество циклов
             final int BASE_DELAY = 50;    // Увеличиваем задержку
-            final double SCROLL_MULTIPLIER = 2.0; // Уменьшаем множитель
+            final double SCROLL_MULTIPLIER = 2.3; // Уменьшаем множитель
             int accumulatedScroll = 0;    // Аккумулятор скролла
 
             int totalScroll = 0;
 
             // Для проверки подарков
             long lastGiftCheckTime = System.currentTimeMillis();
-            final int GIFT_CHECK_INTERVAL = 5000;
+            final int GIFT_CHECK_INTERVAL = 1000; // Уменьшаем интервал до 1 секунды
 
             while (System.currentTimeMillis() < endTime) {
                 try {
-                    // Проверка подарка
+                    // Проверка подарков и event-gift
                     if (System.currentTimeMillis() - lastGiftCheckTime > GIFT_CHECK_INTERVAL) {
                         handleGiftIfPresent(driver, accountId);
+                        handleEventGiftIfPresent(driver, accountId);
                         lastGiftCheckTime = System.currentTimeMillis();
                     }
 
@@ -471,14 +472,14 @@ public class MangaReadScheduler {
                 String basePath = "gifts";
                 String accountPath = basePath + "/account_" + accountId;
                 String datePath = accountPath + "/" + LocalDate.now(ZoneId.systemDefault());
-                
+
                 // Создаем директории если их нет
                 new File(accountPath).mkdirs();
                 new File(datePath).mkdirs();
-                
+
                 // Полный путь для сохранения
                 String fullPath = datePath + "/" + imageName;
-                
+
                 // Скачиваем и сохраняем изображение
                 try (InputStream in = new URL(imageUrl).openStream();
                      OutputStream out = new FileOutputStream(fullPath)) {
@@ -489,59 +490,14 @@ public class MangaReadScheduler {
                     }
                 }
 
-                // 5. Обновляем статистику
-                updateGiftWithImage(accountId, fullPath);
+                log.info("[{}] Сохранен файл подарка: {}", accountId, fullPath);
 
-                // 6. Закрываем модальное окно
+                // 5. Закрываем модальное окно
                 tryAlternativeCloseMethods(driver, accountId);
 
             } catch (Exception e) {
                 log.warn("[{}]Ошибка при взаимодействии с подарком: {}", accountId, e.getMessage());
             }
-        }
-    }
-
-    @Transactional
-    public void updateGiftWithImage(Long accountId, String imagePath) {
-        try {
-            LocalDate today = LocalDate.now(ZoneId.systemDefault());
-            List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(accountId, today);
-
-            if (!existingStats.isEmpty()) {
-                existingStats.forEach(stat->{stat.setCountGift(stat.getCountGift() + 1);
-                    stat.setPathImage(stat.getPathImage());
-                    giftRepository.save(stat);});
-                GiftStatistic newStat = new GiftStatistic();
-                UserCookie user = userRepository.findById(accountId)
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + accountId));
-                newStat.setUser(user);
-                newStat.setCountGift(existingStats.get(0).getCountGift()+1);
-                newStat.setPathImage(imagePath);
-                newStat.setDate(today);
-                giftRepository.save(newStat);
-                log.info("Обновлена новая статистика подарков для User={}: {} подарков", mangaProgressRepository.findByUserId(user.getId())
-                    .map(MangaProgress::getAvatarAltText)
-                    .orElse("Def_avatar.png"), existingStats.get(0).getCountGift()+1);
-            } else {
-                GiftStatistic newStat = new GiftStatistic();
-                UserCookie user = userRepository.findById(accountId)
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + accountId));
-                newStat.setUser(user);
-                newStat.setCountGift(1);
-                newStat.setPathImage(imagePath);
-                newStat.setDate(today);
-                giftRepository.save(newStat);
-                log.info("Создана новая статистика подарков для userId={}: {} подарков, путь к изображению: {}",
-                    mangaProgressRepository.findByUserId(user.getId())
-                        .map(MangaProgress::getAvatarAltText)
-                        .orElse("Def_avatar.png"), newStat.getCountGift(), imagePath);
-            }
-            // Обновляем UI после успешного сохранения
-            if (viewController != null) {
-                Platform.runLater(() -> viewController.updateGiftCountForAccount(accountId));
-            }
-        } catch (Exception e) {
-            log.error("Ошибка при обновлении статистики подарков: {}", e.getMessage());
         }
     }
 
@@ -592,6 +548,7 @@ public class MangaReadScheduler {
             log.info("Периодическое чтение уже активно");
             return;
         }
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
 
         isPeriodicReadingActive = true;
         log.info("Запуск периодического чтения");
@@ -600,7 +557,8 @@ public class MangaReadScheduler {
         List<Long> userIds = userRepository.findAll()
             .stream()
             .map(UserCookie::getId)
-            .collect(Collectors.toList());
+//            .filter(e->giftRepository.findByUserIdAndDate(e, today).size()<10)
+            .toList();
         readingQueue.addAll(userIds);
 
         // Запускаем обработчики очереди
@@ -638,7 +596,7 @@ public class MangaReadScheduler {
 
     private void scheduleNextReading() {
         LocalTime now = LocalTime.now();
-        if (now.isAfter(LocalTime.of(2, 0)) && now.isBefore(LocalTime.of(23, 0))) {
+        if (/*now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(23, 0))*/true) {
             // Проверяем, все ли аккаунты прочитаны
             if (completedReaders.get() >= readingQueue.size() + activeReaders.size()) {
                 log.info("Все аккаунты прочитаны, запускаем новый цикл");
@@ -681,6 +639,75 @@ public class MangaReadScheduler {
 
     public boolean isPeriodicReadingActive() {
         return isPeriodicReadingActive;
+    }
+
+    private void handleEventGiftIfPresent(ChromeDriver driver, Long accountId) {
+        try {
+            // Ищем все элементы event-gift-ball
+            List<WebElement> eventGifts = driver.findElements(By.cssSelector("div[class*='event-gift-ball']"));
+            
+            if (!eventGifts.isEmpty()) {
+                for (WebElement gift : eventGifts) {
+                    try {
+                        // Проверяем, видим ли элемент
+                        if (gift.isDisplayed()) {
+                            log.info("[{}] Обнаружен event-gift", accountId);
+                            
+                            // Плавный скролл к элементу
+                            ((JavascriptExecutor)driver).executeScript(
+                                "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
+                                gift
+                            );
+                            
+                            // Небольшая пауза для анимации
+                            Thread.sleep(1000);
+                            
+                            // Клик через JavaScript
+                            ((JavascriptExecutor)driver).executeScript("arguments[0].click();", gift);
+                            
+                            // Обновляем статистику event-gift
+                            updateEventGiftCount(accountId);
+                            
+                            log.info("[{}] Успешно обработан event-gift", accountId);
+                        }
+                    } catch (Exception e) {
+                        log.warn("[{}] Ошибка при обработке отдельного event-gift", accountId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Ошибка при поиске event-gift: {}", accountId, e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void updateEventGiftCount(Long accountId) {
+        try {
+            LocalDate today = LocalDate.now(ZoneId.systemDefault());
+            List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(accountId, today);
+
+            if (!existingStats.isEmpty()) {
+                existingStats.forEach(stat -> {
+                    stat.setCountEventGift(stat.getCountEventGift() + 1);
+                    giftRepository.save(stat);
+                });
+            } else {
+                GiftStatistic newStat = new GiftStatistic();
+                UserCookie user = userRepository.findById(accountId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + accountId));
+                newStat.setUser(user);
+                newStat.setCountEventGift(1);
+                newStat.setDate(today);
+                giftRepository.save(newStat);
+            }
+
+            // Обновляем UI
+            if (viewController != null) {
+                Platform.runLater(() -> viewController.updateGiftCountForAccount(accountId));
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при обновлении статистики event-gift: {}", e.getMessage());
+        }
     }
 
 }

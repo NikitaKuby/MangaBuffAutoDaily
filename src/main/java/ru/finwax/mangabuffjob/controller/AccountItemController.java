@@ -16,12 +16,14 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.CommentScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
+import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.model.AccountProgress;
 import ru.finwax.mangabuffjob.service.AccountService;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
@@ -36,6 +38,11 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javafx.stage.Popup;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.StackPane;
+
+import java.awt.Desktop;
+import java.net.URI;
 
 @Component
 @Getter
@@ -63,6 +70,34 @@ public class AccountItemController {
     private Label giftCountLabel;
     @FXML
     private ImageView giftImageView;
+    @FXML
+    private Label eventGiftCountLabel;
+    @FXML
+    private ImageView eventGiftImageView;
+    @FXML
+    private Label accountNameLabel;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private Label diamondLabel;
+    @FXML
+    private Label readersLabel;
+    @FXML
+    private Label commentsLabel;
+    @FXML
+    private Label mineHitsLabel;
+    @FXML
+    private Label lastUpdatedLabel;
+    @FXML
+    private Label quizLabel;
+    @FXML
+    private Label advLabel;
+    @FXML
+    private VBox progressBarContainer;
+    @FXML
+    private ProgressBar readingProgressBar;
+    @FXML
+    private ProgressBar commentProgressBar;
 
     @FXML
     private Button startChaptersButton;
@@ -79,6 +114,14 @@ public class AccountItemController {
     @FXML
     private HBox accountItem;
 
+    @FXML
+    private StackPane overlayPane;
+    @FXML
+    private Button reloginButton;
+
+    @FXML
+    private Button openCardsButton;
+
     private final AccountService accountService;
     private final MangaBuffJobViewController parentController;
     private final AdvertisingScheduler advertisingScheduler;
@@ -87,6 +130,7 @@ public class AccountItemController {
     private final CommentScheduler commentScheduler;
     private final MangaReadScheduler mangaReadScheduler;
     private final GiftStatisticRepository giftRepository;
+    private final MbAuth mbAuth;
     private CheckBox viewsCheckBox;
 
     private AccountProgress account;
@@ -99,6 +143,10 @@ public class AccountItemController {
 
     private Popup giftImagesPopup;
 
+    private static final String CARDS_TASK_NAME = "cards";
+
+    private Timeline hidePopupTimeline;
+
     public AccountItemController(
         AccountService accountService,
         MangaBuffJobViewController parentController,
@@ -107,7 +155,8 @@ public class AccountItemController {
         QuizScheduler quizScheduler,
         CommentScheduler commentScheduler,
         MangaReadScheduler mangaReadScheduler,
-        GiftStatisticRepository giftRepository
+        GiftStatisticRepository giftRepository,
+        MbAuth mbAuth
     ) {
         this.accountService = accountService;
         this.parentController = parentController;
@@ -117,6 +166,7 @@ public class AccountItemController {
         this.commentScheduler = commentScheduler;
         this.mangaReadScheduler = mangaReadScheduler;
         this.giftRepository = giftRepository;
+        this.mbAuth = mbAuth;
     }
 
     public void setAccount(AccountProgress account) {
@@ -126,7 +176,7 @@ public class AccountItemController {
         quizProgressLabel.setText(String.valueOf(account.getQuizDone()));
         mineProgressLabel.setText(account.getMineProgress());
         advProgressLabel.setText(account.getAdvProgress());
-        
+
         // Установка количества подарков
         updateGiftCount();
 
@@ -163,7 +213,7 @@ public class AccountItemController {
 
         // Добавляем обработчики событий мыши для показа подарков
         giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());
-        giftImageView.setOnMouseExited(event -> hideGiftImagesPopup());
+        giftImageView.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
 
         startChaptersButton.setOnAction(event -> handleStartChapters());
         startCommentsButton.setOnAction(event -> handleStartComments());
@@ -171,14 +221,49 @@ public class AccountItemController {
         startMiningButton.setOnAction(event -> handleStartMining());
         startAdvButton.setOnAction(event -> handleStartAdv());
         deleteButton.setOnAction(event -> handleDeleteAccount());
+
+        // Add event handler for open cards button
+        openCardsButton.setOnAction(event -> handleOpenCards());
+
+        // Initially hide overlay and relogin button
+        overlayPane.setVisible(false);
+        reloginButton.setVisible(false);
+        accountItem.setDisable(false);
     }
 
     @Transactional
     public void updateGiftCount() {
         LocalDate today = LocalDate.now(ZoneId.systemDefault());
+
+        // Define the directory path for gift images
+        String giftDirPath = "gifts/account_" + account.getUserId() + "/" + today;
+        File giftDir = new File(giftDirPath);
+
+        int calculatedGiftCount = 0;
+        if (giftDir.exists() && giftDir.isDirectory()) {
+            File[] giftFiles = giftDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg"));
+            if (giftFiles != null) {
+                calculatedGiftCount = giftFiles.length;
+            }
+        }
+
+        final int finalGiftCount = calculatedGiftCount;
+
+        // Fetch event gift count from DB
         List<GiftStatistic> gifts = giftRepository.findByUserIdAndDate(account.getUserId(), today);
-        int giftCount = gifts.size();
-        Platform.runLater(() -> giftCountLabel.setText(String.valueOf(giftCount)));
+        int eventGiftCount = gifts.isEmpty() ? 0 : gifts.get(0).getCountEventGift();
+        Image eventGiftImage = new Image(getClass().getResourceAsStream("/static/icon/watermelon.png"));
+        Platform.runLater(() -> {
+            giftCountLabel.setText(String.valueOf(finalGiftCount));
+            eventGiftCountLabel.setText(String.valueOf(eventGiftCount));
+
+            // Обновляем иконку event-gift
+            if (eventGiftCount == -1) { // Используем -1 для индикации ошибки сканирования
+                eventGiftImageView.setImage(eventGiftImage);
+            } else {
+                eventGiftImageView.setImage(eventGiftImage);
+            }
+        });
     }
 
     public void updateButtonStates() {
@@ -196,6 +281,37 @@ public class AccountItemController {
         // Реклама
         boolean advDone = account.getAdvDone() != null && account.getAdvDone() >= 3;
         setButtonState(startAdvButton, advDone ? "green" : "white");
+
+        // Disable task buttons if overlay is visible
+        boolean disableTaskButtons = overlayPane != null && overlayPane.isVisible();
+        startChaptersButton.setDisable(disableTaskButtons || allRead);
+        startCommentsButton.setDisable(disableTaskButtons || allComments);
+        startQuizButton.setDisable(disableTaskButtons || Boolean.TRUE.equals(account.getQuizDone()));
+        startMiningButton.setDisable(disableTaskButtons || (account.getMineHitsLeft() != null && account.getMineHitsLeft() == 0));
+        startAdvButton.setDisable(disableTaskButtons || (account.getAdvDone() != null && account.getAdvDone() >= 3));
+
+        // Hide task buttons if overlay is visible
+        startChaptersButton.setVisible(!disableTaskButtons);
+        startCommentsButton.setVisible(!disableTaskButtons);
+        startQuizButton.setVisible(!disableTaskButtons);
+        startMiningButton.setVisible(!disableTaskButtons);
+        startAdvButton.setVisible(!disableTaskButtons);
+
+        // Show relogin button only if overlay is visible
+        if (reloginButton != null) {
+            reloginButton.setVisible(overlayPane != null && overlayPane.isVisible());
+        }
+
+        // Ensure delete and open cards buttons are always enabled unless overlay is visible
+        boolean disableAccountButtons = overlayPane != null && overlayPane.isVisible();
+        if (deleteButton != null) {
+            deleteButton.setDisable(disableAccountButtons);
+            deleteButton.setVisible(!disableAccountButtons);
+        }
+        if (openCardsButton != null) {
+            openCardsButton.setDisable(disableAccountButtons);
+            openCardsButton.setVisible(!disableAccountButtons);
+        }
     }
 
     void setButtonState(Button button, String state) {
@@ -231,27 +347,30 @@ public class AccountItemController {
     }
 
     private void startLoadingAnimation(Button button) {
-        Timeline timeline = new Timeline();
-        final String baseText = "Загрузка";
-        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0), e -> button.setText(baseText)));
-        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0.5), e -> button.setText(baseText + ".")));
-        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> button.setText(baseText + "..")));
-        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1.5), e -> button.setText(baseText + "...")));
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
-        // Привязываем timeline к кнопке
-        if (button == startChaptersButton) loadingTimelineChapters = timeline;
-        if (button == startCommentsButton) loadingTimelineComments = timeline;
-        if (button == startQuizButton) loadingTimelineQuiz = timeline;
-        if (button == startMiningButton) loadingTimelineMining = timeline;
-        if (button == startAdvButton) loadingTimelineAdv = timeline;
+        // Check if the button is one of the task buttons before starting animation
+        if (button == startChaptersButton || button == startCommentsButton || button == startQuizButton || button == startMiningButton || button == startAdvButton) {
+            Timeline timeline = new Timeline();
+            final String baseText = "Загрузка";
+            timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0), e -> button.setText(baseText)));
+            timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0.5), e -> button.setText(baseText + ".")));
+            timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> button.setText(baseText + "..")));
+            timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1.5), e -> button.setText(baseText + "...")));
+            timeline.setCycleCount(Timeline.INDEFINITE);
+            timeline.play();
+            // Привязываем timeline к кнопке
+            if (button == startChaptersButton) loadingTimelineChapters = timeline;
+            if (button == startCommentsButton) loadingTimelineComments = timeline;
+            if (button == startQuizButton) loadingTimelineQuiz = timeline;
+            if (button == startMiningButton) loadingTimelineMining = timeline;
+            if (button == startAdvButton) loadingTimelineAdv = timeline;
+        }
     }
 
     private void stopLoadingAnimation(Button button) {
-        if (button == startChaptersButton && loadingTimelineChapters != null) { loadingTimelineChapters.stop(); loadingTimelineChapters = null; }
-        if (button == startCommentsButton && loadingTimelineComments != null) { loadingTimelineComments.stop(); loadingTimelineComments = null; }
-        if (button == startQuizButton && loadingTimelineQuiz != null) { loadingTimelineQuiz.stop(); loadingTimelineQuiz = null; }
-        if (button == startMiningButton && loadingTimelineMining != null) { loadingTimelineMining.stop(); loadingTimelineMining = null; }
+        if (button == startChaptersButton && loadingTimelineChapters != null) { loadingTimelineChapters.stop(); loadingTimelineChapters = null; } else
+        if (button == startCommentsButton && loadingTimelineComments != null) { loadingTimelineComments.stop(); loadingTimelineComments = null; } else
+        if (button == startQuizButton && loadingTimelineQuiz != null) { loadingTimelineQuiz.stop(); loadingTimelineQuiz = null; } else
+        if (button == startMiningButton && loadingTimelineMining != null) { loadingTimelineMining.stop(); loadingTimelineMining = null; } else
         if (button == startAdvButton && loadingTimelineAdv != null) { loadingTimelineAdv.stop(); loadingTimelineAdv = null; }
     }
 
@@ -275,12 +394,6 @@ public class AccountItemController {
                     mangaReadScheduler.readMangaChapters(account.getUserId(), countOfChapters, viewsCheckBox.isSelected());
                     Platform.runLater(() -> {
                         parentController.scanAccount(account.getUserId());
-                        boolean allRead = account.getReaderProgress() != null && account.getReaderProgress().split("/")[0].equals(account.getReaderProgress().split("/")[1]);
-                        if (allRead) {
-                            setButtonState(startChaptersButton, "green");
-                        } else {
-                            setButtonState(startChaptersButton, "white");
-                        }
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startChaptersButton, "red"));
@@ -312,13 +425,6 @@ public class AccountItemController {
                     Platform.runLater(() -> {
 
                         parentController.scanAccount(account.getUserId());
-                        boolean allComments = account.getCommentProgress() != null &&
-                            account.getCommentProgress().split("/")[0].equals(account.getCommentProgress().split("/")[1]);
-                        if (allComments) {
-                            setButtonState(startCommentsButton, "green");
-                        } else {
-                            setButtonState(startCommentsButton, "white");
-                        }
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startCommentsButton, "red"));
@@ -341,13 +447,6 @@ public class AccountItemController {
                 try {
                     quizScheduler.monitorQuizRequests(account.getUserId(),  viewsCheckBox.isSelected());
                     parentController.scanAccount(account.getUserId());
-                    Platform.runLater(() -> {
-                        if (Boolean.TRUE.equals(account.getQuizDone())) {
-                            setButtonState(startQuizButton, "green");
-                        } else {
-                            setButtonState(startQuizButton, "white");
-                        }
-                    });
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startQuizButton, "red"));
                     System.err.println("Ошибка при запуске квиза: " + e.getMessage());
@@ -371,13 +470,6 @@ public class AccountItemController {
                     if (mineHitsLeft != null && mineHitsLeft > 0) {
                         mineScheduler.performMining(account.getUserId(), mineHitsLeft, viewsCheckBox.isSelected());
                         parentController.scanAccount(account.getUserId());
-                        Platform.runLater(() -> {
-                            if (mineHitsLeft == 0) {
-                                setButtonState(startMiningButton, "green");
-                            } else {
-                                setButtonState(startMiningButton, "white");
-                            }
-                        });
                     } else {
                         Platform.runLater(() -> setButtonState(startMiningButton, "green"));
                         System.out.println("Нет доступных кликов для майнинга у аккаунта: " + account.getUsername());
@@ -407,13 +499,6 @@ public class AccountItemController {
                     if (countAdv > 0) {
                         advertisingScheduler.performAdv(account.getUserId(), countAdv, viewsCheckBox.isSelected());
                         parentController.scanAccount(account.getUserId());
-                        Platform.runLater(() -> {
-                            if (advDone >= 3) {
-                                setButtonState(startAdvButton, "green");
-                            } else {
-                                setButtonState(startAdvButton, "white");
-                            }
-                        });
                     } else {
                         Platform.runLater(() -> setButtonState(startAdvButton, "green"));
                         System.out.println("No available ads for account: " + account.getUsername());
@@ -461,42 +546,130 @@ public class AccountItemController {
 
     private void showGiftImagesPopup() {
         try {
-            LocalDate today = LocalDate.now(ZoneId.systemDefault());
-            List<GiftStatistic> gifts = giftRepository.findByUserIdAndDate(account.getUserId(), today);
-            if (gifts.isEmpty()) {
-                return; // Нет подарков для отображения
+            if (giftImagesPopup == null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/GiftImagesPopup.fxml"));
+                VBox popupContent = loader.load();
+                GiftImagesPopupController controller = loader.getController();
+                 // Pass the account ID to the popup controller
+                controller.setAccountId(account.getUserId());
+                // Load images for the current date initially
+                controller.loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
+
+                giftImagesPopup = new Popup();
+                giftImagesPopup.getContent().add(popupContent);
+                // Don't use autoHide, we will manage visibility manually
+                // giftImagesPopup.setAutoHide(true);
+
+                // Add mouse event handlers to the popup content
+                popupContent.setOnMouseEntered(event -> {
+                    if (hidePopupTimeline != null) {
+                        hidePopupTimeline.stop();
+                        hidePopupTimeline = null;
+                    }
+                });
+                popupContent.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
+
+                 // Set mouse exited handler for the giftImageView
+                giftImageView.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
             }
 
-            List<String> imagePaths = gifts.stream()
-                                          .map(GiftStatistic::getPathImage)
-                                          .filter(path -> path != null && !path.isEmpty())
-                                          .collect(Collectors.toList());
-
-            if (imagePaths.isEmpty()) {
-                return; // Нет изображений для отображения
-            }
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/GiftImagesPopup.fxml"));
-            VBox popupContent = loader.load();
-            GiftImagesPopupController controller = loader.getController();
-            controller.setGiftImages(imagePaths);
-
-            giftImagesPopup = new Popup();
-            giftImagesPopup.getContent().add(popupContent);
-            giftImagesPopup.setAutoHide(true);
-            giftImagesPopup.show(giftImageView.getScene().getWindow(),
+            // Only show if not already showing
+            if (!giftImagesPopup.isShowing()) {
+                giftImagesPopup.show(giftImageView.getScene().getWindow(),
                                   giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMinX(),
                                   giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMaxY());
+            }
+
         } catch (Exception e) {
             System.err.println("Ошибка при показе окна подарков: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private void hideGiftImagesPopupWithDelay() {
+        if (hidePopupTimeline != null) {
+            hidePopupTimeline.stop();
+        }
+        hidePopupTimeline = new Timeline(new KeyFrame(Duration.millis(200), event -> {
+            if (giftImagesPopup != null && giftImagesPopup.isShowing()) {
+                // Check if the mouse is still over the giftImageView or the popup content
+                // This check is simplified and might need refinement based on actual mouse position
+                // For now, we rely on mouse exited events on both elements stopping the timeline
+                giftImagesPopup.hide();
+            }
+        }));
+        hidePopupTimeline.play();
+    }
+
     private void hideGiftImagesPopup() {
+        // This method is now primarily triggered by the timeline
         if (giftImagesPopup != null && giftImagesPopup.isShowing()) {
             giftImagesPopup.hide();
         }
+    }
+
+    public void showReloginRequiredState() {
+        Platform.runLater(() -> {
+            if (overlayPane != null && reloginButton != null && accountItem != null) {
+                overlayPane.setVisible(true);
+                reloginButton.setVisible(true);
+                accountItem.setDisable(true); // Disable interactions with the account item
+
+                // Hide all task buttons
+                startChaptersButton.setVisible(false);
+                startCommentsButton.setVisible(false);
+                startQuizButton.setVisible(false);
+                startMiningButton.setVisible(false);
+                startAdvButton.setVisible(false);
+                if (deleteButton != null) {
+                    deleteButton.setVisible(false);
+                }
+            }
+        });
+    }
+
+    private void handleRelogin() {
+        System.out.println("Relogin button clicked for account: " + account.getUsername());
+        // TODO: Implement relogin logic here.
+        // After successful re-authentication, call updateUI() and hideReloginRequiredState().
+
+        // Placeholder to revert the state for testing
+        hideReloginRequiredState();
+    }
+
+    public void hideReloginRequiredState() {
+         Platform.runLater(() -> {
+            if (overlayPane != null && reloginButton != null && accountItem != null) {
+                overlayPane.setVisible(false);
+                reloginButton.setVisible(false);
+                accountItem.setDisable(false);
+
+                // Show task buttons again and update their states
+                startChaptersButton.setVisible(true);
+                startCommentsButton.setVisible(true);
+                startQuizButton.setVisible(true);
+                startMiningButton.setVisible(true);
+                startAdvButton.setVisible(true);
+                 if (deleteButton != null) {
+                    deleteButton.setVisible(true);
+                }
+                updateButtonStates(); // Update button states based on current account data
+            }
+        });
+    }
+
+    private void handleOpenCards() {
+        System.out.println("Open Cards button clicked for account: " + account.getUsername());
+        new Thread(() -> {
+            try {
+                ChromeDriver driver = mbAuth.getActualDriver(account.getUserId(), CARDS_TASK_NAME, true);
+                driver.get("https://mangabuff.ru/cards/pack");
+            } catch (Exception e) {
+                System.err.println("Error opening cards page with Selenium: " + e.getMessage());
+                e.printStackTrace();
+                // Optionally, show an error message to the user
+            }
+        }).start();
     }
 }
 

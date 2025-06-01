@@ -30,7 +30,10 @@ public class MangaBuffAuth {
 
 
     public ChromeOptions setUpDriver() {
-        WebDriverManager.chromedriver().setup();
+        WebDriverManager.chromedriver()
+            .clearDriverCache()
+            .clearResolutionCache()
+            .setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
         options.addArguments("--disable-blink-features=AutomationControlled");

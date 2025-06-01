@@ -13,7 +13,6 @@ import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 @Service
 @RequiredArgsConstructor
 public class TaskExecutionService {
-    private final ScanningProgress scanningProgress;
     private final AdvertisingScheduler advertisingScheduler;
     private final MineScheduler mineScheduler;
     private final QuizScheduler quizScheduler;

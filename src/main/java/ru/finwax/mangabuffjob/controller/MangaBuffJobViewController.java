@@ -40,6 +40,10 @@ import java.util.ResourceBundle;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import javafx.scene.control.Alert;
+
 @Component
 @RequiredArgsConstructor
 public class MangaBuffJobViewController implements Initializable{
@@ -494,8 +498,32 @@ public class MangaBuffJobViewController implements Initializable{
     public void scanAccount(Long userId) {
         try {
             scanningProgress.sendGetRequestWithCookies(userId);
-            // Обновляем UI в FX потоке
             Platform.runLater(this::loadAccountsFromDatabase);
+        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
+            System.err.println("Ошибка 401 Unauthorized для аккаунта " + userId);
+            Platform.runLater(() -> {
+                // Find the corresponding AccountItemController
+                for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                    if (node instanceof HBox accountItem) {
+                        AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                        if (controller.getAccount().getUserId().equals(userId)) {
+                            controller.showReloginRequiredState();
+                            break;
+                        }
+                    }
+                }
+            });
+            // e.printStackTrace(); // You might want to log this error
+        } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
+            System.err.println("Ошибка 502 Bad Gateway при сканировании аккаунта " + userId + ": Сайт недоступен.");
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Ошибка сканирования аккаунта");
+                alert.setHeaderText("Сайт недоступен");
+                alert.setContentText("Не удалось подключиться к сайту для сканирования аккаунта " + userId + ". Пожалуйста, попробуйте позже.");
+                alert.showAndWait();
+            });
+            // e.printStackTrace(); // You might want to log this error
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -521,7 +549,6 @@ public class MangaBuffJobViewController implements Initializable{
         Task<Void> refreshTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                // Получаем все дочерние элементы из accountsVBox
                 Platform.runLater(() -> {
                     accountsVBox.getChildren().forEach(node -> {
                         if (node instanceof HBox accountItem) {
@@ -537,11 +564,7 @@ public class MangaBuffJobViewController implements Initializable{
                 // Обновляем все аккаунты
                 var accounts = userCookieRepository.findAll();
                 for (UserCookie userCookie : accounts) {
-                    scanningProgress.sendGetRequestWithCookies(userCookie.getId());
-                    Thread.sleep(2000);
-                    Platform.runLater(() -> {
-                        loadAccountsFromDatabase();
-                    });
+                    scanAccount(userCookie.getId());
                 }
                 return null;
             }

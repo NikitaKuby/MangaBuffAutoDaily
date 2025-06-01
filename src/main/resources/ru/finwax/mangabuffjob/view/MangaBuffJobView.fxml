@@ -11,7 +11,7 @@
 <?import javafx.scene.control.ScrollPane?>
 
 <?import java.net.URL?>
-<AnchorPane minHeight="400.0" minWidth="300.0" prefHeight="690.0" prefWidth="780.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+<AnchorPane minHeight="400.0" minWidth="300.0" prefHeight="690.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
    <stylesheets>
       <URL value="@styles.css"/>
    </stylesheets>

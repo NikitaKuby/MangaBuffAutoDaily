@@ -26,14 +26,11 @@ public class GiftStatistic {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private UserCookie user;
 
-    @Column(name = "path_image", nullable = false)
-    private String pathImage;
-
     @Column(name = "date", nullable = false, updatable = false)
     private LocalDate date;
 
-    @Column(name = "count_gift", nullable = false)
-    private Integer countGift = 0;
+    @Column(name = "count_event_gift", nullable = false)
+    private Integer countEventGift = 0;
 
     @PrePersist
     protected void onCreate() {
