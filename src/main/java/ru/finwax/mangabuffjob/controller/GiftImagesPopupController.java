@@ -49,15 +49,11 @@ public class GiftImagesPopupController {
             return;
         }
 
-        // Update the title label
         LocalDate today = LocalDate.now(ZoneId.systemDefault());
         if (date.isEqual(today)) {
             popupTitleLabel.setText("Подарки за сегодня");
         } else {
-            // Format date nicely, e.g., "31 мая 2025"
-            // Need a date formatter for Russian locale
-            // For simplicity now, use toString()
-            popupTitleLabel.setText("Подарки за " + date.toString()); // TODO: Localize date format
+            popupTitleLabel.setText("Подарки за " + date.toString());
         }
 
         imageFlowPane.getChildren().clear();
@@ -80,7 +76,7 @@ public class GiftImagesPopupController {
         if (imagePaths.isEmpty()) {
             System.out.println("[{}] Нет изображений подарков для отображения для даты: {}".replace("{}", accountId.toString()).replace("{}", date.toString()));
             // Optionally display a message in the popup indicating no gifts for this date
-            Label noGiftsLabel = new Label("Нет подарков за эту дату."); // TODO: Localize
+            Label noGiftsLabel = new Label("Нет подарков за эту дату.");
             imageFlowPane.getChildren().add(noGiftsLabel);
             return;
         }
@@ -108,17 +104,15 @@ public class GiftImagesPopupController {
         dateButtonContainer.getChildren().clear();
 
         List<LocalDate> availableDates = getAvailableGiftDates(accountId);
-        Collections.sort(availableDates, Collections.reverseOrder()); // Sort dates in descending order
+        Collections.sort(availableDates, Collections.reverseOrder());
 
-        // Add "NEW" button for today if there are gifts today
         LocalDate today = LocalDate.now(ZoneId.systemDefault());
-        if (hasGiftsForDate(accountId, today)) { // Check if there are gifts today
-             Button todayButton = new Button("NEW"); // TODO: Localize
+        if (hasGiftsForDate(accountId, today)) {
+             Button todayButton = new Button("NEW");
              todayButton.setOnAction(event -> loadImagesForDate(today));
              dateButtonContainer.getChildren().add(todayButton);
         }
 
-        // Add buttons for previous dates
         for (LocalDate date : availableDates) {
             if (!date.isEqual(today)) { // Don't add a button for today again
                 Button dateButton = new Button(formatDateButtonText(date)); // Format date for button text
@@ -163,13 +157,10 @@ public class GiftImagesPopupController {
         return false;
     }
 
-    // Helper method to format date for button text (e.g., "31 мая")
     private String formatDateButtonText(LocalDate date) {
-        // Basic formatting for now. Can be improved with DateFormat for localization.
-        return date.getDayOfMonth() + " " + getMonthName(date.getMonthValue()); // TODO: Localize month name
+        return date.getDayOfMonth() + " " + getMonthName(date.getMonthValue());
     }
 
-    // Helper method to get Russian month name (can be moved to a utility class)
     private String getMonthName(int month) {
         String[] months = {"января", "февраля", "марта", "апреля", "мая", "июня",
             "июля", "августа", "сентября", "октября", "ноября", "декабря"};

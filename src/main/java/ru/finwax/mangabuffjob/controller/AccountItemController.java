@@ -630,10 +630,7 @@ public class AccountItemController {
 
     private void handleRelogin() {
         System.out.println("Relogin button clicked for account: " + account.getUsername());
-        // TODO: Implement relogin logic here.
-        // After successful re-authentication, call updateUI() and hideReloginRequiredState().
-
-        // Placeholder to revert the state for testing
+        // TODO: реализовать relog
         hideReloginRequiredState();
     }
 
