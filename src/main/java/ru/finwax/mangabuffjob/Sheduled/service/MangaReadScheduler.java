@@ -567,7 +567,7 @@ public class MangaReadScheduler {
         }
 
         // Запускаем планировщик
-        scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0, SCHEDULE_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0, (userIds.size()/MAX_PARALLEL_TASKS+1)*5L, TimeUnit.MINUTES);
     }
 
     private void processReadingQueue() {

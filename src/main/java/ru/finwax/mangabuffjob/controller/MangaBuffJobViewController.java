@@ -31,6 +31,11 @@ import ru.finwax.mangabuffjob.service.TaskExecutor;
 import ru.finwax.mangabuffjob.model.MangaTask;
 import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.service.AccountService;
+import javafx.scene.control.Alert;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.AnchorPane;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +47,6 @@ import java.util.ArrayList;
 
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import javafx.scene.control.Alert;
 
 @Component
 @RequiredArgsConstructor
@@ -68,6 +72,14 @@ public class MangaBuffJobViewController implements Initializable{
     @FXML
     private Button runBotButton;
 
+    @FXML
+    private javafx.scene.control.TextField promoCodeInput;
+    @FXML
+    private Button applyPromoCodeButton;
+
+    @FXML
+    private AnchorPane rootPane;
+
     private final UserCookieRepository userCookieRepository;
     private final MangaProgressRepository mangaProgressRepository;
     private final ApplicationContext applicationContext;
@@ -78,6 +90,7 @@ public class MangaBuffJobViewController implements Initializable{
     private Timeline loadingTimelineRefresh;
     private final MangaReadScheduler mangaReadScheduler;
     private final AccountService accountService;
+    private final ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService;
 
     private ObservableList<AccountProgress> accountData = FXCollections.observableArrayList();
 
@@ -113,6 +126,9 @@ public class MangaBuffJobViewController implements Initializable{
             refreshButton.setOnAction(event -> handleRefreshAccounts());
             updateMangaListButton.setOnAction(event -> handleUpdateMLB());
             periodicReadingButton.setOnAction(event -> handlePeriodicReading());
+
+            // Add handler for promo code button
+            applyPromoCodeButton.setOnAction(event -> handleApplyPromoCode());
             
             // Проверяем наличие данных в таблице манги
             if (mangaParserService.hasMangaData()) {
@@ -154,7 +170,7 @@ public class MangaBuffJobViewController implements Initializable{
                     Platform.runLater(() -> setButtonState(updateMangaListButton, "green"));
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(updateMangaListButton, "red"));
-                    System.err.println("Ошибка при обновлении списка манги: " + e.getMessage());
+                    System.err.println("Error updating manga list: " + e.getMessage());
                     e.printStackTrace();
                 }
                 return null;
@@ -500,7 +516,7 @@ public class MangaBuffJobViewController implements Initializable{
             scanningProgress.sendGetRequestWithCookies(userId);
             Platform.runLater(this::loadAccountsFromDatabase);
         } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
-            System.err.println("Ошибка 401 Unauthorized для аккаунта " + userId);
+            System.err.println("Error 401 Unauthorized for account " + userId);
             Platform.runLater(() -> {
                 // Find the corresponding AccountItemController
                 for (javafx.scene.Node node : accountsVBox.getChildren()) {
@@ -515,7 +531,7 @@ public class MangaBuffJobViewController implements Initializable{
             });
             // e.printStackTrace(); // You might want to log this error
         } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
-            System.err.println("Ошибка 502 Bad Gateway при сканировании аккаунта " + userId + ": Сайт недоступен.");
+            System.err.println("Error 502 Bad Gateway when scanning account " + userId + ": Site unavailable.");
             Platform.runLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Ошибка сканирования аккаунта");
@@ -578,7 +594,7 @@ public class MangaBuffJobViewController implements Initializable{
             protected void failed() {
                 Platform.runLater(() -> {
                     stopLoadingAnimationRefresh(refreshButton);
-                    System.err.println("Ошибка при обновлении аккаунтов: " + getException().getMessage());
+                    System.err.println("Error refreshing accounts: " + getException().getMessage());
                 });
             }
         };
@@ -590,11 +606,96 @@ public class MangaBuffJobViewController implements Initializable{
         try {
             Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe /T");
             Runtime.getRuntime().exec("taskkill /F /IM chrome.exe /T");
-            System.out.println("Убили драйвера");
+            System.out.println("Killed chrome drivers");
         } catch (IOException e) {
             System.err.print("Failed to kill chrome processes");
         }
     }
 
+    private void handleApplyPromoCode() {
+        String promoCode = promoCodeInput.getText();
+        if (promoCode == null || promoCode.trim().isEmpty()) {
+            // Show toast notification for empty field
+            System.out.println("Promo code is empty!");
+            showNotification("Промокод не введен!", "error");
+            return;
+        }
+
+        // Disable button and input while processing
+        applyPromoCodeButton.setDisable(true);
+        promoCodeInput.setDisable(true);
+
+        Task<Void> applyPromoTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                try {
+                    promoCodeService.applyPromoCodeToAllAccounts(promoCode, MangaBuffJobViewController.this::showNotification);
+                } catch (Exception e) {
+                    System.err.println("Error applying promo code: " + e.getMessage());
+                    // Show error toast notification
+                    Platform.runLater(() -> showNotification("Ошибка при применении промокода: " + e.getMessage(), "error"));
+                }
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                // Re-enable button and input
+                applyPromoCodeButton.setDisable(false);
+                promoCodeInput.setDisable(false);
+                // Final success notification will be handled by PromoCodeService
+            }
+
+            @Override
+            protected void failed() {
+                // Re-enable button and input
+                applyPromoCodeButton.setDisable(false);
+                promoCodeInput.setDisable(false);
+                System.err.println("Promo code application failed.");
+                Platform.runLater(() -> showNotification("Применение промокода завершилось с ошибкой.", "error"));
+            }
+        };
+
+        new Thread(applyPromoTask).start();
+    }
+
+    // Method to show toast notifications
+    public void showNotification(String message, String type) {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/ToastNotification.fxml"));
+                HBox toast = loader.load();
+                ToastNotificationController controller = loader.getController();
+                controller.showMessage(message, type, rootPane); // Pass rootPane to the controller
+
+                // Position the toast notification (top right)
+                if (rootPane != null) {
+                    rootPane.getChildren().add(toast);
+
+                    // Position at top right
+                    AnchorPane.setTopAnchor(toast, 10.0);
+                    AnchorPane.setRightAnchor(toast, 10.0);
+
+                    // Adjust vertical position based on existing toasts
+                    double offset = 10; // Initial offset from top
+                    for (javafx.scene.Node existingToast : rootPane.getChildren()) {
+                        if (existingToast != toast && existingToast instanceof HBox && existingToast.getStyleClass().contains("toast-notification")) {
+                            // Calculate the new offset based on the bottom of the last toast + spacing
+                            double bottom = existingToast.getBoundsInParent().getMinY() + existingToast.getBoundsInParent().getHeight();
+                            offset = Math.max(offset, bottom + 10);
+                        }
+                    }
+                    AnchorPane.setTopAnchor(toast, offset);
+
+                    // Start the fade out animation after a delay
+                    controller.startFadeOut(Duration.seconds(4), Duration.seconds(2)); // Fade out after 2 seconds over 0.5 seconds
+                }
+
+            } catch (IOException e) {
+                System.err.println("Error loading ToastNotification.fxml: " + e.getMessage()); // Keep for debugging during dev
+                e.printStackTrace();
+            }
+        });
+    }
 
 } 

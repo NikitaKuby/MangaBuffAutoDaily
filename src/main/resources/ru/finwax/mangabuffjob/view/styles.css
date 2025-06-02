@@ -1,4 +1,3 @@
-
 /* Цветные кнопки */
 .btn-green {
     -fx-background-color: #4CAF50;
@@ -58,4 +57,34 @@
 .label {
     -fx-font-size: 14px;
     -fx-text-fill: #222;
+}
+
+/* Toast Notifications */
+.toast-notification {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0.5, 0, 2);
+    -fx-min-width: 100;
+    -fx-max-width: 200;
+    -fx-pref-width: 150;
+    -fx-min-height: 50;
+    -fx-pref-height: -1; /* Allow height to adjust to content */
+}
+
+.toast-success {
+    -fx-border-color: green;
+    -fx-border-width: 2;
+}
+
+.toast-error {
+    -fx-border-color: red;
+    -fx-border-width: 2;
+}
+
+.toast-message-label {
+    -fx-text-fill: #333;
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
 } 
