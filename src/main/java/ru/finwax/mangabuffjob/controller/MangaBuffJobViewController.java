@@ -145,7 +145,7 @@ public class MangaBuffJobViewController implements Initializable{
 
     private void handlePeriodicReading() {
         if (!mangaReadScheduler.isPeriodicReadingActive()) {
-            mangaReadScheduler.startPeriodicReading();
+            mangaReadScheduler.startPeriodicReading(viewsCheckBox.isSelected());
             setButtonState(periodicReadingButton, "blue");
         } else {
             mangaReadScheduler.stopPeriodicReading();

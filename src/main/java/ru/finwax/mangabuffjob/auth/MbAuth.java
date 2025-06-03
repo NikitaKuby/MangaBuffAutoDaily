@@ -4,6 +4,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOExceptionList;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -37,10 +38,22 @@ public class MbAuth {
                 .clearDriverCache()
                 .clearResolutionCache()
                 .setup();
-        } catch (Exception e){
-            log.warn("Не удалось очистить кэш драйвера: {}", id);
-            WebDriverManager.chromedriver()
-                .setup();
+        } catch (Exception e) {
+            // Проверяем, является ли это ошибкой доступа к файлу кэша
+            if (e.getCause() instanceof IOExceptionList || 
+                (e.getCause() != null && e.getCause().getCause() instanceof java.nio.file.AccessDeniedException)) {
+                // Игнорируем ошибку очистки кэша, так как она не критична
+                log.debug("[{}] Не удалось очистить кэш драйвера (не критично)", id);
+                try {
+                    WebDriverManager.chromedriver().setup();
+                } catch (Exception ex) {
+                    log.error("[{}] Критическая ошибка при настройке драйвера: {}", id, ex.getMessage());
+                    throw new RuntimeException("Не удалось настроить драйвер", ex);
+                }
+            } else {
+                log.error("[{}] Неожиданная ошибка при настройке драйвера: {}", id, e.getMessage());
+                throw new RuntimeException("Не удалось настроить драйвер", e);
+            }
         }
 
         ChromeOptions options = new ChromeOptions();
@@ -50,7 +63,7 @@ public class MbAuth {
         options.addArguments("--user-agent="+userAgent);
         log.info("[{}] Использован User-Agent: {}", id, userAgent);
 
-// Дополнительные настройки для анонимности
+        // Дополнительные настройки для анонимности
         options.addArguments("--disable-webrtc");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--remote-allow-origins=*");

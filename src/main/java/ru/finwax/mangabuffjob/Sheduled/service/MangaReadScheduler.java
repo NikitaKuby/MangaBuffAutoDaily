@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -59,12 +60,11 @@ public class MangaReadScheduler {
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
     private MangaBuffJobViewController viewController;
-    private static final int CHAPTER_READ_TIME_MS =  90 * 1000;
+    private static final int CHAPTER_READ_TIME_MS =  100 * 1000;
     private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
-    private static final int CHAPTERS_PER_READ = 2;
+    private static final int CHAPTERS_PER_READ = 4;
     private static final int MAX_PARALLEL_TASKS = 4;
-    private static final int SCHEDULE_INTERVAL_MINUTES = 9;
 
     private final MangaDataRepository mangaRepository;
     private final UserCookieRepository userRepository;
@@ -292,34 +292,108 @@ public class MangaReadScheduler {
 
     }
 
-    private void readChapter(ChromeDriver driver,Long accountId) throws InterruptedException {
+    private long calculateTotalPageHeight(ChromeDriver driver) {
+        try {
+            // JavaScript для получения высоты всех изображений
+            String script = """
+                let totalHeight = 0;
+                const images = document.querySelectorAll('.reader__item img');
+                images.forEach(img => {
+                    if (img.complete) {
+                        totalHeight += img.naturalHeight;
+                    } else {
+                        // Если изображение еще не загружено, используем текущую высоту
+                        totalHeight += img.height || 0;
+                    }
+                });
+                return totalHeight;
+            """;
+            
+            return (long) ((JavascriptExecutor) driver).executeScript(script);
+        } catch (Exception e) {
+            log.error("Error calculating page height: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    private boolean isElementInViewport(ChromeDriver driver, WebElement element) {
+        try {
+            String script = """
+                var elem = arguments[0];
+                var rect = elem.getBoundingClientRect();
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+            """;
+            return (boolean) ((JavascriptExecutor) driver).executeScript(script, element);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isEndOfChapter(ChromeDriver driver) {
+        try {
+            // Проверяем наличие футера
+            WebElement footer = driver.findElement(By.cssSelector("div.reader__footer"));
+            if (!footer.isDisplayed()) {
+                return false;
+            }
+
+            // Проверяем, находится ли футер в области просмотра
+            if (!isElementInViewport(driver, footer)) {
+                return false;
+            }
+
+            // Дополнительная проверка: убедимся, что мы действительно достигли конца страницы
+            String script = """
+                return Math.abs(
+                    (window.innerHeight + window.scrollY) - document.documentElement.scrollHeight
+                ) < 100;
+            """;
+            return (boolean) ((JavascriptExecutor) driver).executeScript(script);
+        } catch (NoSuchElementException e) {
+            return false;
+        } catch (Exception e) {
+            log.warn("Ошибка при проверке конца главы: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private void readChapter(ChromeDriver driver, Long accountId) throws InterruptedException {
         try {
             long startTime = System.currentTimeMillis();
             long endTime = startTime + CHAPTER_READ_TIME_MS;
             Dimension windowSize = driver.manage().window().getSize();
             int maxYOffset = windowSize.getHeight();
 
-            // Получаем общее количество глав
-            WebElement pageCounter = driver.findElement(By.cssSelector("div.reader-menu__item--page"));
-            String textAfterSpan = pageCounter.getText().substring(
-                pageCounter.findElement(By.tagName("span")).getText().length()
-            );
-            int totalChapters = Integer.parseInt(textAfterSpan.replace("/", "").trim());
-            // Если глав >40, то скроллим вдвое быстрее
-            double scrollMultiplier = totalChapters > 40 ? 2.0 : 1.0;
+            // Получаем общую высоту всех страниц
+            long totalPageHeight = calculateTotalPageHeight(driver);
+            
+            // Если не удалось получить высоту, используем старую логику
+            if (totalPageHeight == 0) {
+                WebElement pageCounter = driver.findElement(By.cssSelector("div.reader-menu__item--page"));
+                String textAfterSpan = pageCounter.getText().substring(
+                    pageCounter.findElement(By.tagName("span")).getText().length()
+                );
+                int totalChapters = Integer.parseInt(textAfterSpan.replace("/", "").trim());
+                totalPageHeight = totalChapters * maxYOffset; // Примерная оценка
+            }
 
-
+            // Рассчитываем оптимальную скорость скроллинга
+            double scrollMultiplier = Math.max(1.0, Math.min(3.0, totalPageHeight / (maxYOffset * 20)));
+            
             // Оптимизированные параметры
-            final int SCROLL_CYCLES = 15; // Уменьшаем количество циклов
-            final int BASE_DELAY = 50;    // Увеличиваем задержку
-            final double SCROLL_MULTIPLIER = 2.3; // Уменьшаем множитель
-            int accumulatedScroll = 0;    // Аккумулятор скролла
-
-            int totalScroll = 0;
+            final int SCROLL_CYCLES = 15;
+            final int BASE_DELAY = 50;
+            final double SCROLL_MULTIPLIER = 2.3;
+            int accumulatedScroll = 0;
 
             // Для проверки подарков
             long lastGiftCheckTime = System.currentTimeMillis();
-            final int GIFT_CHECK_INTERVAL = 1000; // Уменьшаем интервал до 1 секунды
+            final int GIFT_CHECK_INTERVAL = 1000;
 
             while (System.currentTimeMillis() < endTime) {
                 try {
@@ -330,24 +404,29 @@ public class MangaReadScheduler {
                         lastGiftCheckTime = System.currentTimeMillis();
                     }
 
+                    // Проверяем, достигли ли мы конца главы
+                    if (isEndOfChapter(driver)) {
+                        log.debug("[{}] Достигнут конец главы", accountId);
+                        // Продолжаем скроллинг до истечения времени
+                        // Это поможет избежать подозрительного поведения
+                        Thread.sleep(1000);
+                        continue;
+                    }
+
                     // Односторонний плавный скролл вниз
                     for (int i = 0; i < SCROLL_CYCLES && System.currentTimeMillis() < endTime; i++) {
-                        // Модифицированная синусоида (только положительные значения)
                         double progress = (double) i / SCROLL_CYCLES;
                         int scrollStep = (int) (Math.pow(Math.sin(progress * Math.PI), 2) *
                             (maxYOffset * SCROLL_MULTIPLIER * scrollMultiplier / SCROLL_CYCLES));
 
-                        // Гарантируем минимальный скролл вниз
                         scrollStep = Math.max(3, scrollStep);
 
-                        // Плавный скролл с аккумуляцией
                         ((JavascriptExecutor) driver).executeScript(
                             "window.scrollBy({top: arguments[0], behavior: 'auto'})",
                             scrollStep
                         );
                         accumulatedScroll += scrollStep;
 
-                        // Минимальные движения курсора
                         if (random.nextDouble() < 0.08) {
                             new Actions(driver)
                                 .moveByOffset(10 + random.nextInt(20), 5 + random.nextInt(10))
@@ -359,7 +438,7 @@ public class MangaReadScheduler {
                     }
 
                     // Ускоренный бустер-скролл
-                    int boostScroll = (int) (maxYOffset * 0.3);
+                    int boostScroll = (int) (maxYOffset * 0.3 * scrollMultiplier);
                     ((JavascriptExecutor) driver).executeScript(
                         "window.scrollBy(0, arguments[0])",
                         boostScroll
@@ -378,19 +457,16 @@ public class MangaReadScheduler {
                     continue;
                 }
             }
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
             if (e instanceof StaleElementReferenceException) {
                 log.warn("Элемент устарел, перезагружаем страницу");
                 driver.navigate().refresh();
                 Thread.sleep(200);
             } else {
-                log.error("[{}]Ошибка чтения главы", accountId, e);
-                throw e; // Пробрасываем исключение выше
+                log.error("[{}] Ошибка чтения главы", accountId, e);
+                throw e;
             }
         }
-
     }
 
     private boolean readSingleChapter(ChromeDriver driver, Long accountId, WebElement chapterItem) {
@@ -543,7 +619,7 @@ public class MangaReadScheduler {
         }
     }
 
-    public void startPeriodicReading() {
+    public void startPeriodicReading(Boolean checkView) {
         if (isPeriodicReadingActive) {
             log.info("Периодическое чтение уже активно");
             return;
@@ -563,21 +639,23 @@ public class MangaReadScheduler {
 
         // Запускаем обработчики очереди
         for (int i = 0; i < MAX_PARALLEL_TASKS; i++) {
-            readingExecutor.submit(this::processReadingQueue);
+            readingExecutor.submit(()-> processReadingQueue(checkView));
         }
 
         // Запускаем планировщик
-        scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0, (userIds.size()/MAX_PARALLEL_TASKS+1)*5L, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0,
+            (userIds.size() / MAX_PARALLEL_TASKS + 1) * CHAPTERS_PER_READ*2L,
+            TimeUnit.MINUTES);
     }
 
-    private void processReadingQueue() {
+    private void processReadingQueue(boolean checkView) {
         while (isPeriodicReadingActive) {
             try {
                 Long userId = readingQueue.poll(1, TimeUnit.SECONDS);
                 if (userId != null && !activeReaders.contains(userId)) {
                     activeReaders.add(userId);
                     try {
-                        readMangaChapters(userId, CHAPTERS_PER_READ, false);
+                        readMangaChapters(userId, CHAPTERS_PER_READ, checkView);
                         completedReaders.incrementAndGet();
                         log.info("[{}] Аккаунт прочитал {} глав. Всего прочитано: {}/{}", 
                             userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size()+completedReaders.get()-1);
