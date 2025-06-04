@@ -46,7 +46,13 @@ public class MangaBuffJobFXApplication extends Application {
 
     @Override
     public void stop() {
-        springContext.close();
+        System.out.println("Stopping MangaBuffJob Desktop...");
+        // Завершаем процессы Chrome/chromedriver перед закрытием Spring контекста
+        ru.finwax.mangabuffjob.controller.MangaBuffJobViewController.killChromeDrivers();
+        if (springContext != null) {
+            springContext.close();
+        }
+        System.out.println("MangaBuffJob Desktop stopped.");
     }
 
     public static void main(String[] args) {

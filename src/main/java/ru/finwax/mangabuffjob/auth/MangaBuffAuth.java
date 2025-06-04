@@ -53,9 +53,13 @@ public class MangaBuffAuth {
         try {
             // Переход на страницу логина
             driver.get("https://mangabuff.ru/login");
+            log.info(login);
 
-            // Используем более надежный селектор для аватара
+            // Ждем успешной авторизации (появления аватара)
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".header__item.header-profile img")));
+
+            // Дополнительная проверка успешной авторизации
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".header__item.header-profile")));
 
             // Получение куки и CSRF токена
             Set<Cookie> cookies = driver.manage().getCookies();

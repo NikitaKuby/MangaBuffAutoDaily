@@ -34,4 +34,7 @@ public interface MangaChapterRepository extends JpaRepository<MangaChapter, Long
     List<String> findFirstTenUncommentedChapterIds(Pageable pageable,
                                                    @Param("userId") Long userId);
 
+    @Modifying
+    @Query("DELETE FROM MangaChapter c WHERE c.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

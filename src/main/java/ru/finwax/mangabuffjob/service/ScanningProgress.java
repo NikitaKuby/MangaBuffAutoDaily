@@ -273,6 +273,10 @@ public class ScanningProgress {
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
+        } catch (HttpClientErrorException.Unauthorized e) {
+            // Для 401 ошибки просто логируем сообщение без стектрейса
+            log.warn("Unauthorized error for user {}: {}", id, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Ошибка при сканинге", e);
             throw new RuntimeException("Failed to send comment", e);

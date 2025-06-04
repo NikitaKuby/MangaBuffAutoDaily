@@ -43,6 +43,9 @@ import javafx.scene.layout.StackPane;
 
 import java.awt.Desktop;
 import java.net.URI;
+import javafx.scene.control.Alert;
+import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 
 @Component
 @Getter
@@ -115,7 +118,12 @@ public class AccountItemController {
     private HBox accountItem;
 
     @FXML
-    private StackPane overlayPane;
+    private StackPane taskOverlayPane;
+    @FXML
+    private StackPane taskButtonsStack;
+    @FXML
+    private HBox taskButtonsHBox;
+
     @FXML
     private Button reloginButton;
 
@@ -147,6 +155,8 @@ public class AccountItemController {
 
     private Timeline hidePopupTimeline;
 
+    private final MangaBuffAuth mangaBuffAuth;
+
     public AccountItemController(
         AccountService accountService,
         MangaBuffJobViewController parentController,
@@ -156,7 +166,8 @@ public class AccountItemController {
         CommentScheduler commentScheduler,
         MangaReadScheduler mangaReadScheduler,
         GiftStatisticRepository giftRepository,
-        MbAuth mbAuth
+        MbAuth mbAuth,
+        MangaBuffAuth mangaBuffAuth
     ) {
         this.accountService = accountService;
         this.parentController = parentController;
@@ -167,6 +178,51 @@ public class AccountItemController {
         this.mangaReadScheduler = mangaReadScheduler;
         this.giftRepository = giftRepository;
         this.mbAuth = mbAuth;
+        this.mangaBuffAuth = mangaBuffAuth;
+    }
+
+    @FXML
+    public void initialize() {
+        if (taskOverlayPane == null) {
+            System.err.println("taskOverlayPane is null in initialize()");
+            return;
+        }
+        if (reloginButton == null) {
+            System.err.println("reloginButton is null in initialize()");
+            return;
+        }
+        if (accountItem == null) {
+            System.err.println("accountItem is null in initialize()");
+            return;
+        }
+        // Подключаем CSS программно
+        if (accountItem.getScene() != null) {
+            accountItem.getScene().getStylesheets().add(getClass().getResource("/ru/finwax/mangabuffjob/view/style.css").toExternalForm());
+        } else {
+            accountItem.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null) {
+                    newScene.getStylesheets().add(getClass().getResource("/ru/finwax/mangabuffjob/view/style.css").toExternalForm());
+                }
+            });
+        }
+        taskOverlayPane.setVisible(false);
+        taskOverlayPane.getStyleClass().setAll("relogin-overlay");
+        taskOverlayPane.setMouseTransparent(false);
+        taskOverlayPane.setViewOrder(-1.0);
+        taskOverlayPane.toFront();
+        reloginButton.setVisible(false);
+        reloginButton.setText("Войти снова");
+        reloginButton.getStyleClass().setAll("relogin-btn");
+        reloginButton.setOnAction(event -> handleRelogin());
+        reloginButton.setMouseTransparent(false);
+        reloginButton.toFront();
+        accountItem.setViewOrder(0.0);
+        accountItem.setDisable(false);
+        taskOverlayPane.toFront();
+        reloginButton.toFront();
+        accountItem.getParent().layout();
+        taskOverlayPane.requestLayout();
+        reloginButton.requestLayout();
     }
 
     public void setAccount(AccountProgress account) {
@@ -226,9 +282,13 @@ public class AccountItemController {
         openCardsButton.setOnAction(event -> handleOpenCards());
 
         // Initially hide overlay and relogin button
-        overlayPane.setVisible(false);
+        taskOverlayPane.setVisible(false);
         reloginButton.setVisible(false);
         accountItem.setDisable(false);
+        // Если требуется перелогин, показать оверлей и кнопку
+        if (account.isReloginRequired()) {
+            showReloginRequiredState();
+        }
     }
 
     @Transactional
@@ -283,7 +343,7 @@ public class AccountItemController {
         setButtonState(startAdvButton, advDone ? "green" : "white");
 
         // Disable task buttons if overlay is visible
-        boolean disableTaskButtons = overlayPane != null && overlayPane.isVisible();
+        boolean disableTaskButtons = taskOverlayPane != null && taskOverlayPane.isVisible();
         startChaptersButton.setDisable(disableTaskButtons || allRead);
         startCommentsButton.setDisable(disableTaskButtons || allComments);
         startQuizButton.setDisable(disableTaskButtons || Boolean.TRUE.equals(account.getQuizDone()));
@@ -299,11 +359,11 @@ public class AccountItemController {
 
         // Show relogin button only if overlay is visible
         if (reloginButton != null) {
-            reloginButton.setVisible(overlayPane != null && overlayPane.isVisible());
+            reloginButton.setVisible(taskOverlayPane != null && taskOverlayPane.isVisible());
         }
 
         // Ensure delete and open cards buttons are always enabled unless overlay is visible
-        boolean disableAccountButtons = overlayPane != null && overlayPane.isVisible();
+        boolean disableAccountButtons = taskOverlayPane != null && taskOverlayPane.isVisible();
         if (deleteButton != null) {
             deleteButton.setDisable(disableAccountButtons);
             deleteButton.setVisible(!disableAccountButtons);
@@ -609,50 +669,91 @@ public class AccountItemController {
     }
 
     public void showReloginRequiredState() {
+        if (taskOverlayPane == null || reloginButton == null) {
+            System.err.println("UI components not initialized");
+            return;
+        }
         Platform.runLater(() -> {
-            if (overlayPane != null && reloginButton != null && accountItem != null) {
-                overlayPane.setVisible(true);
-                reloginButton.setVisible(true);
-                accountItem.setDisable(true); // Disable interactions with the account item
+            System.out.println("Showing relogin state for account: " + account.getUsername());
+            taskOverlayPane.getStyleClass().setAll("relogin-overlay");
+            taskOverlayPane.setVisible(true);
+            taskOverlayPane.setMouseTransparent(false);
+            taskOverlayPane.toFront();
+            reloginButton.getStyleClass().setAll("relogin-btn");
+            reloginButton.setText("Войти снова, сессия истекла");
+            reloginButton.setVisible(true);
+            reloginButton.toFront();
+            if (taskButtonsHBox != null) {
+                taskButtonsHBox.setVisible(false);
+            }
+            taskOverlayPane.requestLayout();
+            reloginButton.requestLayout();
+            System.out.println("Relogin state shown for account: " + account.getUsername());
+        });
+    }
 
-                // Hide all task buttons
-                startChaptersButton.setVisible(false);
-                startCommentsButton.setVisible(false);
-                startQuizButton.setVisible(false);
-                startMiningButton.setVisible(false);
-                startAdvButton.setVisible(false);
-                if (deleteButton != null) {
-                    deleteButton.setVisible(false);
-                }
+    public void hideReloginRequiredState() {
+        System.out.println("Attempting to hide relogin state for account: " + (account != null ? account.getUsername() : "null"));
+        if (taskOverlayPane == null || reloginButton == null || taskButtonsStack == null || taskButtonsHBox == null) {
+            System.err.println("Critical error: UI components are null (task overlay)");
+            return;
+        }
+        Platform.runLater(() -> {
+            try {
+                // Показываем весь блок task-кнопок
+                taskButtonsHBox.setVisible(true);
+
+                if (startChaptersButton != null) startChaptersButton.setVisible(true);
+                if (startCommentsButton != null) startCommentsButton.setVisible(true);
+                if (startQuizButton != null) startQuizButton.setVisible(true);
+                if (startMiningButton != null) startMiningButton.setVisible(true);
+                if (startAdvButton != null) startAdvButton.setVisible(true);
+                if (deleteButton != null) deleteButton.setVisible(true);
+                if (openCardsButton != null) openCardsButton.setVisible(true);
+
+                // Скрываем overlay
+                taskOverlayPane.setVisible(false);
+                reloginButton.setVisible(false);
+
+                // Обновляем состояния кнопок
+                updateButtonStates();
+
+                // Принудительно обновляем layout
+                taskButtonsStack.requestLayout();
+                taskOverlayPane.requestLayout();
+                reloginButton.requestLayout();
+                System.out.println("Successfully hid relogin state for account: " + account.getUsername());
+            } catch (Exception e) {
+                System.err.println("Error hiding relogin state: " + e.getMessage());
+                e.printStackTrace();
             }
         });
     }
 
     private void handleRelogin() {
         System.out.println("Relogin button clicked for account: " + account.getUsername());
-        // TODO: реализовать relog
-        hideReloginRequiredState();
-    }
-
-    public void hideReloginRequiredState() {
-         Platform.runLater(() -> {
-            if (overlayPane != null && reloginButton != null && accountItem != null) {
-                overlayPane.setVisible(false);
-                reloginButton.setVisible(false);
-                accountItem.setDisable(false);
-
-                // Show task buttons again and update their states
-                startChaptersButton.setVisible(true);
-                startCommentsButton.setVisible(true);
-                startQuizButton.setVisible(true);
-                startMiningButton.setVisible(true);
-                startAdvButton.setVisible(true);
-                 if (deleteButton != null) {
-                    deleteButton.setVisible(true);
-                }
-                updateButtonStates(); // Update button states based on current account data
-            }
-        });
+        try {
+            // Выполняем повторную аутентификацию
+            UserCookie userCookie = mangaBuffAuth.authenticate(account.getUsername());
+            
+            // После успешной аутентификации обновляем состояние UI
+            Platform.runLater(() -> {
+                hideReloginRequiredState();
+                // Обновляем данные аккаунта
+                parentController.scanAccount(account.getUserId());
+            });
+        } catch (Exception e) {
+            System.err.println("Ошибка при повторном входе: " + e.getMessage());
+            e.printStackTrace();
+            // Показываем сообщение об ошибке
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка входа");
+                alert.setHeaderText("Не удалось войти в аккаунт");
+                alert.setContentText("Пожалуйста, проверьте правильность логина и попробуйте снова.\n\n" + e.getMessage());
+                alert.showAndWait();
+            });
+        }
     }
 
     private void handleOpenCards() {

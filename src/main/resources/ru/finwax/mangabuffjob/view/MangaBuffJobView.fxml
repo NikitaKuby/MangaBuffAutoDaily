@@ -10,16 +10,18 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
 <?import java.net.URL?>
-<AnchorPane fx:id="rootPane" minHeight="400.0" minWidth="300.0" prefHeight="690.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+<AnchorPane fx:id="rootPane" minHeight="400.0" minWidth="300.0" prefHeight="800.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
    <stylesheets>
       <URL value="@styles.css"/>
    </stylesheets>
    <children>
       <VBox layoutX="20.0" layoutY="20.0" spacing="0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="60.0">
         <children>
-          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="600.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="700.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
             <children>
               <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="50.0" VBox.vgrow="ALWAYS">
                 <content>
@@ -35,6 +37,11 @@
                   <Insets top="10" right="20" bottom="0" left="10"/>
                 </padding>
                 <children>
+                    <ImageView fx:id="supportImageView" fitHeight="20" fitWidth="20" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+                        <image>
+                            <Image url="@/static/icon/star.png" />
+                        </image>
+                    </ImageView>
                     <Button fx:id="updateMangaListButton" mnemonicParsing="false" text="Обновить список манги">
                         <tooltip>
                             <Tooltip text="Загрузить список манги с сайта" showDelay="50ms" />

@@ -11,6 +11,7 @@ import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.service.AccountService;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.auth.MbAuth;
+import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 
 import java.io.IOException;
 
@@ -25,6 +26,7 @@ public class AccountItemControllerFactory {
     private final MangaReadScheduler mangaReadScheduler;
     private final GiftStatisticRepository giftRepository;
     private final MbAuth mbAuth;
+    private final MangaBuffAuth mangaBuffAuth;
 
     public AccountItemController createController(MangaBuffJobViewController parentController) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountItem.fxml"));
@@ -37,7 +39,8 @@ public class AccountItemControllerFactory {
             commentScheduler,
             mangaReadScheduler,
             giftRepository,
-            mbAuth
+            mbAuth,
+            mangaBuffAuth
         );
         loader.setController(controller);
         loader.load();

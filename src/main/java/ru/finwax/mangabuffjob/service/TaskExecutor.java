@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class TaskExecutor {
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final BlockingQueue<MangaTask> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentHashMap<Long, TaskStatus> taskStatuses = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, AtomicBoolean> activeAccountTasks = new ConcurrentHashMap<>();
     @Getter
     private final TaskExecutionService taskExecutionService;
     private volatile boolean isRunning = false;
@@ -43,6 +45,7 @@ public class TaskExecutor {
     private void processTasks(Consumer<MangaTask> statusCallback) {
         while (isRunning) {
             try {
+                // Получаем задачу из очереди
                 MangaTask task = taskQueue.poll(1, TimeUnit.SECONDS);
                 if (task == null) {
                     if (taskQueue.isEmpty()) {
@@ -52,17 +55,28 @@ public class TaskExecutor {
                     continue;
                 }
 
-                // Обновляем статус задачи
-                task.setStatus(TaskStatus.RUNNING);
-                statusCallback.accept(task);
+                // Проверяем, нет ли уже активной задачи для этого аккаунта
+                AtomicBoolean accountActive = activeAccountTasks.computeIfAbsent(task.getUserId(), k -> new AtomicBoolean(false));
+                if (!accountActive.compareAndSet(false, true)) {
+                    // Если для аккаунта уже есть активная задача, возвращаем текущую в очередь
+                    taskQueue.offer(task);
+                    continue;
+                }
 
                 try {
+                    // Обновляем статус задачи
+                    task.setStatus(TaskStatus.RUNNING);
+                    statusCallback.accept(task);
+
                     // Выполняем задачу
                     taskExecutionService.executeTask(task);
                     task.setStatus(TaskStatus.COMPLETED);
                 } catch (Exception e) {
                     task.setStatus(TaskStatus.ERROR);
                     task.setErrorMessage(e.getMessage());
+                } finally {
+                    // Освобождаем флаг активности для аккаунта
+                    accountActive.set(false);
                 }
 
                 // Обновляем UI

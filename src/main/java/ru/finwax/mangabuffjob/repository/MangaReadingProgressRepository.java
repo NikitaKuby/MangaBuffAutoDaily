@@ -35,9 +35,7 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
                         @Param("chapterReaded") Integer chapterReaded,
                         @Param("hasReaded") Boolean hasReaded);
 
-
-
-    Optional<MangaReadingProgress> findMangaReadingProgressByUserCookieIdAndHasReadedIsFalse( Long userId);
+    Optional<MangaReadingProgress> findMangaReadingProgressByUserCookieIdAndHasReadedIsFalse(Long userId);
 
     @Query(value = """
         SELECT * FROM manga_reading_progress
@@ -47,5 +45,7 @@ public interface MangaReadingProgressRepository extends JpaRepository<MangaReadi
         """, nativeQuery = true)
     Optional<MangaReadingProgress> findMangaProgress(@Param("userId") Long userId);
 
-
+    @Modifying
+    @Query("DELETE FROM MangaReadingProgress m WHERE m.userCookie.id = :userId")
+    void deleteByUserCookieId(@Param("userId") Long userId);
 }

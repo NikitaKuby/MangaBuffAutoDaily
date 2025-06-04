@@ -15,8 +15,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.Popup;
 import javafx.util.Duration;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
@@ -36,6 +36,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,39 +45,35 @@ import java.time.LocalDate;
 import java.util.ResourceBundle;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Component
-@RequiredArgsConstructor
-public class MangaBuffJobViewController implements Initializable{
+public class MangaBuffJobViewController implements Initializable {
 
     @FXML
     public CheckBox viewsCheckBox;
     @FXML
     public Button updateMangaListButton;
-
     @FXML
     public Button periodicReadingButton;
     @FXML
     private VBox accountsVBox;
-
     @FXML
     private Button refreshButton;
     @FXML
     private Button addAccountButton;
-    
-
-
     @FXML
     private Button runBotButton;
-
+    @FXML
+    private ImageView supportImageView;
     @FXML
     private javafx.scene.control.TextField promoCodeInput;
     @FXML
     private Button applyPromoCodeButton;
-
     @FXML
     private AnchorPane rootPane;
 
@@ -93,13 +90,40 @@ public class MangaBuffJobViewController implements Initializable{
     private final ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService;
 
     private ObservableList<AccountProgress> accountData = FXCollections.observableArrayList();
+    private final Set<Long> reloginRequiredAccounts = new HashSet<>();
+
+    private Popup supportPopup;
+    private Timeline hidePopupTimeline;
+
+    public MangaBuffJobViewController(
+            UserCookieRepository userCookieRepository,
+            MangaProgressRepository mangaProgressRepository,
+            ApplicationContext applicationContext,
+            AccountItemControllerFactory accountItemControllerFactory,
+            ScanningProgress scanningProgress,
+            MangaParserService mangaParserService,
+            TaskExecutor taskExecutor,
+            MangaReadScheduler mangaReadScheduler,
+            AccountService accountService,
+            ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService) {
+        this.userCookieRepository = userCookieRepository;
+        this.mangaProgressRepository = mangaProgressRepository;
+        this.applicationContext = applicationContext;
+        this.accountItemControllerFactory = accountItemControllerFactory;
+        this.scanningProgress = scanningProgress;
+        this.mangaParserService = mangaParserService;
+        this.taskExecutor = taskExecutor;
+        this.mangaReadScheduler = mangaReadScheduler;
+        this.accountService = accountService;
+        this.promoCodeService = promoCodeService;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
             System.out.println("Controller initialization...");
             
-            // Проверяем инициализацию компонентов
+            // Проверяем инициализацию всех компонентов
             if (accountsVBox == null) {
                 throw new IllegalStateException("accountsVBox not initialized");
             }
@@ -109,8 +133,55 @@ public class MangaBuffJobViewController implements Initializable{
             if (runBotButton == null) {
                 throw new IllegalStateException("runBotButton not initialized");
             }
+            if (refreshButton == null) {
+                throw new IllegalStateException("refreshButton not initialized");
+            }
+            if (updateMangaListButton == null) {
+                throw new IllegalStateException("updateMangaListButton not initialized");
+            }
+            if (periodicReadingButton == null) {
+                throw new IllegalStateException("periodicReadingButton not initialized");
+            }
+            if (viewsCheckBox == null) {
+                throw new IllegalStateException("viewsCheckBox not initialized");
+            }
+            if (promoCodeInput == null) {
+                throw new IllegalStateException("promoCodeInput not initialized");
+            }
+            if (applyPromoCodeButton == null) {
+                throw new IllegalStateException("applyPromoCodeButton not initialized");
+            }
+            if (rootPane == null) {
+                throw new IllegalStateException("rootPane not initialized");
+            }
+            if (supportImageView == null) {
+                throw new IllegalStateException("supportImageView not initialized");
+            }
             
             System.out.println("All components initialized successfully");
+            
+            // Initialize support popup
+            supportPopup = new Popup();
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/SupportPopup.fxml"));
+                VBox popupContent = loader.load();
+                supportPopup.getContent().add(popupContent);
+                
+                // Add mouse event handlers to the popup content
+                popupContent.setOnMouseEntered(event -> {
+                    if (hidePopupTimeline != null) {
+                        hidePopupTimeline.stop();
+                        hidePopupTimeline = null;
+                    }
+                });
+                popupContent.setOnMouseExited(event -> hideSupportPopupWithDelay());
+
+                // Set mouse event handlers for the supportImageView
+                supportImageView.setOnMouseEntered(event -> showSupportPopup());
+                supportImageView.setOnMouseExited(event -> hideSupportPopupWithDelay());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             
             // Загрузка данных из базы данных
             loadAccountsFromDatabase();
@@ -126,8 +197,6 @@ public class MangaBuffJobViewController implements Initializable{
             refreshButton.setOnAction(event -> handleRefreshAccounts());
             updateMangaListButton.setOnAction(event -> handleUpdateMLB());
             periodicReadingButton.setOnAction(event -> handlePeriodicReading());
-
-            // Add handler for promo code button
             applyPromoCodeButton.setOnAction(event -> handleApplyPromoCode());
             
             // Проверяем наличие данных в таблице манги
@@ -139,7 +208,7 @@ public class MangaBuffJobViewController implements Initializable{
         } catch (Exception e) {
             System.err.println("Controller initialization error: " + e.getMessage());
             e.printStackTrace();
-            throw e;
+            throw new RuntimeException("Failed to initialize MangaBuffJobViewController", e);
         }
     }
 
@@ -264,10 +333,8 @@ public class MangaBuffJobViewController implements Initializable{
             var accounts = userCookieRepository.findAll();
 
             accounts.forEach(userCookie -> {
-                // Получаем прогресс из базы данных
                 MangaProgress progress = mangaProgressRepository.findByUserId(userCookie.getId())
                     .orElseGet(() -> {
-                        // Создаем новый прогресс только если его нет в базе
                         MangaProgress newProgress = MangaProgress.builder()
                             .userId(userCookie.getId())
                             .readerDone(0)
@@ -277,13 +344,9 @@ public class MangaBuffJobViewController implements Initializable{
                             .advDone(0)
                             .lastUpdated(LocalDate.now())
                             .build();
-                        // Сохраняем новый прогресс в базу
                         return mangaProgressRepository.save(newProgress);
                     });
-
-                // Добавляем аккаунт в список только если он существует в базе
                 Integer mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
-
                 accountData.add(new AccountProgress(
                     userCookie.getUsername(),
                     progress.getReaderDone() + "/" + progress.getTotalReaderChapters(),
@@ -298,13 +361,11 @@ public class MangaBuffJobViewController implements Initializable{
                     progress.getTotalReaderChapters(),
                     progress.getTotalCommentChapters(),
                     mineHitsLeftForDisplay,
-                    progress.getDiamond()
+                    progress.getDiamond(),
+                    reloginRequiredAccounts.contains(userCookie.getId())
                 ));
             });
-
-            // Обновляем отображение аккаунтов после загрузки данных
             displayAccounts();
-
         } catch (Exception e) {
             System.err.println("Error loading accounts from database: " + e.getMessage());
             e.printStackTrace();
@@ -514,34 +575,52 @@ public class MangaBuffJobViewController implements Initializable{
     public void scanAccount(Long userId) {
         try {
             scanningProgress.sendGetRequestWithCookies(userId);
-            Platform.runLater(this::loadAccountsFromDatabase);
-        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
-            System.err.println("Error 401 Unauthorized for account " + userId);
+            reloginRequiredAccounts.remove(userId);
             Platform.runLater(() -> {
-                // Find the corresponding AccountItemController
+                for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                    if (node instanceof HBox accountItem) {
+                        AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                        if (controller.getAccount().getUserId().equals(userId)) {
+                            mangaProgressRepository.findByUserId(userId).ifPresent(progress -> {
+                                UserCookie userCookie = userCookieRepository.findById(userId).orElse(null);
+                                String username = userCookie != null ? userCookie.getUsername() : "";
+                                AccountProgress updatedAccount = new AccountProgress(
+                                    username,
+                                    progress.getReaderDone() + "/" + progress.getTotalReaderChapters(),
+                                    progress.getCommentDone() + "/" + progress.getTotalCommentChapters(),
+                                    progress.getQuizDone(),
+                                    (100 - progress.getMineHitsLeft()) + "/100",
+                                    progress.getAdvDone() + "/3",
+                                    progress.getAdvDone(),
+                                    progress.getAvatarPath(),
+                                    progress.getAvatarAltText(),
+                                    progress.getUserId(),
+                                    progress.getTotalReaderChapters(),
+                                    progress.getTotalCommentChapters(),
+                                    progress.getMineHitsLeft(),
+                                    progress.getDiamond(),
+                                    false
+                                );
+                                controller.setAccount(updatedAccount);
+                            });
+                        }
+                    }
+                }
+            });
+        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
+            reloginRequiredAccounts.add(userId);
+            Platform.runLater(() -> {
                 for (javafx.scene.Node node : accountsVBox.getChildren()) {
                     if (node instanceof HBox accountItem) {
                         AccountItemController controller = (AccountItemController) accountItem.getUserData();
                         if (controller.getAccount().getUserId().equals(userId)) {
                             controller.showReloginRequiredState();
-                            break;
                         }
                     }
                 }
             });
-            // e.printStackTrace(); // You might want to log this error
-        } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
-            System.err.println("Error 502 Bad Gateway when scanning account " + userId + ": Site unavailable.");
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Ошибка сканирования аккаунта");
-                alert.setHeaderText("Сайт недоступен");
-                alert.setContentText("Не удалось подключиться к сайту для сканирования аккаунта " + userId + ". Пожалуйста, попробуйте позже.");
-                alert.showAndWait();
-            });
-            // e.printStackTrace(); // You might want to log this error
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error scanning account " + userId + ": " + e.getMessage());
         }
     }
 
@@ -561,7 +640,6 @@ public class MangaBuffJobViewController implements Initializable{
 
     private void handleRefreshAccounts() {
         startLoadingAnimationRefresh(refreshButton);
-
         Task<Void> refreshTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
@@ -576,20 +654,37 @@ public class MangaBuffJobViewController implements Initializable{
                         }
                     });
                 });
-
-                // Обновляем все аккаунты
                 var accounts = userCookieRepository.findAll();
                 for (UserCookie userCookie : accounts) {
-                    scanAccount(userCookie.getId());
+                    try {
+                        scanningProgress.sendGetRequestWithCookies(userCookie.getId());
+                        reloginRequiredAccounts.remove(userCookie.getId());
+                        Thread.sleep(1000);
+                    } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
+                        reloginRequiredAccounts.add(userCookie.getId());
+                        Platform.runLater(() -> {
+                            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                                if (node instanceof HBox accountItem) {
+                                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                                    if (controller.getAccount().getUserId().equals(userCookie.getId())) {
+                                        controller.showReloginRequiredState();
+                                    }
+                                }
+                            }
+                        });
+                    } catch (Exception e) {
+                        System.err.println("Error refreshing account " + userCookie.getId() + ": " + e.getMessage());
+                    }
                 }
                 return null;
             }
-
             @Override
             protected void succeeded() {
-                Platform.runLater(() -> stopLoadingAnimationRefresh(refreshButton));
+                Platform.runLater(() -> {
+                    stopLoadingAnimationRefresh(refreshButton);
+                    loadAccountsFromDatabase();
+                });
             }
-
             @Override
             protected void failed() {
                 Platform.runLater(() -> {
@@ -598,7 +693,6 @@ public class MangaBuffJobViewController implements Initializable{
                 });
             }
         };
-
         new Thread(refreshTask).start();
     }
 
@@ -696,6 +790,37 @@ public class MangaBuffJobViewController implements Initializable{
                 e.printStackTrace();
             }
         });
+    }
+
+    private void showSupportPopup() {
+        try {
+            if (!supportPopup.isShowing()) {
+                supportPopup.show(supportImageView.getScene().getWindow(),
+                    supportImageView.localToScreen(supportImageView.getBoundsInLocal()).getMinX(),
+                    supportImageView.localToScreen(supportImageView.getBoundsInLocal()).getMaxY());
+            }
+        } catch (Exception e) {
+            System.err.println("Ошибка при показе окна поддержки: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void hideSupportPopupWithDelay() {
+        if (hidePopupTimeline != null) {
+            hidePopupTimeline.stop();
+        }
+        hidePopupTimeline = new Timeline(new KeyFrame(Duration.millis(200), event -> {
+            if (supportPopup != null && supportPopup.isShowing()) {
+                supportPopup.hide();
+            }
+        }));
+        hidePopupTimeline.play();
+    }
+
+    private void hideSupportPopup() {
+        if (supportPopup != null && supportPopup.isShowing()) {
+            supportPopup.hide();
+        }
     }
 
 } 

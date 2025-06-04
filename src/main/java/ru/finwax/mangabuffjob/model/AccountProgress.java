@@ -22,9 +22,10 @@ public class AccountProgress {
     private Integer totalReaderChapters;
     private Integer totalCommentChapters;
     private Long diamond;
+    private boolean reloginRequired;
 
 
-    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft, Long diamond) {
+    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft, Long diamond, boolean reloginRequired) {
         this.username = username;
         this.readerProgress = readerProgress;
         this.commentProgress = commentProgress;
@@ -39,5 +40,14 @@ public class AccountProgress {
         this.totalCommentChapters = totalCommentChapters;
         this.mineHitsLeft = mineHitsLeft;
         this.diamond = diamond;
+        this.reloginRequired = reloginRequired;
+    }
+
+    public boolean isReloginRequired() {
+        return reloginRequired;
+    }
+
+    public void setReloginRequired(boolean reloginRequired) {
+        this.reloginRequired = reloginRequired;
     }
 } 
