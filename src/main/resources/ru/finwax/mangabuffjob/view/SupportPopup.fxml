@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="300.0" spacing="10.0" style="-fx-border-color: #cccccc; -fx-border-radius: 5; -fx-background-color: #eeeeee; -fx-background-radius: 5;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.SupportPopupController">
+   <padding>
+      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+   </padding>
+   <Label text="☕ Поддержать проект" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+   <Label text="Если проект вам помог, вы можете поддержать его развитие, в будущем планируется большие улучшения, в т.ч. Оптимизация и удобный UI" wrapText="true"/>
+   <Label text="💳 Прямые переводы:" style="-fx-font-weight: bold;"/>
+   <VBox spacing="5">
+      <Label text="ЮMoney: 4100119154518148"/>
+      <Label text="СБП: +7(995)-391-56-59"/>
+   </VBox>
+</VBox> 

@@ -1,0 +1,36 @@
+/* Светлый оверлей для relogin */
+.relogin-overlay {
+    -fx-background-color: #e0f2e9cc;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, #b2dfdb, 8, 0.2, 0, 2);
+    -fx-alignment: center;
+}
+
+/* Кнопка “Войти снова” */
+.relogin-btn {
+    -fx-background-color: #b2dfdb;
+    -fx-text-fill: #388e3c;
+    -fx-font-size: 16px;
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-font-weight: normal;
+    -fx-padding: 10 32;
+}
+
+/* Кнопка “готово” */
+.btn-green {
+    -fx-background-color: #b2dfdb;
+    -fx-text-fill: #388e3c;
+    -fx-background-radius: 12;
+    -fx-font-size: 14px;
+    -fx-border-color: transparent;
+}
+
+/* Кнопка “начать” */
+.btn-white {
+    -fx-background-color: #fff;
+    -fx-text-fill: #388e3c;
+    -fx-background-radius: 12;
+    -fx-font-size: 14px;
+    -fx-border-color: #b2dfdb;
+} 
