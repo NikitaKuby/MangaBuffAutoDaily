@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
@@ -27,7 +28,7 @@
                 <content>
                   <VBox fx:id="accountsVBox" spacing="10.0" fillWidth="true" VBox.vgrow="ALWAYS">
                     <padding>
-                      <Insets top="10" right="10" bottom="10" left="10"/>
+                      <Insets top="15" right="10" bottom="15" left="10"/>
                     </padding>
                   </VBox>
                 </content>
@@ -42,17 +43,28 @@
                             <Image url="@/static/icon/star.png" />
                         </image>
                     </ImageView>
-                    <Button fx:id="updateMangaListButton" mnemonicParsing="false" text="Обновить список манги">
-                        <tooltip>
-                            <Tooltip text="Загрузить список манги с сайта" showDelay="50ms" />
-                        </tooltip>
-                    </Button>
                     <Button fx:id="refreshButton" mnemonicParsing="false" text="↻" >
                         <tooltip>
                             <Tooltip text="Обновить все аккаунты" showDelay="50ms" />
                         </tooltip>
                     </Button>
-                    <Button fx:id="addAccountButton" mnemonicParsing="false" text="+ account" />
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                       <children>
+                          <Button fx:id="addAccountButton" mnemonicParsing="false" style="-fx-background-color: transparent;">
+                             <graphic>
+                                <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+                                   <image>
+                                      <Image url="@/static/icon/add-account.png" />
+                                   </image>
+                                </ImageView>
+                             </graphic>
+                             <tooltip>
+                                <Tooltip text="Добавить аккаунт" showDelay="50ms" />
+                             </tooltip>
+                          </Button>
+                          <Button fx:id="updateMangaListButton" mnemonicParsing="false" styleClass="btn-green" text="Обновить список манги" />
+                       </children>
+                    </HBox>
                 </children>
               </HBox>
             </children>

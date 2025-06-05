@@ -88,6 +88,7 @@ public class AdvertisingScheduler {
                 // Кликаем через JavaScript для надежности
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", closeButton);
                 log.info("Реклама успешно закрыта");
+                Thread.sleep(10000);
                 return true;
             } catch (Exception e) {
                 return false;

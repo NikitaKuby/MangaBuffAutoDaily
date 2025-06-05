@@ -31,8 +31,6 @@ public class MineScheduler {
     private static final String MINE_PAGE_URL = "https://mangabuff.ru/mine";
     private static final String MINE_HIT_URL = "https://mangabuff.ru/mine/hit";
     private static final String MINE_BUTTON_CSS = "button.main-mine__game-tap";
-
-    private static final String TASK_NAME = "mining";
     private static final int CLICK_INTERVAL_MS = 1000;
     private static final int MAX_PARALLEL_SESSIONS = 8;
 
@@ -43,22 +41,7 @@ public class MineScheduler {
 
 
     public void performMining(Long id, Integer TOTAL_CLICKS, boolean checkViews) {
-        try {
-            Thread.sleep(500); // 0.5 секунды
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        mbAuth.killUserDriver(id, TASK_NAME);
-
-        try {
-            Thread.sleep(1000); // 1 секунда
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
-
+        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "mining", checkViews);
         if (!tryAcquireMiningPermission()) {
             log.warn("[{}]Max parallel mining sessions reached ({})", id, MAX_PARALLEL_SESSIONS);
             return;
@@ -133,15 +116,15 @@ public class MineScheduler {
                 mineButton.click();
                 clicksPerformed++;
                 Thread.sleep(CLICK_INTERVAL_MS);
-                 try {
-                     limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
-                     break;
-                 } catch (InterruptedException e) {
-                     Thread.currentThread().interrupt();
-                     break;
-                 }
+                //  try {
+                //      limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
+                //      break;
+                //  } catch (InterruptedException e) {
+                //      Thread.currentThread().interrupt();
+                //      break;
+                //  }
             } catch (Exception e) {
-                //log.error("[{}] Click error. Exception type: {}, Message: {}", id, e.getClass().getName(), e.getMessage());
+                log.error("[{}] Click error. Exception type: {}, Message: {}", id, e.getClass().getName(), e.getMessage());
                 if (e.getMessage() != null && e.getMessage().contains("element is not attached") || e.getClass().getName().contains("StaleElementReferenceException")) {
                    log.warn("[{}] Element is stale or detached, stopping mining for this session.", id);
                     break;

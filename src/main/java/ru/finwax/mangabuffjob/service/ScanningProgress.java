@@ -16,6 +16,11 @@ import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
+import ru.finwax.mangabuffjob.controller.AccountItemController;
+import ru.finwax.mangabuffjob.controller.MangaBuffJobViewController;
+import ru.finwax.mangabuffjob.model.AccountProgress;
+import javafx.application.Platform;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +43,7 @@ public class ScanningProgress {
     private final GiftStatisticRepository giftRepository;
     private final UserCookieRepository userRepository;
     private static final String AVATARS_DIR = "avatars";
+    private MangaBuffJobViewController mangaBuffJobViewController;
 
     private Document fetchDocument(Long id, String url)  {
         HttpHeaders headers = requestModel.getHeaderBase(id);
@@ -213,6 +219,13 @@ public class ScanningProgress {
                 progress.setMineHitsLeft(mineHitsLeft);
                 progress.setLastUpdated(LocalDate.now());
                 progress.setDiamond(diamondBalance);
+                // Загружаем состояние чекбоксов из существующего прогресса
+                boolean currentReaderEnabled = progress.isReaderEnabled();
+                boolean currentCommentEnabled = progress.isCommentEnabled();
+                boolean currentQuizEnabled = progress.isQuizEnabled();
+                boolean currentMineEnabled = progress.isMineEnabled();
+                boolean currentAdvEnabled = progress.isAdvEnabled();
+
                 if (avatarUrl != null && !avatarUrl.isEmpty() && progress.getAvatarPath() == null) { // Скачиваем только если аватара еще нет и URL не пустой
                     try {
                         String savedAvatarPath = saveAvatar(avatarUrl, id);
@@ -222,6 +235,7 @@ public class ScanningProgress {
                         log.error("Ошибка при сохранении аватара для пользователя {}", id, e);
                     }
                 }
+                // При обновлении существующего прогресса, сохраняем текущее состояние чекбоксов из БД
                 mangaProgressRepository.save(progress);
 
                 // Обновляем количество event-gift в базе данных
@@ -244,7 +258,47 @@ public class ScanningProgress {
                 } else {
                      log.warn("[{}] Пропущено обновление event-gift в БД из-за ошибки парсинга или null значения", id);
                 }
+                // Возвращаем обновленный объект AccountProgress для UI
+                 MangaProgress updatedProgress = mangaProgressRepository.findByUserId(id).orElseThrow(() -> new RuntimeException("Progress not found after save for user " + id));
+                 Platform.runLater(() -> {
+                    for (javafx.scene.Node node : mangaBuffJobViewController.getAccountsVBox().getChildren()) {
+                        if (node instanceof HBox accountItem) {
+                            AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                            if (controller.getAccount().getUserId().equals(id)) {
+                                AccountProgress updatedAccount = new AccountProgress(
+                                    userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id)).getUsername(),
+                                    updatedProgress.getReaderDone() + "/" + updatedProgress.getTotalReaderChapters(),
+                                    updatedProgress.getCommentDone() + "/" + updatedProgress.getTotalCommentChapters(),
+                                    updatedProgress.getQuizDone(),
+                                    (100 - updatedProgress.getMineHitsLeft()) + "/100",
+                                    updatedProgress.getAdvDone() + "/3",
+                                    updatedProgress.getAdvDone(),
+                                    updatedProgress.getAvatarPath(),
+                                    updatedProgress.getAvatarAltText(),
+                                    updatedProgress.getUserId(),
+                                    updatedProgress.getTotalReaderChapters(),
+                                    updatedProgress.getTotalCommentChapters(),
+                                    updatedProgress.getMineHitsLeft(),
+                                    updatedProgress.getDiamond(),
+                                    false,
+                                    updatedProgress.isReaderEnabled(),
+                                    updatedProgress.isCommentEnabled(),
+                                    updatedProgress.isQuizEnabled(),
+                                    updatedProgress.isMineEnabled(),
+                                    updatedProgress.isAdvEnabled()
+                                );
+                                controller.setAccount(updatedAccount);
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
+                         id, commentsDone, totalComments, chaptersDone, totalChapters,
+                         quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
             } else {
+                // При создании нового прогресса, чекбоксы по умолчанию true
                 MangaProgress mangaProgress = MangaProgress.builder()
                     .userId(id)
                     .commentDone(commentsDone)
@@ -255,16 +309,21 @@ public class ScanningProgress {
                     .advDone(advWatchedToday)
                     .mineHitsLeft(mineHitsLeft)
                     .diamond(diamondBalance)
+                    .readerEnabled(true)
+                    .commentEnabled(true)
+                    .quizEnabled(true)
+                    .mineEnabled(true)
+                    .advEnabled(true)
                     .lastUpdated(LocalDate.now())
-                    .avatarPath(avatarUrl != null && !avatarUrl.isEmpty() ? saveAvatar(avatarUrl, id) : null) // Скачиваем и сохраняем при создании, если URL не пустой
+                    .avatarPath(avatarUrl != null && !avatarUrl.isEmpty() ? saveAvatar(avatarUrl, id) : null)
                     .avatarAltText(avatarAltText)
                     .build();
                 mangaProgressRepository.save(mangaProgress);
-            }
 
-            log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
-                     id, commentsDone, totalComments, chaptersDone, totalChapters,
-                     quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
+                log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
+                         id, commentsDone, totalComments, chaptersDone, totalChapters,
+                         quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
+            }
 
         } catch (HttpClientErrorException.UnprocessableEntity e) {
             log.warn("Попытка: Лимит комментариев. Ждем...");
@@ -302,5 +361,9 @@ public class ScanningProgress {
         String[] months = {"января", "февраля", "марта", "апреля", "мая", "июня",
             "июля", "августа", "сентября", "октября", "ноября", "декабря"};
         return months[month - 1];
+    }
+
+    public void setMangaBuffJobViewController(MangaBuffJobViewController mangaBuffJobViewController) {
+        this.mangaBuffJobViewController = mangaBuffJobViewController;
     }
 }

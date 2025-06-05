@@ -10,6 +10,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MangaReadingProgressId implements Serializable {
-    private Long manga;
-    private Long userCookie;
+    private MangaData manga;
+    private UserCookie userCookie;
 } 

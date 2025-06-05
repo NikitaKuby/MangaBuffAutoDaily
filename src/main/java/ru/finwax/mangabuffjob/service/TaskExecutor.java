@@ -12,17 +12,33 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class TaskExecutor {
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final BlockingQueue<MangaTask> taskQueue = new LinkedBlockingQueue<>();
-    private final ConcurrentHashMap<Long, TaskStatus> taskStatuses = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, MangaTask> taskStatuses = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, AtomicBoolean> activeAccountTasks = new ConcurrentHashMap<>();
     @Getter
     private final TaskExecutionService taskExecutionService;
     private volatile boolean isRunning = false;
+
+    public List<MangaTask> getRunningTasks() {
+        List<MangaTask> runningTasks = new ArrayList<>();
+        for (MangaTask task : taskStatuses.values()) {
+            if (task.getStatus() == TaskStatus.RUNNING) {
+                runningTasks.add(task);
+            }
+        }
+        return runningTasks;
+    }
+
+    private String getTaskKey(Long userId, TaskType type) {
+        return userId + ":" + type.name();
+    }
 
     public void executeTasks(List<MangaTask> tasks, Consumer<MangaTask> statusCallback) {
         if (isRunning) {
@@ -66,14 +82,17 @@ public class TaskExecutor {
                 try {
                     // Обновляем статус задачи
                     task.setStatus(TaskStatus.RUNNING);
+                    taskStatuses.put(getTaskKey(task.getUserId(), task.getType()), task);
                     statusCallback.accept(task);
 
                     // Выполняем задачу
                     taskExecutionService.executeTask(task);
                     task.setStatus(TaskStatus.COMPLETED);
+                    taskStatuses.put(getTaskKey(task.getUserId(), task.getType()), task);
                 } catch (Exception e) {
                     task.setStatus(TaskStatus.ERROR);
                     task.setErrorMessage(e.getMessage());
+                    taskStatuses.put(getTaskKey(task.getUserId(), task.getType()), task);
                 } finally {
                     // Освобождаем флаг активности для аккаунта
                     accountActive.set(false);

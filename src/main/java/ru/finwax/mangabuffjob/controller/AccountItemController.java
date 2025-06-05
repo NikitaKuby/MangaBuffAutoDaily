@@ -40,12 +40,14 @@ import java.util.stream.Collectors;
 import javafx.stage.Popup;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.StackPane;
+import javafx.scene.control.Tooltip;
 
 import java.awt.Desktop;
 import java.net.URI;
 import javafx.scene.control.Alert;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
+import ru.finwax.mangabuffjob.model.TaskType;
 
 @Component
 @Getter
@@ -55,16 +57,32 @@ public class AccountItemController {
     private ImageView avatarImageView;
     @FXML
     private Label avatarAltTextLabel;
+
     @FXML
-    private Label readerProgressLabel;
+    private ImageView readerStatusIcon;
     @FXML
-    private Label commentProgressLabel;
+    private Tooltip readerProgressTooltip;
+
     @FXML
-    private Label quizProgressLabel;
+    private ImageView commentStatusIcon;
     @FXML
-    private Label mineProgressLabel;
+    private Tooltip commentProgressTooltip;
+
     @FXML
-    private Label advProgressLabel;
+    private ImageView quizStatusIcon;
+    @FXML
+    private Tooltip quizProgressTooltip;
+
+    @FXML
+    private ImageView mineStatusIcon;
+    @FXML
+    private Tooltip mineProgressTooltip;
+
+    @FXML
+    private ImageView advStatusIcon;
+    @FXML
+    private Tooltip advProgressTooltip;
+
     @FXML
     private Label diamondCountLabel;
     @FXML
@@ -129,6 +147,21 @@ public class AccountItemController {
 
     @FXML
     private Button openCardsButton;
+
+    @FXML
+    private CheckBox readerCheckBox;
+
+    @FXML
+    private CheckBox commentCheckBox;
+
+    @FXML
+    private CheckBox quizCheckBox;
+
+    @FXML
+    private CheckBox mineCheckBox;
+
+    @FXML
+    private CheckBox advCheckBox;
 
     private final AccountService accountService;
     private final MangaBuffJobViewController parentController;
@@ -227,68 +260,150 @@ public class AccountItemController {
 
     public void setAccount(AccountProgress account) {
         this.account = account;
-        readerProgressLabel.setText(account.getReaderProgress());
-        commentProgressLabel.setText(account.getCommentProgress());
-        quizProgressLabel.setText(String.valueOf(account.getQuizDone()));
-        mineProgressLabel.setText(account.getMineProgress());
-        advProgressLabel.setText(account.getAdvProgress());
+        if (account != null) {
+            // Устанавливаем состояние чекбоксов
+            readerCheckBox.setSelected(account.isReaderEnabled());
+            commentCheckBox.setSelected(account.isCommentEnabled());
+            quizCheckBox.setSelected(account.isQuizEnabled());
+            mineCheckBox.setSelected(account.isMineEnabled());
+            advCheckBox.setSelected(account.isAdvEnabled());
 
-        // Установка количества подарков
-        updateGiftCount();
+            // Добавляем слушатели изменений для сохранения состояния
+            readerCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                account.setReaderEnabled(newVal);
+                new Thread(() -> accountService.updateAccountProgressEnabledStates(account.getUserId(), newVal, account.isCommentEnabled(), account.isQuizEnabled(), account.isMineEnabled(), account.isAdvEnabled())).start();
+            });
+            commentCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                account.setCommentEnabled(newVal);
+                new Thread(() -> accountService.updateAccountProgressEnabledStates(account.getUserId(), account.isReaderEnabled(), newVal, account.isQuizEnabled(), account.isMineEnabled(), account.isAdvEnabled())).start();
+            });
+            quizCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                account.setQuizEnabled(newVal);
+                new Thread(() -> accountService.updateAccountProgressEnabledStates(account.getUserId(), account.isReaderEnabled(), account.isCommentEnabled(), newVal, account.isMineEnabled(), account.isAdvEnabled())).start();
+            });
+            mineCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                account.setMineEnabled(newVal);
+                new Thread(() -> accountService.updateAccountProgressEnabledStates(account.getUserId(), account.isReaderEnabled(), account.isCommentEnabled(), account.isQuizEnabled(), newVal, account.isAdvEnabled())).start();
+            });
+            advCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                account.setAdvEnabled(newVal);
+                new Thread(() -> accountService.updateAccountProgressEnabledStates(account.getUserId(), account.isReaderEnabled(), account.isCommentEnabled(), account.isQuizEnabled(), account.isMineEnabled(), newVal)).start();
+            });
 
-        // Автоматическая установка цвета кнопок
-        updateButtonStates();
+            // Обновление иконок статуса и всплывающих подсказок
+            updateStatusIcon(readerStatusIcon, readerProgressTooltip, account.getReaderProgress(), isTaskCompleted(account.getReaderProgress()) ? "green" : "grey");
+            updateStatusIcon(commentStatusIcon, commentProgressTooltip, account.getCommentProgress(), isTaskCompleted(account.getCommentProgress()) ? "green" : "grey");
+            updateStatusIcon(quizStatusIcon, quizProgressTooltip, String.valueOf(account.getQuizDone()), Boolean.TRUE.equals(account.getQuizDone()) ? "green" : "grey");
+            updateStatusIcon(mineStatusIcon, mineProgressTooltip, account.getMineProgress(), isMineCompleted(account.getMineHitsLeft()) ? "green" : "grey");
+            updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), isAdvCompleted(account.getAdvDone()) ? "green" : "grey");
 
-        // Отображение аватара
-        if (account.getAvatarPath() != null) {
-            File avatarFile = new File(account.getAvatarPath());
-            if (avatarFile.exists()) {
-                Image avatarImage = new Image(avatarFile.toURI().toString());
-                avatarImageView.setImage(avatarImage);
+            // Привязка Tooltip к ImageView программно
+            Tooltip.install(readerStatusIcon, readerProgressTooltip);
+            Tooltip.install(commentStatusIcon, commentProgressTooltip);
+            Tooltip.install(quizStatusIcon, quizProgressTooltip);
+            Tooltip.install(mineStatusIcon, mineProgressTooltip);
+            Tooltip.install(advStatusIcon, advProgressTooltip);
+
+            // Установка количества подарков
+            updateGiftCount();
+
+            // Автоматическая установка цвета кнопок
+            updateButtonStates();
+
+            // Отображение аватара
+            if (account.getAvatarPath() != null) {
+                File avatarFile = new File(account.getAvatarPath());
+                if (avatarFile.exists()) {
+                    Image avatarImage = new Image(avatarFile.toURI().toString());
+                    avatarImageView.setImage(avatarImage);
+                } else {
+                    avatarImageView.setImage(null);
+                }
             } else {
                 avatarImageView.setImage(null);
             }
-        } else {
-            avatarImageView.setImage(null);
+
+            // Установка иконки подарка
+            Image giftImage = new Image(getClass().getResourceAsStream("/static/card-gift.png"));
+            giftImageView.setImage(giftImage);
+
+            Image diamondImage = new Image(getClass().getResourceAsStream("/static/diamond.png"));
+            diamondImageView.setImage(diamondImage);
+
+            diamondCountLabel.setText(String.valueOf(account.getDiamond()));
+
+            if(account.getAvatarAltText().length()>6) {
+                avatarAltTextLabel.setText(account.getAvatarAltText().substring(0, 6));
+            }else {
+                avatarAltTextLabel.setText(account.getAvatarAltText());
+            }
+
+            // Добавляем обработчики событий мыши для показа подарков
+            giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());
+            giftImageView.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
+
+            startChaptersButton.setOnAction(event -> handleStartChapters());
+            startCommentsButton.setOnAction(event -> handleStartComments());
+            startQuizButton.setOnAction(event -> handleStartQuiz());
+            startMiningButton.setOnAction(event -> handleStartMining());
+            startAdvButton.setOnAction(event -> handleStartAdv());
+            deleteButton.setOnAction(event -> handleDeleteAccount());
+
+            // Add event handler for open cards button
+            openCardsButton.setOnAction(event -> handleOpenCards());
+
+            // Initially hide overlay and relogin button
+            taskOverlayPane.setVisible(false);
+            reloginButton.setVisible(false);
+            accountItem.setDisable(false);
+            // Если требуется перелогин, показать оверлей и кнопку
+            if (account.isReloginRequired()) {
+                showReloginRequiredState();
+            }
         }
+    }
 
-        // Установка иконки подарка
-        Image giftImage = new Image(getClass().getResourceAsStream("/static/card-gift.png"));
-        giftImageView.setImage(giftImage);
-
-        Image diamondImage = new Image(getClass().getResourceAsStream("/static/diamond.png"));
-        diamondImageView.setImage(diamondImage);
-
-        diamondCountLabel.setText(String.valueOf(account.getDiamond()));
-
-        if(account.getAvatarAltText().length()>6) {
-            avatarAltTextLabel.setText(account.getAvatarAltText().substring(0, 6));
-        }else {
-            avatarAltTextLabel.setText(account.getAvatarAltText());
+    private boolean isTaskCompleted(String progress) {
+        if (progress == null) return false;
+        String[] parts = progress.split("/");
+        if (parts.length != 2) return false;
+        try {
+            return Integer.parseInt(parts[0]) >= Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            return false;
         }
+    }
 
-        // Добавляем обработчики событий мыши для показа подарков
-        giftImageView.setOnMouseEntered(event -> showGiftImagesPopup());
-        giftImageView.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
+    private boolean isMineCompleted(Integer mineHitsLeft) {
+        return mineHitsLeft != null && mineHitsLeft == 0;
+    }
 
-        startChaptersButton.setOnAction(event -> handleStartChapters());
-        startCommentsButton.setOnAction(event -> handleStartComments());
-        startQuizButton.setOnAction(event -> handleStartQuiz());
-        startMiningButton.setOnAction(event -> handleStartMining());
-        startAdvButton.setOnAction(event -> handleStartAdv());
-        deleteButton.setOnAction(event -> handleDeleteAccount());
+    private boolean isAdvCompleted(Integer advDone) {
+        return advDone != null && advDone >= 3;
+    }
 
-        // Add event handler for open cards button
-        openCardsButton.setOnAction(event -> handleOpenCards());
-
-        // Initially hide overlay and relogin button
-        taskOverlayPane.setVisible(false);
-        reloginButton.setVisible(false);
-        accountItem.setDisable(false);
-        // Если требуется перелогин, показать оверлей и кнопку
-        if (account.isReloginRequired()) {
-            showReloginRequiredState();
-        }
+    private void updateStatusIcon(ImageView iconView, Tooltip tooltip, String progressText, String status) {
+        Platform.runLater(() -> {
+            String iconPath;
+            switch (status) {
+                case "blue":
+                    iconPath = "/static/icon/indicator/blue.png";
+                    break;
+                case "green":
+                    iconPath = "/static/icon/indicator/green.png";
+                    break;
+                case "red":
+                    iconPath = "/static/icon/indicator/red.png";
+                    break;
+                case "grey":
+                default:
+                    iconPath = "/static/icon/indicator/grey.png";
+                    break;
+            }
+            Image statusIcon = new Image(getClass().getResourceAsStream(iconPath));
+            iconView.setImage(statusIcon);
+            tooltip.setText(progressText);
+        });
     }
 
     @Transactional
@@ -442,6 +557,7 @@ public class AccountItemController {
         if (isButtonGreen(startChaptersButton)) return;
         System.out.println("Start Chapters button clicked for account: " + account.getUsername());
         setButtonState(startChaptersButton, "blue"); // Синяя кнопка и блокировка
+        updateStatusIcon(readerStatusIcon, readerProgressTooltip, account.getReaderProgress(), "blue");
 
         Task<Void> task = new Task<>() {
             @Override
@@ -451,12 +567,13 @@ public class AccountItemController {
                         Integer.parseInt(account.getReaderProgress().split("/")[0]);
                     System.out.println(countOfChapters);
 
-                    mangaReadScheduler.readMangaChapters(account.getUserId(), countOfChapters, viewsCheckBox.isSelected());
+                    mangaReadScheduler.readMangaChapters(account.getUserId(), countOfChapters, isTaskEnabled(TaskType.READER));
                     Platform.runLater(() -> {
                         parentController.scanAccount(account.getUserId());
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startChaptersButton, "red"));
+                    updateStatusIcon(readerStatusIcon, readerProgressTooltip, account.getReaderProgress(), "red");
                     System.err.println("Ошибка при чтении глав: " + e.getMessage());
                 }
                 return null;
@@ -469,6 +586,7 @@ public class AccountItemController {
         if (isButtonGreen(startCommentsButton)) return;
         System.out.println("Start Comments button clicked for account: " + account.getUsername());
         setButtonState(startCommentsButton, "blue");
+        updateStatusIcon(commentStatusIcon, commentProgressTooltip, account.getCommentProgress(), "blue");
 
         Task<Void> task = new Task<>() {
             @Override
@@ -488,6 +606,7 @@ public class AccountItemController {
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startCommentsButton, "red"));
+                    updateStatusIcon(commentStatusIcon, commentProgressTooltip, account.getCommentProgress(), "red");
                     System.err.println("Ошибка при отправке комментариев: " + e.getMessage());
                 }
                 return null;
@@ -500,15 +619,17 @@ public class AccountItemController {
         if (isButtonGreen(startQuizButton)) return;
         System.out.println("Start Quiz button clicked for account: " + account.getUsername());
         setButtonState(startQuizButton, "blue");
+        updateStatusIcon(quizStatusIcon, quizProgressTooltip, String.valueOf(account.getQuizDone()), "blue");
 
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
                 try {
-                    quizScheduler.monitorQuizRequests(account.getUserId(),  viewsCheckBox.isSelected());
+                    quizScheduler.monitorQuizRequests(account.getUserId(), isTaskEnabled(TaskType.QUIZ));
                     parentController.scanAccount(account.getUserId());
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startQuizButton, "red"));
+                    updateStatusIcon(quizStatusIcon, quizProgressTooltip, String.valueOf(account.getQuizDone()), "red");
                     System.err.println("Ошибка при запуске квиза: " + e.getMessage());
                     e.printStackTrace();
                 }
@@ -521,6 +642,7 @@ public class AccountItemController {
     private void handleStartMining() {
         if (isButtonGreen(startMiningButton)) return;
         setButtonState(startMiningButton, "blue");
+        updateStatusIcon(mineStatusIcon, mineProgressTooltip, account.getMineProgress(), "blue");
 
         Task<Void> task = new Task<>() {
             @Override
@@ -528,7 +650,7 @@ public class AccountItemController {
                 try {
                     Integer mineHitsLeft = account.getMineHitsLeft();
                     if (mineHitsLeft != null && mineHitsLeft > 0) {
-                        mineScheduler.performMining(account.getUserId(), mineHitsLeft, viewsCheckBox.isSelected());
+                        mineScheduler.performMining(account.getUserId(), mineHitsLeft, isTaskEnabled(TaskType.MINE));
                         parentController.scanAccount(account.getUserId());
                     } else {
                         Platform.runLater(() -> setButtonState(startMiningButton, "green"));
@@ -536,6 +658,7 @@ public class AccountItemController {
                     }
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startMiningButton, "red"));
+                    updateStatusIcon(mineStatusIcon, mineProgressTooltip, account.getMineProgress(), "red");
                     System.err.println("Ошибка при запуске майнинга: " + e.getMessage());
                     e.printStackTrace();
                 }
@@ -549,6 +672,7 @@ public class AccountItemController {
         if (isButtonGreen(startAdvButton)) return;
         System.out.println("Start Adv button clicked for account: " + account.getUsername());
         setButtonState(startAdvButton, "blue");
+        updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), "blue");
 
         Task<Void> task = new Task<>() {
             @Override
@@ -557,7 +681,7 @@ public class AccountItemController {
                     int advDone = account.getAdvDone();
                     int countAdv = 3 - advDone;
                     if (countAdv > 0) {
-                        advertisingScheduler.performAdv(account.getUserId(), countAdv, viewsCheckBox.isSelected());
+                        advertisingScheduler.performAdv(account.getUserId(), countAdv, isTaskEnabled(TaskType.ADV));
                         parentController.scanAccount(account.getUserId());
                     } else {
                         Platform.runLater(() -> setButtonState(startAdvButton, "green"));
@@ -565,6 +689,7 @@ public class AccountItemController {
                     }
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startAdvButton, "red"));
+                    updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), "red");
                     System.err.println("Error starting ads: " + e.getMessage());
                     e.printStackTrace();
                 }
@@ -768,6 +893,81 @@ public class AccountItemController {
                 // Optionally, show an error message to the user
             }
         }).start();
+    }
+
+    public void updateTaskStatusIcon(TaskType taskType, String status) {
+        String progressText = ""; // Будем получать текст прогресса из AccountProgress
+        ImageView iconView = null;
+        Tooltip tooltip = null;
+
+        switch (taskType) {
+            case READER:
+                iconView = readerStatusIcon;
+                tooltip = readerProgressTooltip;
+                progressText = account.getReaderProgress();
+                break;
+            case COMMENT:
+                iconView = commentStatusIcon;
+                tooltip = commentProgressTooltip;
+                progressText = account.getCommentProgress();
+                break;
+            case QUIZ:
+                iconView = quizStatusIcon;
+                tooltip = quizProgressTooltip;
+                progressText = String.valueOf(account.getQuizDone());
+                break;
+            case MINE:
+                iconView = mineStatusIcon;
+                tooltip = mineProgressTooltip;
+                progressText = account.getMineProgress();
+                break;
+            case ADV:
+                iconView = advStatusIcon;
+                tooltip = advProgressTooltip;
+                progressText = account.getAdvProgress();
+                break;
+        }
+
+        if (iconView != null && tooltip != null) {
+            updateStatusIcon(iconView, tooltip, progressText, status);
+        }
+    }
+
+    public boolean isTaskEnabled(TaskType taskType) {
+        switch (taskType) {
+            case READER:
+                return readerCheckBox.isSelected();
+            case COMMENT:
+                return commentCheckBox.isSelected();
+            case QUIZ:
+                return quizCheckBox.isSelected();
+            case MINE:
+                return mineCheckBox.isSelected();
+            case ADV:
+                return advCheckBox.isSelected();
+            default:
+                return false;
+        }
+    }
+
+    public void setTaskEnabled(TaskType taskType, boolean enabled) {
+        switch (taskType) {
+            case READER:
+                readerCheckBox.setSelected(enabled);
+                break;
+            case COMMENT:
+                commentCheckBox.setSelected(enabled);
+                break;
+            case QUIZ:
+                quizCheckBox.setSelected(enabled);
+                break;
+            case MINE:
+                mineCheckBox.setSelected(enabled);
+                break;
+            case ADV:
+                advCheckBox.setSelected(enabled);
+                break;
+        }
     }
 }
 

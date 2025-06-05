@@ -35,4 +35,17 @@ public class AccountService {
         // Удаляем сам аккаунт
         userCookieRepository.delete(userCookie);
     }
+
+    @Transactional
+    public void updateAccountProgressEnabledStates(Long userId, boolean readerEnabled, boolean commentEnabled, boolean quizEnabled, boolean mineEnabled, boolean advEnabled) {
+        mangaProgressRepository.findByUserId(userId)
+            .ifPresent(progress -> {
+                progress.setReaderEnabled(readerEnabled);
+                progress.setCommentEnabled(commentEnabled);
+                progress.setQuizEnabled(quizEnabled);
+                progress.setMineEnabled(mineEnabled);
+                progress.setAdvEnabled(advEnabled);
+                mangaProgressRepository.save(progress);
+            });
+    }
 } 

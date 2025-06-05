@@ -39,16 +39,24 @@ public class MbAuth {
                 .clearResolutionCache()
                 .setup();
         } catch (Exception e) {
-            // Проверяем, является ли это ошибкой доступа к файлу кэша
-            if (e.getCause() instanceof IOExceptionList || 
-                (e.getCause() != null && e.getCause().getCause() instanceof java.nio.file.AccessDeniedException)) {
-                // Игнорируем ошибку очистки кэша, так как она не критична
-                log.debug("[{}] Не удалось очистить кэш драйвера (не критично)", id);
+            // Проверяем, является ли это ошибкой доступа к файлу кэша или ошибкой списка IOExceptionList
+            Throwable cause = e.getCause();
+            boolean isCacheError = false;
+            if (cause instanceof IOExceptionList) {
+                 isCacheError = true;
+            } else if (cause != null && cause.getCause() instanceof java.nio.file.AccessDeniedException) {
+                 isCacheError = true;
+            }
+
+            if (isCacheError) {
+                // Игнорируем ошибку очистки кэша, так как она не критична, логируем без стектрейса
+                log.debug("[{}] Не удалось очистить кэш драйвера (не критично): {}", id, e.getMessage());
                 try {
+                    // Повторно вызываем setup() без очистки, чтобы убедиться, что драйвер готов
                     WebDriverManager.chromedriver().setup();
-                } catch (Exception ex) {
-                    log.error("[{}] Критическая ошибка при настройке драйвера: {}", id, ex.getMessage());
-                    throw new RuntimeException("Не удалось настроить драйвер", ex);
+                } catch (Exception setupEx) {
+                    log.error("[{}] Критическая ошибка при настройке драйвера после игнорирования ошибки кеша: {}", id, setupEx.getMessage());
+                    throw new RuntimeException("Не удалось настроить драйвер после ошибки кеша", setupEx);
                 }
             } else {
                 log.error("[{}] Неожиданная ошибка при настройке драйвера: {}", id, e.getMessage());

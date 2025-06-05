@@ -10,36 +10,45 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.CheckBox?>
 
-<AnchorPane prefHeight="80.0" prefWidth="680.0" style="-fx-border-color: #d0d0d0; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: #fff; -fx-effect: dropshadow(gaussian, #bdbdbd, 4, 0.2, 0, 2);" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="80.0" minHeight="80.0" maxHeight="80.0" prefWidth="680.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <HBox fx:id="accountItem" alignment="CENTER_LEFT" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+      <HBox fx:id="accountItem" alignment="CENTER_LEFT" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" styleClass="account-card">
          <children>
-            <Button fx:id="openCardsButton" mnemonicParsing="false" style="-fx-background-color: lightgreen; -fx-background-radius: 6px; -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px;" >
-                 <graphic>
-                    <ImageView fitHeight="20" fitWidth="20" pickOnBounds="true" preserveRatio="true">
-                       <image>
-                          <Image url="@/static/icon/play.png" />
-                       </image>
-                    </ImageView>
-                 </graphic>
-                 <tooltip>
-                    <Tooltip text="Открыть страницу карт для соответсвующего аккаунта" showDelay="50ms" />
-                 </tooltip>
-            </Button>
-            <Button fx:id="deleteButton" mnemonicParsing="false" style="-fx-background-color: #ff3b2b; -fx-background-radius: 6px; -fx-min-width: 28px; -fx-min-height: 28px; -fx-max-width: 28px; -fx-max-height: 28px;" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="12.0" >
-               <graphic>
-                  <ImageView fitHeight="20" fitWidth="20" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@/static/icon/delete.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <tooltip>
-                  <Tooltip text="Нажмите для удаления аккаунта" showDelay="50ms" />
-               </tooltip>
-            </Button>
-            <VBox alignment="CENTER">
+             <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
+                 <children>
+                    <Button fx:id="openCardsButton" mnemonicParsing="false" style="-fx-background-color: transparent;" >
+                         <graphic>
+                            <ImageView fitHeight="20" fitWidth="20" pickOnBounds="true" preserveRatio="true">
+                               <image>
+                                  <Image url="@/static/icon/play.png" />
+                               </image>
+                            </ImageView>
+                         </graphic>
+                         <tooltip>
+                            <Tooltip text="Открыть страницу карт для соответсвующего аккаунта" showDelay="50ms" />
+                         </tooltip>
+                    </Button>
+                 </children>
+             </VBox>
+             <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
+                 <children>
+                    <Button fx:id="deleteButton" mnemonicParsing="false" style="-fx-background-color: transparent;" >
+                       <graphic>
+                          <ImageView fitHeight="20" fitWidth="20" pickOnBounds="true" preserveRatio="true">
+                             <image>
+                                <Image url="@/static/icon/delete.png" />
+                             </image>
+                          </ImageView>
+                       </graphic>
+                       <tooltip>
+                          <Tooltip text="Нажмите для удаления аккаунта" showDelay="50ms" />
+                       </tooltip>
+                    </Button>
+                 </children>
+             </VBox>
+            <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                <children>
                   <ImageView fx:id="avatarImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" />
                   <Label fx:id="avatarAltTextLabel" text="Alt Text" style="-fx-font-size: 10px;" />
@@ -49,50 +58,104 @@
                 <children>
                     <HBox fx:id="taskButtonsHBox" alignment="CENTER_LEFT" spacing="10.0">
                         <children>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                                 <children>
-                                    <Label text="Reader" />
-                                    <Label fx:id="readerProgressLabel" text="0/0" />
-                                    <Button fx:id="startChaptersButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" disable="true">
+                                    <HBox alignment="CENTER" spacing="5" prefHeight="25.0" minHeight="25.0" maxHeight="25.0">
+                                        <children>
+                                            <StackPane alignment="CENTER" prefHeight="20.0" minHeight="20.0" maxHeight="20.0">
+                                                <ImageView fx:id="readerStatusIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@/static/icon/indicator/grey.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </StackPane>
+                                            <CheckBox fx:id="readerCheckBox" selected="true" alignment="CENTER" />
+                                        </children>
+                                    </HBox>
+                                    <Button fx:id="startChaptersButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" disable="true" visible="false" managed="false">
                                         <tooltip>
                                             <Tooltip text="Нажмите &quot;Обновить список манги&quot; для работы этих кнопок" showDelay="50ms" />
                                         </tooltip>
                                     </Button>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="90.0" minWidth="90.0" maxWidth="90.0">
                                 <children>
-                                    <Label text="Comments" />
-                                    <Label fx:id="commentProgressLabel" text="0/0" />
-                                    <Button fx:id="startCommentsButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" disable="true">
+                                    <HBox alignment="CENTER" spacing="5" prefHeight="25.0" minHeight="25.0" maxHeight="25.0">
+                                        <children>
+                                            <StackPane alignment="CENTER" prefHeight="20.0" minHeight="20.0" maxHeight="20.0">
+                                                <ImageView fx:id="commentStatusIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@/static/icon/indicator/grey.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </StackPane>
+                                            <CheckBox fx:id="commentCheckBox" selected="true" alignment="CENTER" />
+                                        </children>
+                                    </HBox>
+                                    <Button fx:id="startCommentsButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" disable="true" visible="false" managed="false">
                                         <tooltip>
                                             <Tooltip text="Нажмите &quot;Обновить список манги&quot; для работы этих кнопок" showDelay="50ms" />
                                         </tooltip>
                                     </Button>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                                 <children>
-                                    <Label text="Quiz" />
-                                    <Label fx:id="quizProgressLabel" text="false" />
-                                    <Button fx:id="startQuizButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" />
+                                    <HBox alignment="CENTER" spacing="5" prefHeight="25.0" minHeight="25.0" maxHeight="25.0">
+                                        <children>
+                                            <StackPane alignment="CENTER" prefHeight="20.0" minHeight="20.0" maxHeight="20.0">
+                                                <ImageView fx:id="quizStatusIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@/static/icon/indicator/grey.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </StackPane>
+                                            <CheckBox fx:id="quizCheckBox" selected="true" alignment="CENTER" />
+                                        </children>
+                                    </HBox>
+                                    <Button fx:id="startQuizButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" visible="false" managed="false"/>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                                 <children>
-                                    <Label text="Mine" />
-                                    <Label fx:id="mineProgressLabel" text="false" />
-                                    <Button fx:id="startMiningButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" />
+                                    <HBox alignment="CENTER" spacing="5" prefHeight="25.0" minHeight="25.0" maxHeight="25.0">
+                                        <children>
+                                            <StackPane alignment="CENTER" prefHeight="20.0" minHeight="20.0" maxHeight="20.0">
+                                                <ImageView fx:id="mineStatusIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@/static/icon/indicator/grey.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </StackPane>
+                                            <CheckBox fx:id="mineCheckBox" selected="true" alignment="CENTER" />
+                                        </children>
+                                    </HBox>
+                                    <Button fx:id="startMiningButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" visible="false" managed="false"/>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                                 <children>
-                                    <Label text="Adv" />
-                                    <Label fx:id="advProgressLabel" text="0/0" />
-                                    <Button fx:id="startAdvButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" />
+                                    <HBox alignment="CENTER" spacing="5" prefHeight="25.0" minHeight="25.0" maxHeight="25.0">
+                                        <children>
+                                            <StackPane alignment="CENTER" prefHeight="20.0" minHeight="20.0" maxHeight="20.0">
+                                                <ImageView fx:id="advStatusIcon" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                                    <image>
+                                                        <Image url="@/static/icon/indicator/grey.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </StackPane>
+                                            <CheckBox fx:id="advCheckBox" selected="true" alignment="CENTER" />
+                                        </children>
+                                    </HBox>
+                                    <Button fx:id="startAdvButton" mnemonicParsing="false" text="начать" style="-fx-min-width: 90px; -fx-max-width: 90px;" disable="true" visible="false" managed="false">
+                                        <tooltip>
+                                            <Tooltip text="Нажмите &quot;Обновить список манги&quot; для работы этих кнопок" showDelay="50ms" />
+                                        </tooltip>
+                                    </Button>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
                                 <children>
                                     <HBox alignment="CENTER" spacing="5.0">
                                         <children>
@@ -102,7 +165,7 @@
                                     </HBox>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
                                 <children>
                                     <HBox alignment="CENTER" spacing="5.0">
                                         <children>
@@ -112,7 +175,7 @@
                                     </HBox>
                                 </children>
                             </VBox>
-                            <VBox alignment="CENTER">
+                            <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                                 <children>
                                     <HBox alignment="CENTER" spacing="5.0">
                                         <children>
@@ -138,4 +201,11 @@
          <viewOrder>0</viewOrder>
       </HBox>
    </children>
+   <fx:define>
+       <Tooltip fx:id="readerProgressTooltip" text="" showDelay="50ms"/>
+       <Tooltip fx:id="commentProgressTooltip" text="" showDelay="50ms"/>
+       <Tooltip fx:id="quizProgressTooltip" text="" showDelay="50ms"/>
+       <Tooltip fx:id="mineProgressTooltip" text="" showDelay="50ms"/>
+       <Tooltip fx:id="advProgressTooltip" text="" showDelay="50ms"/>
+   </fx:define>
 </AnchorPane> 

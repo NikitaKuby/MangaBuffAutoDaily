@@ -72,6 +72,22 @@ public class MangaProgress {
     private Long diamond;
 
     @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    private boolean readerEnabled = true;
+    @Builder.Default
+    @Column(columnDefinition = "boolean default false")
+    private boolean commentEnabled = false;
+    @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    private boolean quizEnabled = true;
+    @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    private boolean mineEnabled = true;
+    @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    private boolean advEnabled = true;
+
+    @Builder.Default
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

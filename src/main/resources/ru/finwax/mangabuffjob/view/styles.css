@@ -87,4 +87,15 @@
     -fx-text-fill: #333;
     -fx-font-size: 12px;
     -fx-font-weight: normal;
+}
+
+.account-card {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 1);
+    -fx-padding: 5px;
+    -fx-margin: 5px;
 } 

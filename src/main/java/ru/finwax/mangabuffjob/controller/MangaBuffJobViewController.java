@@ -191,6 +191,9 @@ public class MangaBuffJobViewController implements Initializable {
             // Устанавливаем ссылку на этот контроллер в MangaReadScheduler
             mangaReadScheduler.setViewController(this);
 
+            // Устанавливаем ссылку на этот контроллер в ScanningProgress
+            scanningProgress.setMangaBuffJobViewController(this);
+
             // Настройка обработчиков событий для кнопок
             addAccountButton.setOnAction(event -> handleAddAccount());
             runBotButton.setOnAction(event -> handleRunBot());
@@ -362,7 +365,12 @@ public class MangaBuffJobViewController implements Initializable {
                     progress.getTotalCommentChapters(),
                     mineHitsLeftForDisplay,
                     progress.getDiamond(),
-                    reloginRequiredAccounts.contains(userCookie.getId())
+                    reloginRequiredAccounts.contains(userCookie.getId()),
+                    progress.isReaderEnabled(),
+                    progress.isCommentEnabled(),
+                    progress.isQuizEnabled(),
+                    progress.isMineEnabled(),
+                    progress.isAdvEnabled()
                 ));
             });
             displayAccounts();
@@ -377,6 +385,19 @@ public class MangaBuffJobViewController implements Initializable {
             Platform.runLater(() -> {
                 try {
                     accountsVBox.getChildren().clear();
+
+                    // Add headers if there are accounts
+                    if (!accountData.isEmpty()) {
+                        try {
+                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountHeaders.fxml"));
+                            loader.setControllerFactory(applicationContext::getBean);
+                            AnchorPane headers = loader.load();
+                            accountsVBox.getChildren().add(headers);
+                        } catch (IOException e) {
+                            System.err.println("Error loading headers FXML: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
 
                     for (AccountProgress account : accountData) {
                         try {
@@ -452,38 +473,38 @@ public class MangaBuffJobViewController implements Initializable {
 
     private List<MangaTask> getPendingTasks(AccountProgress account) {
         List<MangaTask> tasks = new ArrayList<>();
-        
+
         // ADV tasks
-        if (account.getAdvDone() < 3) {
+        if (account.isAdvEnabled() && account.getAdvDone() < 3) {
             tasks.add(new MangaTask(account.getUserId(), TaskType.ADV, 3 - account.getAdvDone()));
         }
-        
+
         // MINE tasks
-        if (account.getMineHitsLeft() > 0) {
+        if (account.isMineEnabled() && account.getMineHitsLeft() > 0) {
             tasks.add(new MangaTask(account.getUserId(), TaskType.MINE, account.getMineHitsLeft()));
         }
-        
+
         // QUIZ tasks
-        if (account.getQuizDone() != null && !account.getQuizDone()) {
+        if (account.isQuizEnabled() && account.getQuizDone() != null && !account.getQuizDone()) {
             tasks.add(new MangaTask(account.getUserId(), TaskType.QUIZ, 1));
         }
-        
+
         // COMMENT tasks
         String[] commentProgress = account.getCommentProgress().split("/");
         int commentDone = Integer.parseInt(commentProgress[0]);
         int totalComments = Integer.parseInt(commentProgress[1]);
-        if (commentDone < totalComments) {
+        if (account.isCommentEnabled() && commentDone < totalComments) {
             tasks.add(new MangaTask(account.getUserId(), TaskType.COMMENT, totalComments - commentDone));
         }
-        
+
         // READER tasks
         String[] readerProgress = account.getReaderProgress().split("/");
         int readerDone = Integer.parseInt(readerProgress[0]);
         int totalReader = Integer.parseInt(readerProgress[1]);
-        if (readerDone < 75) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.READER, 75 - readerDone));
+        if (account.isReaderEnabled() && readerDone < totalReader) {
+            tasks.add(new MangaTask(account.getUserId(), TaskType.READER, totalReader - readerDone));
         }
-        
+
         return tasks;
     }
 
@@ -526,7 +547,25 @@ public class MangaBuffJobViewController implements Initializable {
                                     break;
                             }
                         }
-                        break;
+                        
+                        // Обновляем статус иконки
+                        String iconStatus = "grey"; // Default
+                        switch (task.getStatus()) {
+                            case RUNNING:
+                                iconStatus = "blue";
+                                break;
+                            case COMPLETED:
+                                iconStatus = "green"; // Устанавливаем статус иконки в green
+                                // Сканируем аккаунт для обновления прогресса и тултипа
+                                Platform.runLater(() -> scanAccount(task.getUserId()));
+                                break;
+                            case ERROR:
+                                iconStatus = "red";
+                                break;
+                        }
+                        controller.updateTaskStatusIcon(task.getType(), iconStatus);
+
+                        break; // Found the controller, no need to continue the loop
                     }
                 }
             }
@@ -546,30 +585,14 @@ public class MangaBuffJobViewController implements Initializable {
         // Собираем все задачи
         List<MangaTask> allTasks = new ArrayList<>();
         for (AccountProgress account : accountData) {
-            allTasks.addAll(getPendingTasks(account));
+            List<MangaTask> pendingTasks = getPendingTasks(account);
+            allTasks.addAll(pendingTasks);
         }
         
         // Запускаем выполнение задач
         taskExecutor.executeTasks(allTasks, this::updateTaskStatus);
         
         // После завершения всех задач
-        Task<Void> refreshTask = new Task<>() {
-            @Override
-            protected Void call() {
-                try {
-                    // Ждем завершения всех задач
-                    Thread.sleep(1000); // Даем время на завершение
-                    Platform.runLater(() -> {
-                        handleRefreshAccounts();
-                        setUIEnabled(true);
-                    });
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return null;
-            }
-        };
-        new Thread(refreshTask).start();
     }
 
     public void scanAccount(Long userId) {
@@ -599,8 +622,14 @@ public class MangaBuffJobViewController implements Initializable {
                                     progress.getTotalCommentChapters(),
                                     progress.getMineHitsLeft(),
                                     progress.getDiamond(),
-                                    false
+                                    false,
+                                    progress.isReaderEnabled(),
+                                    progress.isCommentEnabled(),
+                                    progress.isQuizEnabled(),
+                                    progress.isMineEnabled(),
+                                    progress.isAdvEnabled()
                                 );
+
                                 controller.setAccount(updatedAccount);
                             });
                         }
@@ -683,6 +712,23 @@ public class MangaBuffJobViewController implements Initializable {
                 Platform.runLater(() -> {
                     stopLoadingAnimationRefresh(refreshButton);
                     loadAccountsFromDatabase();
+
+                    // После загрузки данных из базы и обновления UI, проверяем запущенные задачи и обновляем иконки
+                    List<MangaTask> runningTasks = taskExecutor.getRunningTasks();
+                    if (!runningTasks.isEmpty()) {
+                        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                            if (node instanceof HBox accountItem) {
+                                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                                Long accountUserId = controller.getAccount().getUserId();
+                                runningTasks.stream()
+                                            .filter(task -> task.getUserId().equals(accountUserId))
+                                            .forEach(runningTask -> {
+                                                // Обновляем иконку статуса на синий для запущенных задач
+                                                controller.updateTaskStatusIcon(runningTask.getType(), "blue");
+                                            });
+                            }
+                        }
+                    }
                 });
             }
             @Override
@@ -821,6 +867,10 @@ public class MangaBuffJobViewController implements Initializable {
         if (supportPopup != null && supportPopup.isShowing()) {
             supportPopup.hide();
         }
+    }
+
+    public VBox getAccountsVBox() {
+        return accountsVBox;
     }
 
 } 
