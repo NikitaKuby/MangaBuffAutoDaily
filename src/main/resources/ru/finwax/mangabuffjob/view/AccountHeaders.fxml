@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<AnchorPane prefHeight="40.0" style="-fx-border-color: #f0f1f4; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: #f0f1f4;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+         <children>
+            <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
+               <children>
+                  <Label text="" />
+               </children>
+            </VBox>
+            <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
+               <children>
+                  <Label text="" />
+               </children>
+            </VBox>
+            <VBox alignment="CENTER_LEFT" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
+               <children>
+                  <Label text="" style="-fx-font-weight: bold;" />
+               </children>
+            </VBox>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <children>
+                    <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
+                        <children>
+                            <Label text="Reader" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="90.0" minWidth="90.0" maxWidth="90.0">
+                        <children>
+                            <Label text="Comments" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
+                        <children>
+                            <Label text="Quiz" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
+                        <children>
+                            <Label text="Mine" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
+                        <children>
+                            <Label text="Adv" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
+                        <children>
+                            <Label text="" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
+                        <children>
+                            <Label text="" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
+                        <children>
+                            <Label text="" style="-fx-font-weight: bold;" />
+                        </children>
+                    </VBox>
+                </children>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </HBox>
+   </children>
+</AnchorPane> 
