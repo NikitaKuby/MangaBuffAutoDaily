@@ -22,6 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 @Slf4j
 @Service
@@ -193,8 +195,9 @@ public class MangaParserService {
     public void importMangaFromCSV() {
         log.info("Начинаем импорт манги из CSV файла");
         try {
-            // Читаем CSV файл
-            try (BufferedReader reader = new BufferedReader(new FileReader("manga_parsing_data.csv"))) {
+            // Читаем CSV файл из ресурсов
+            try (InputStream is = getClass().getResourceAsStream("/static/manga_parsing_data.csv");
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
                 String line;
                 // Пропускаем заголовок
                 reader.readLine();

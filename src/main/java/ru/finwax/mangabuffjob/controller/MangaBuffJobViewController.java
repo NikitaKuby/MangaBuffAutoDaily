@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.model.AccountProgress;
+import ru.finwax.mangabuffjob.model.CountScroll;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.service.MangaParserService;
@@ -40,6 +41,7 @@ import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
 
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -232,8 +235,8 @@ public class MangaBuffJobViewController implements Initializable {
             @Override
             protected Void call(){
                 try {
-                    File csvFile = new File("manga_parsing_data.csv");
-                    if (csvFile.exists()) {
+                    InputStream is = getClass().getResourceAsStream("/static/manga_parsing_data.csv");
+                    if (is != null) {
                         mangaParserService.importMangaFromCSV();
                         Platform.runLater(() -> setButtonState(updateMangaListButton, "green"));
                     } else {
@@ -350,6 +353,21 @@ public class MangaBuffJobViewController implements Initializable {
                         return mangaProgressRepository.save(newProgress);
                     });
                 Integer mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
+
+                // Получаем текущие данные о свитках из существующего аккаунта, если он есть
+                Map<String, CountScroll> existingScrollCounts = null;
+                for (AccountProgress existingAccount : accountData) {
+                    if (existingAccount.getUserId().equals(userCookie.getId())) {
+                        existingScrollCounts = existingAccount.getScrollCounts();
+                        break;
+                    }
+                }
+
+                // Если нет существующих данных, парсим новые
+                if (existingScrollCounts == null) {
+                    existingScrollCounts = scanningProgress.parseScrollCount(userCookie.getId());
+                }
+
                 accountData.add(new AccountProgress(
                     userCookie.getUsername(),
                     progress.getReaderDone() + "/" + progress.getTotalReaderChapters(),
@@ -370,7 +388,8 @@ public class MangaBuffJobViewController implements Initializable {
                     progress.isCommentEnabled(),
                     progress.isQuizEnabled(),
                     progress.isMineEnabled(),
-                    progress.isAdvEnabled()
+                    progress.isAdvEnabled(),
+                    existingScrollCounts
                 ));
             });
             displayAccounts();
@@ -627,7 +646,8 @@ public class MangaBuffJobViewController implements Initializable {
                                     progress.isCommentEnabled(),
                                     progress.isQuizEnabled(),
                                     progress.isMineEnabled(),
-                                    progress.isAdvEnabled()
+                                    progress.isAdvEnabled(),
+                                    scanningProgress.parseScrollCount(progress.getUserId())
                                 );
 
                                 controller.setAccount(updatedAccount);

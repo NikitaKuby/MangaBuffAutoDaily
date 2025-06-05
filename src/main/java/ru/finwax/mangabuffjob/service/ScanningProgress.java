@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
+import ru.finwax.mangabuffjob.model.CountScroll;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
@@ -31,8 +32,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +93,27 @@ public class ScanningProgress {
             log.error("Ошибка при парсинге количества event-gift", e);
         }
         return null; // Возвращаем null если элемент не найден или другая ошибка
+    }
+
+    public Map<String, CountScroll> parseScrollCount(Long id) {
+        try {
+            Document eventDoc = fetchDocument(id, "https://mangabuff.ru/cards/upLevel");
+            Elements scrollItems = eventDoc.select(".card-level-scrolls__item");
+            Map<String, CountScroll> scrollCounts = new HashMap<>();
+
+            for (Element item : scrollItems) {
+                String rank = item.attr("data-rank");
+                int count = Integer.parseInt(item.attr("data-count"));
+                int blessedCount = Integer.parseInt(item.attr("data-blessed-count"));
+                
+                scrollCounts.put(rank, new CountScroll(count, blessedCount));
+            }
+
+            return scrollCounts;
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге количества свитков", e);
+        }
+        return null;
     }
 
     public void sendGetRequestWithCookies(Long id) {
@@ -256,11 +280,11 @@ public class ScanningProgress {
                         giftRepository.save(newStat);
                     }
                 } else {
-                     log.warn("[{}] Пропущено обновление event-gift в БД из-за ошибки парсинга или null значения", id);
+                    log.warn("[{}] Пропущено обновление event-gift в БД из-за ошибки парсинга или null значения", id);
                 }
                 // Возвращаем обновленный объект AccountProgress для UI
-                 MangaProgress updatedProgress = mangaProgressRepository.findByUserId(id).orElseThrow(() -> new RuntimeException("Progress not found after save for user " + id));
-                 Platform.runLater(() -> {
+                MangaProgress updatedProgress = mangaProgressRepository.findByUserId(id).orElseThrow(() -> new RuntimeException("Progress not found after save for user " + id));
+                Platform.runLater(() -> {
                     for (javafx.scene.Node node : mangaBuffJobViewController.getAccountsVBox().getChildren()) {
                         if (node instanceof HBox accountItem) {
                             AccountItemController controller = (AccountItemController) accountItem.getUserData();
@@ -285,7 +309,8 @@ public class ScanningProgress {
                                     updatedProgress.isCommentEnabled(),
                                     updatedProgress.isQuizEnabled(),
                                     updatedProgress.isMineEnabled(),
-                                    updatedProgress.isAdvEnabled()
+                                    updatedProgress.isAdvEnabled(),
+                                    parseScrollCount(id)
                                 );
                                 controller.setAccount(updatedAccount);
                                 break;
@@ -295,8 +320,8 @@ public class ScanningProgress {
                 });
 
                 log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
-                         id, commentsDone, totalComments, chaptersDone, totalChapters,
-                         quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
+                    id, commentsDone, totalComments, chaptersDone, totalChapters,
+                    quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
             } else {
                 // При создании нового прогресса, чекбоксы по умолчанию true
                 MangaProgress mangaProgress = MangaProgress.builder()
@@ -321,8 +346,8 @@ public class ScanningProgress {
                 mangaProgressRepository.save(mangaProgress);
 
                 log.info("Статус {}: Комментариев: {}/{}, Глав: {}/{}, Квиз: {}, Реклама: {}/3, Шахта: {}/100",
-                         id, commentsDone, totalComments, chaptersDone, totalChapters,
-                         quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
+                    id, commentsDone, totalComments, chaptersDone, totalChapters,
+                    quizDoneToday, advWatchedToday, (100 - mineHitsLeft));
             }
 
         } catch (HttpClientErrorException.UnprocessableEntity e) {

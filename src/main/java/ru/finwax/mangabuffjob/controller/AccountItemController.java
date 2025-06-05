@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Sheduled.service.AdvertisingScheduler;
@@ -25,6 +26,7 @@ import ru.finwax.mangabuffjob.Sheduled.service.MineScheduler;
 import ru.finwax.mangabuffjob.Sheduled.service.QuizScheduler;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.model.AccountProgress;
+import ru.finwax.mangabuffjob.model.CountScroll;
 import ru.finwax.mangabuffjob.service.AccountService;
 import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.Entity.GiftStatistic;
@@ -49,8 +51,12 @@ import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 import ru.finwax.mangabuffjob.model.TaskType;
 
+import java.util.Map;
+import javafx.geometry.Pos;
+
 @Component
 @Getter
+@Slf4j
 public class AccountItemController {
 
     @FXML
@@ -87,6 +93,8 @@ public class AccountItemController {
     private Label diamondCountLabel;
     @FXML
     private ImageView diamondImageView;
+    @FXML
+    private ImageView scrollImageView;
     @FXML
     private Label giftCountLabel;
     @FXML
@@ -162,6 +170,26 @@ public class AccountItemController {
 
     @FXML
     private CheckBox advCheckBox;
+
+    private Popup scrollStatsPopup;
+    private ImageView scrollIcon1;
+    private Label scrollLabel1;
+    private ImageView scrollIcon2;
+    private Label scrollLabel2;
+    private ImageView scrollIcon3;
+    private Label scrollLabel3;
+    private ImageView scrollIcon4;
+    private Label scrollLabel4;
+    private ImageView scrollIcon5;
+    private Label scrollLabel5;
+    private ImageView scrollIcon6;
+    private Label scrollLabel6;
+    private ImageView scrollIcon7;
+    private Label scrollLabel7;
+    private ImageView scrollIcon8;
+    private Label scrollLabel8;
+    private ImageView scrollIcon9;
+    private Label scrollLabel9;
 
     private final AccountService accountService;
     private final MangaBuffJobViewController parentController;
@@ -256,6 +284,91 @@ public class AccountItemController {
         accountItem.getParent().layout();
         taskOverlayPane.requestLayout();
         reloginButton.requestLayout();
+
+        // Create the scroll stats popup programmatically
+        scrollStatsPopup = new Popup();
+        VBox popupContent = new VBox();
+        popupContent.setStyle("-fx-background-color: #e0e0e0; -fx-padding: 15; -fx-border-color: #cccccc; -fx-border-width: 1; -fx-border-radius: 5; -fx-background-radius: 5; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);");
+        popupContent.setSpacing(8);
+
+        String[] iconPaths = {
+            "/static/icon/scroll/X.png",
+            "/static/icon/scroll/S.png",
+            "/static/icon/scroll/A.png",
+            "/static/icon/scroll/P.png",
+            "/static/icon/scroll/G.png",
+            "/static/icon/scroll/B.png",
+            "/static/icon/scroll/C.png",
+            "/static/icon/scroll/D.png",
+            "/static/icon/scroll/E.png"
+        };
+
+        ImageView[] scrollIcons = new ImageView[iconPaths.length];
+        Label[] scrollLabels = new Label[iconPaths.length];
+
+        for (int i = 0; i < iconPaths.length; i++) {
+            HBox row = new HBox();
+            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            row.setSpacing(5);
+
+            scrollIcons[i] = new ImageView();
+            try {
+                java.net.URL iconUrl = getClass().getResource(iconPaths[i]);
+                if (iconUrl != null) {
+                    Image iconImage = new Image(iconUrl.openStream());
+                    scrollIcons[i].setImage(iconImage);
+                    scrollIcons[i].setFitHeight(31.2);
+                    scrollIcons[i].setFitWidth(31.2);
+                    scrollIcons[i].setPickOnBounds(true);
+                    scrollIcons[i].setPreserveRatio(true);
+                } else {
+                     System.err.println("Scroll icon resource not found: " + iconPaths[i]);
+                     // Handle missing resource, maybe set a default blank image or hide the ImageView
+                }
+            } catch (Exception e) {
+                System.err.println("Error loading scroll icon: " + iconPaths[i] + " - " + e.getMessage());
+                // Use a placeholder or handle the error as needed
+            }
+
+            scrollLabels[i] = new Label("0 | 0");
+
+            row.getChildren().addAll(scrollIcons[i], scrollLabels[i]);
+            popupContent.getChildren().add(row);
+        }
+
+        scrollStatsPopup.getContent().add(popupContent);
+
+        // Add mouse hover events for scroll icon
+        scrollImageView.setOnMouseEntered(event -> {
+            if (scrollStatsPopup != null) {
+                // Calculate position relative to the main stage
+                javafx.stage.Window ownerWindow = accountItem.getScene().getWindow();
+                double x = scrollImageView.localToScreen(scrollImageView.getBoundsInLocal()).getMinX();
+                double y = scrollImageView.localToScreen(scrollImageView.getBoundsInLocal()).getMinY();
+
+                // Adjust position slightly to be next to the icon
+                scrollStatsPopup.show(ownerWindow, x + scrollImageView.getBoundsInLocal().getWidth(), y);
+            }
+        });
+
+        scrollImageView.setOnMouseExited(event -> {
+            // Keep popup visible if mouse enters the popup itself
+            if (scrollStatsPopup != null && scrollStatsPopup.getContent() != null && !scrollStatsPopup.getContent().isEmpty() && scrollStatsPopup.getContent().get(0).isHover()) {
+                // Do nothing, mouse is over the popup content
+            } else if (scrollStatsPopup != null) {
+                scrollStatsPopup.hide();
+            }
+        });
+
+        // Add mouse exit event for the popup content to hide it
+        if (scrollStatsPopup != null && scrollStatsPopup.getContent() != null && !scrollStatsPopup.getContent().isEmpty()) {
+             scrollStatsPopup.getContent().get(0).setOnMouseExited(event -> {
+                // Hide if mouse exits the popup content and is not over the scroll icon
+                 if (!scrollImageView.isHover()) {
+                     scrollStatsPopup.hide();
+                 }
+             });
+        }
     }
 
     public void setAccount(AccountProgress account) {
@@ -360,6 +473,12 @@ public class AccountItemController {
             if (account.isReloginRequired()) {
                 showReloginRequiredState();
             }
+
+            // Update button states after setting the account
+            updateButtonStates();
+
+            // Обновляем информацию о свитках
+            updateScrollStatsPopup();
         }
     }
 
@@ -442,6 +561,11 @@ public class AccountItemController {
     }
 
     public void updateButtonStates() {
+        if (this.account == null) {
+            // Account is not yet set, cannot update button states
+            return;
+        }
+
         // Главы
         boolean allRead = account.getReaderProgress() != null && account.getReaderProgress().split("/")[0].equals(account.getReaderProgress().split("/")[1]);
         setButtonState(startChaptersButton, allRead ? "green" : "white");
@@ -967,6 +1091,27 @@ public class AccountItemController {
             case ADV:
                 advCheckBox.setSelected(enabled);
                 break;
+        }
+    }
+
+    private void updateScrollStatsPopup() {
+        if (account == null || account.getScrollCounts() == null) return;
+
+        Map<String, CountScroll> scrollCounts = account.getScrollCounts();
+        String[] ranks = {"X", "S", "A", "P", "G", "B", "C", "D", "E"};
+
+        // Получаем существующий VBox из POPUP
+        VBox popupContent = (VBox) scrollStatsPopup.getContent().get(0);
+        if (popupContent == null) return;
+
+        // Обновляем метки для каждого ранга
+        for (int i = 0; i < ranks.length; i++) {
+            CountScroll count = scrollCounts.get(ranks[i]);
+            if (count != null) {
+                HBox row = (HBox) popupContent.getChildren().get(i);
+                Label label = (Label) row.getChildren().get(1);
+                label.setText(count.getCount() + " | " + count.getBlessedCount());
+            }
         }
     }
 }

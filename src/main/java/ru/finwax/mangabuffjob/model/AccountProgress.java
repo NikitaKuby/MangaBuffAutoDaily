@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -28,8 +30,9 @@ public class AccountProgress {
     private boolean quizEnabled;
     private boolean mineEnabled;
     private boolean advEnabled;
+    private Map<String, CountScroll> scrollCounts;
 
-    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft, Long diamond, boolean reloginRequired, boolean readerEnabled, boolean commentEnabled, boolean quizEnabled, boolean mineEnabled, boolean advEnabled) {
+    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone, String mineProgress, String advProgress, Integer advDone, String avatarPath, String avatarAltText, Long userId, Integer totalReaderChapters, Integer totalCommentChapters, Integer mineHitsLeft, Long diamond, boolean reloginRequired, boolean readerEnabled, boolean commentEnabled, boolean quizEnabled, boolean mineEnabled, boolean advEnabled, Map<String, CountScroll> scrollCounts) {
         this.username = username;
         this.readerProgress = readerProgress;
         this.commentProgress = commentProgress;
@@ -50,6 +53,7 @@ public class AccountProgress {
         this.quizEnabled = quizEnabled;
         this.mineEnabled = mineEnabled;
         this.advEnabled = advEnabled;
+        this.scrollCounts = scrollCounts;
     }
 
     public boolean isReloginRequired() {
