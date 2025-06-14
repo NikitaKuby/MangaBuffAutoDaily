@@ -1,6 +1,7 @@
 package ru.finwax.mangabuffjob.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
@@ -21,6 +22,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.NoSuchElementException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PromoCodeService {
 
@@ -38,7 +40,7 @@ public class PromoCodeService {
 
         for (UserCookie account : accounts) {
             if (stopProcessing.get()) {
-                System.out.println("Promo code processing stopped by request.");
+                log.info("Promo code processing stopped by request.");
                 notificationCallback.accept("Promo code processing stopped.", "info");
                 break; // Exit the loop if stopProcessing is true
             }
@@ -46,7 +48,7 @@ public class PromoCodeService {
                 try {
                     applyPromoCodeToAccount(account, promoCode, notificationCallback);
                 } catch (Exception e) {
-                    System.err.println("Error processing account " + account.getId() + ": " + e.getMessage()); // Keep for debugging during dev
+                    log.error("Error processing account " + account.getId() + ": " + e.getMessage()); // Keep for debugging during dev
                     // TODO: Show error notification for this account
                     notificationCallback.accept("Error processing account " + account.getUsername() + ": " + e.getMessage(), "error");
                 }
@@ -57,7 +59,7 @@ public class PromoCodeService {
         // Optionally, wait for all futures to complete
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-        System.out.println("All promo code application tasks completed.");
+        log.info("All promo code application tasks completed.");
         notificationCallback.accept("All promo code application tasks completed.", "success");
     }
 
@@ -98,7 +100,7 @@ public class PromoCodeService {
         } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
             notificationCallback.accept("[" + account.getUsername() + "] Error 502 Bad Gateway: Site unavailable.", "error");
         } catch (Exception e) {
-            System.err.println("Unexpected error applying promo code for account " + account.getId() + ": " + e.getMessage()); // Keep for debugging during dev
+            log.error("Unexpected error applying promo code for account " + account.getId() + ": " + e.getMessage()); // Keep for debugging during dev
             notificationCallback.accept("Error applying promo code for account " + account.getUsername() + ": " + e.getMessage(), "error");
         } finally {
             if (driver != null) {
@@ -135,7 +137,7 @@ public class PromoCodeService {
                             continue;
                         }
 
-                        System.out.println("[" + accountId + "] Detected notification: Class = " + toastClass + ", Message = " + toastMessage);
+                        log.info("[" + accountId + "] Detected notification: Class = " + toastClass + ", Message = " + toastMessage);
 
                         if (toastClass.contains("toast-error")) {
                             if (toastMessage.contains("Промокод не найден.") || toastMessage.contains("Промокод больше не доступен.")) {
@@ -158,7 +160,7 @@ public class PromoCodeService {
                 Thread.sleep(200);
             } catch (org.openqa.selenium.WebDriverException e) {
                  // Handle potential StaleElementReferenceException or other driver errors during monitoring
-                 System.err.println("[" + accountId + "] Error monitoring notifications: " + e.getMessage());
+                 log.info("[" + accountId + "] Error monitoring notifications: " + e.getMessage());
                  break; // Exit monitoring loop for this account on error
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

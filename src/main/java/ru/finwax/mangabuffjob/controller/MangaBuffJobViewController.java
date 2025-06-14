@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Popup;
 import javafx.util.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
@@ -55,6 +56,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Component
+@Slf4j
 public class MangaBuffJobViewController implements Initializable {
 
     @FXML
@@ -64,6 +66,8 @@ public class MangaBuffJobViewController implements Initializable {
     @FXML
     public Button periodicReadingButton;
     @FXML
+    public Button stopPeriodicReadingButton;
+    @FXML
     private VBox accountsVBox;
     @FXML
     private Button refreshButton;
@@ -71,6 +75,8 @@ public class MangaBuffJobViewController implements Initializable {
     private Button addAccountButton;
     @FXML
     private Button runBotButton;
+    @FXML
+    private Button stopBotButton;
     @FXML
     private ImageView supportImageView;
     @FXML
@@ -124,7 +130,7 @@ public class MangaBuffJobViewController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            System.out.println("Controller initialization...");
+            log.info("Controller initialization...");
             
             // Проверяем инициализацию всех компонентов
             if (accountsVBox == null) {
@@ -136,6 +142,9 @@ public class MangaBuffJobViewController implements Initializable {
             if (runBotButton == null) {
                 throw new IllegalStateException("runBotButton not initialized");
             }
+            if (stopBotButton == null) {
+                throw new IllegalStateException("stopBotButton not initialized");
+            }
             if (refreshButton == null) {
                 throw new IllegalStateException("refreshButton not initialized");
             }
@@ -144,6 +153,9 @@ public class MangaBuffJobViewController implements Initializable {
             }
             if (periodicReadingButton == null) {
                 throw new IllegalStateException("periodicReadingButton not initialized");
+            }
+            if (stopPeriodicReadingButton == null) {
+                throw new IllegalStateException("stopPeriodicReadingButton not initialized");
             }
             if (viewsCheckBox == null) {
                 throw new IllegalStateException("viewsCheckBox not initialized");
@@ -160,8 +172,8 @@ public class MangaBuffJobViewController implements Initializable {
             if (supportImageView == null) {
                 throw new IllegalStateException("supportImageView not initialized");
             }
-            
-            System.out.println("All components initialized successfully");
+
+            log.info("All components initialized successfully");
             
             // Initialize support popup
             supportPopup = new Popup();
@@ -200,19 +212,21 @@ public class MangaBuffJobViewController implements Initializable {
             // Настройка обработчиков событий для кнопок
             addAccountButton.setOnAction(event -> handleAddAccount());
             runBotButton.setOnAction(event -> handleRunBot());
+            stopBotButton.setOnAction(event -> handleStopBot());
             refreshButton.setOnAction(event -> handleRefreshAccounts());
             updateMangaListButton.setOnAction(event -> handleUpdateMLB());
             periodicReadingButton.setOnAction(event -> handlePeriodicReading());
+            stopPeriodicReadingButton.setOnAction(event -> handleStopPeriodicReading());
             applyPromoCodeButton.setOnAction(event -> handleApplyPromoCode());
             
             // Проверяем наличие данных в таблице манги
             if (mangaParserService.hasMangaData()) {
                 setButtonState(updateMangaListButton, "green");
             }
-            
-            System.out.println("Controller initialization finished successfully");
+
+            log.info("Controller initialization finished successfully");
         } catch (Exception e) {
-            System.err.println("Controller initialization error: " + e.getMessage());
+            log.error("Controller initialization error: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Failed to initialize MangaBuffJobViewController", e);
         }
@@ -220,12 +234,77 @@ public class MangaBuffJobViewController implements Initializable {
 
     private void handlePeriodicReading() {
         if (!mangaReadScheduler.isPeriodicReadingActive()) {
+            // Скрываем кнопку запуска и показываем кнопку остановки
+            periodicReadingButton.setVisible(false);
+            periodicReadingButton.setManaged(false);
+            stopPeriodicReadingButton.setVisible(true);
+            stopPeriodicReadingButton.setManaged(true);
+
             mangaReadScheduler.startPeriodicReading(viewsCheckBox.isSelected());
-            setButtonState(periodicReadingButton, "blue");
+            setButtonState(periodicReadingButton, "blue"); // Это будет применено к скрытой кнопке, но пока оставим для консистентности
+            log.info("Запуск периодического чтения");
         } else {
-            mangaReadScheduler.stopPeriodicReading();
-            setButtonState(periodicReadingButton, "white");
+            // Эта ветка теперь не должна достигаться через UI, так как будет отдельная кнопка остановки
+            // Тем не менее, оставляем логику для безопасности или для внутреннего использования
+            log.info("Периодическое чтение уже активно, игнорируем повторный запуск.");
         }
+    }
+
+    private void handleStopPeriodicReading() {
+        log.info("Остановка периодического чтения...");
+
+        // Визуально отключаем кнопку остановки и показываем "Загрузка"
+        stopPeriodicReadingButton.setDisable(true);
+        stopPeriodicReadingButton.getStyleClass().add("btn-loading");
+        stopPeriodicReadingButton.setText("Остановка...");
+
+        Task<Void> stopTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                mangaReadScheduler.stopPeriodicReading();
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    // Возвращаем кнопки в исходное состояние
+                    periodicReadingButton.setVisible(true);
+                    periodicReadingButton.setManaged(true);
+                    stopPeriodicReadingButton.setVisible(false);
+                    stopPeriodicReadingButton.setManaged(false);
+                    setButtonState(periodicReadingButton, "white"); // Возвращаем кнопку запуска в белое состояние
+                    showNotification("Периодическое чтение остановлено.", "info");
+
+                    // Сбрасываем состояние кнопки остановки
+                    stopPeriodicReadingButton.getStyleClass().remove("btn-loading");
+                    stopPeriodicReadingButton.setText("Остановить периодическое чтение");
+                    stopPeriodicReadingButton.setDisable(false);
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> {
+                    log.error("Ошибка при остановке периодического чтения: " + getException().getMessage());
+                    showNotification("Ошибка при остановке периодического чтения.", "error");
+
+                    // Возвращаем кнопки в исходное состояние даже при ошибке
+                    periodicReadingButton.setVisible(true);
+                    periodicReadingButton.setManaged(true);
+                    stopPeriodicReadingButton.setVisible(false);
+                    stopPeriodicReadingButton.setManaged(false);
+                    setButtonState(periodicReadingButton, "red"); // Возможно, показать красную кнопку, если произошла ошибка
+                    
+                    // Сбрасываем состояние кнопки остановки
+                    stopPeriodicReadingButton.getStyleClass().remove("btn-loading");
+                    stopPeriodicReadingButton.setText("Остановить периодическое чтение");
+                    stopPeriodicReadingButton.setDisable(false);
+                });
+            }
+        };
+
+        new Thread(stopTask).start();
     }
 
     private void handleUpdateMLB() {
@@ -245,7 +324,7 @@ public class MangaBuffJobViewController implements Initializable {
                     Platform.runLater(() -> setButtonState(updateMangaListButton, "green"));
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(updateMangaListButton, "red"));
-                    System.err.println("Error updating manga list: " + e.getMessage());
+                    log.error("Error updating manga list: " + e.getMessage());
                     e.printStackTrace();
                 }
                 return null;
@@ -293,7 +372,11 @@ public class MangaBuffJobViewController implements Initializable {
                     break;
                 case "white":
                     button.getStyleClass().add("btn-white");
-                    button.setText("начать");
+                    if (button == periodicReadingButton) {
+                        button.setText("Запускать периодическое чтение");
+                    } else {
+                        button.setText("начать");
+                    }
                     button.setDisable(false);
                     break;
                 case "red":
@@ -352,7 +435,7 @@ public class MangaBuffJobViewController implements Initializable {
                             .build();
                         return mangaProgressRepository.save(newProgress);
                     });
-                Integer mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
+                int mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
 
                 // Получаем текущие данные о свитках из существующего аккаунта, если он есть
                 Map<String, CountScroll> existingScrollCounts = null;
@@ -394,7 +477,7 @@ public class MangaBuffJobViewController implements Initializable {
             });
             displayAccounts();
         } catch (Exception e) {
-            System.err.println("Error loading accounts from database: " + e.getMessage());
+            log.error("Error loading accounts from database: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -411,6 +494,8 @@ public class MangaBuffJobViewController implements Initializable {
                             FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountHeaders.fxml"));
                             loader.setControllerFactory(applicationContext::getBean);
                             AnchorPane headers = loader.load();
+                            AccountHeadersController headersController = loader.getController();
+                            headersController.setParentController(this);
                             accountsVBox.getChildren().add(headers);
                         } catch (IOException e) {
                             System.err.println("Error loading headers FXML: " + e.getMessage());
@@ -437,22 +522,22 @@ public class MangaBuffJobViewController implements Initializable {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Critical error displaying accounts: " + e.getMessage());
+                    log.error("Critical error displaying accounts: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
         } catch (Exception e) {
-            System.err.println("Critical error in displayAccounts: " + e.getMessage());
+            log.error("Critical error in displayAccounts: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     private void handleAddAccount() {
-        System.out.println("handleAddAccount called");
+        log.info("handleAddAccount called");
         try {
             // Загрузка FXML для диалогового окна
             FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/LoginDialog.fxml"));
-            System.out.println("Loading FXML for LoginDialog.fxml");
+            log.info("Loading FXML for LoginDialog.fxml");
             
             // Устанавливаем фабрику контроллеров для LoginDialog.fxml
             loader.setControllerFactory(applicationContext::getBean);
@@ -466,19 +551,19 @@ public class MangaBuffJobViewController implements Initializable {
             dialogStage.setScene(scene);
             controller.setDialogStage(dialogStage);
 
-            System.out.println("Showing login dialog...");
+            log.info("Showing login dialog...");
             // Показ диалога и ожидание закрытия
             dialogStage.showAndWait();
 
             // Если пользователь нажал "Войти", обновляем список аккаунтов
             if (controller.isLoginClicked()) {
-                System.out.println("User logged in, updating account list");
+                log.info("User logged in, updating account list");
                 loadAccountsFromDatabase();
             } else {
-                System.out.println("User cancelled login");
+                log.info("User cancelled login");
             }
         } catch (IOException e) {
-            System.err.println("Error loading LoginDialog.fxml");
+            log.error("Error loading LoginDialog.fxml");
             e.printStackTrace();
         }
     }
@@ -595,8 +680,11 @@ public class MangaBuffJobViewController implements Initializable {
         // Блокируем UI
         setUIEnabled(false);
         
-//        // Рефрешим состояние всех аккаунтов
-//        handleRefreshAccounts();
+        // Показываем кнопку остановки и скрываем кнопку запуска
+        runBotButton.setVisible(false);
+        runBotButton.setManaged(false);
+        stopBotButton.setVisible(true);
+        stopBotButton.setManaged(true);
         
         // Устанавливаем состояние checkViews
         taskExecutor.getTaskExecutionService().setCheckViews(viewsCheckBox.isSelected());
@@ -607,11 +695,74 @@ public class MangaBuffJobViewController implements Initializable {
             List<MangaTask> pendingTasks = getPendingTasks(account);
             allTasks.addAll(pendingTasks);
         }
-        
+
+        // Если нет задач для выполнения, сразу разблокируем UI и возвращаем кнопки
+        if (allTasks.isEmpty()) {
+            Platform.runLater(() -> {
+                setUIEnabled(true);
+                runBotButton.setVisible(true);
+                runBotButton.setManaged(true);
+                stopBotButton.setVisible(false);
+                stopBotButton.setManaged(false);
+                showNotification("Все выбранные задачи выполнены!", "info");
+            });
+            return; // Выходим из метода, так как нет задач для запуска
+        }
+
         // Запускаем выполнение задач
-        taskExecutor.executeTasks(allTasks, this::updateTaskStatus);
-        
-        // После завершения всех задач
+        taskExecutor.executeTasks(allTasks, task -> {
+            updateTaskStatus(task);
+            // Если это последняя задача, разблокируем UI
+            if (taskExecutor.getRunningTasks().isEmpty()) {
+                Platform.runLater(() -> {
+                    setUIEnabled(true);
+                    // Возвращаем кнопки в исходное состояние
+                    runBotButton.setVisible(true);
+                    runBotButton.setManaged(true);
+                    stopBotButton.setVisible(false);
+                    stopBotButton.setManaged(false);
+                });
+            }
+        });
+    }
+
+    private void handleStopBot() {
+        try {
+            log.info("Остановка бота...");
+            
+            // Останавливаем выполнение задач
+            taskExecutor.stopAllTasks();
+            
+            // Закрываем все драйверы
+            killChromeDrivers();
+            
+            // Сбрасываем состояние кнопок
+            Platform.runLater(() -> {
+                runBotButton.setVisible(true);
+                runBotButton.setManaged(true);
+                stopBotButton.setVisible(false);
+                stopBotButton.setManaged(false);
+                
+                // Разблокируем UI
+                setUIEnabled(true);
+                
+                // Сбрасываем состояние всех кнопок задач на белый
+                accountsVBox.getChildren().forEach(node -> {
+                    if (node instanceof HBox accountItem) {
+                        Object controller = accountItem.getUserData();
+                        if (controller instanceof AccountItemController accountController) {
+                            accountController.resetRedButtonsToWhite();
+                            accountController.updateButtonStates();
+                        }
+                    }
+                });
+            });
+            
+            log.info("Бот успешно остановлен");
+        } catch (Exception e) {
+            log.error("Ошибка при остановке бота: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void scanAccount(Long userId) {
@@ -766,9 +917,9 @@ public class MangaBuffJobViewController implements Initializable {
         try {
             Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe /T");
             Runtime.getRuntime().exec("taskkill /F /IM chrome.exe /T");
-            System.out.println("Killed chrome drivers");
+            log.info("Killed chrome drivers");
         } catch (IOException e) {
-            System.err.print("Failed to kill chrome processes");
+            log.info("Failed to kill chrome processes");
         }
     }
 
@@ -776,7 +927,7 @@ public class MangaBuffJobViewController implements Initializable {
         String promoCode = promoCodeInput.getText();
         if (promoCode == null || promoCode.trim().isEmpty()) {
             // Show toast notification for empty field
-            System.out.println("Promo code is empty!");
+            log.info("Promo code is empty!");
             showNotification("Промокод не введен!", "error");
             return;
         }
@@ -891,6 +1042,136 @@ public class MangaBuffJobViewController implements Initializable {
 
     public VBox getAccountsVBox() {
         return accountsVBox;
+    }
+
+    public void toggleAllReaderCheckboxes() {
+        Platform.runLater(() -> {
+            boolean newState = !isAnyReaderCheckboxSelected();
+            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                if (node instanceof HBox accountItem) {
+                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                    if (controller != null) {
+                        controller.getReaderCheckBox().setSelected(newState);
+                    }
+                }
+            }
+        });
+    }
+
+    public void toggleAllCommentCheckboxes() {
+        Platform.runLater(() -> {
+            boolean newState = !isAnyCommentCheckboxSelected();
+            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                if (node instanceof HBox accountItem) {
+                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                    if (controller != null) {
+                        controller.getCommentCheckBox().setSelected(newState);
+                    }
+                }
+            }
+        });
+    }
+
+    public void toggleAllQuizCheckboxes() {
+        Platform.runLater(() -> {
+            boolean newState = !isAnyQuizCheckboxSelected();
+            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                if (node instanceof HBox accountItem) {
+                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                    if (controller != null) {
+                        controller.getQuizCheckBox().setSelected(newState);
+                    }
+                }
+            }
+        });
+    }
+
+    public void toggleAllMinerCheckboxes() {
+        Platform.runLater(() -> {
+            boolean newState = !isAnyMinerCheckboxSelected();
+            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                if (node instanceof HBox accountItem) {
+                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                    if (controller != null) {
+                        controller.getMineCheckBox().setSelected(newState);
+                    }
+                }
+            }
+        });
+    }
+
+    public void toggleAllAdvCheckboxes() {
+        Platform.runLater(() -> {
+            boolean newState = !isAnyAdvCheckboxSelected();
+            for (javafx.scene.Node node : accountsVBox.getChildren()) {
+                if (node instanceof HBox accountItem) {
+                    AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                    if (controller != null) {
+                        controller.getAdvCheckBox().setSelected(newState);
+                    }
+                }
+            }
+        });
+    }
+
+    private boolean isAnyReaderCheckboxSelected() {
+        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+            if (node instanceof HBox accountItem) {
+                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                if (controller != null && controller.getReaderCheckBox().isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyCommentCheckboxSelected() {
+        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+            if (node instanceof HBox accountItem) {
+                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                if (controller != null && controller.getCommentCheckBox().isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyQuizCheckboxSelected() {
+        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+            if (node instanceof HBox accountItem) {
+                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                if (controller != null && controller.getQuizCheckBox().isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyMinerCheckboxSelected() {
+        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+            if (node instanceof HBox accountItem) {
+                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                if (controller != null && controller.getMineCheckBox().isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isAnyAdvCheckboxSelected() {
+        for (javafx.scene.Node node : accountsVBox.getChildren()) {
+            if (node instanceof HBox accountItem) {
+                AccountItemController controller = (AccountItemController) accountItem.getUserData();
+                if (controller != null && controller.getAdvCheckBox().isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 } 

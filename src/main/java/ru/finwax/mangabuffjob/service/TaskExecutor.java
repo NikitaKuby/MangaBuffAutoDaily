@@ -18,7 +18,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class TaskExecutor {
-    private final ExecutorService executorService = Executors.newFixedThreadPool(3);
+    private ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final BlockingQueue<MangaTask> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentHashMap<String, MangaTask> taskStatuses = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, AtomicBoolean> activeAccountTasks = new ConcurrentHashMap<>();
@@ -45,6 +45,11 @@ public class TaskExecutor {
             return;
         }
         isRunning = true;
+
+        // Если executorService был остановлен, создаем новый
+        if (executorService == null || executorService.isTerminated()) {
+            executorService = Executors.newFixedThreadPool(3);
+        }
 
         // Сортируем задачи по приоритету
         tasks.sort(Comparator.comparingInt(t -> t.getType().getPriority()));
@@ -118,5 +123,28 @@ public class TaskExecutor {
         } catch (InterruptedException e) {
             executorService.shutdownNow();
         }
+    }
+
+    public void stopAllTasks() {
+        // Останавливаем выполнение новых задач
+        isRunning = false;
+        
+        // Очищаем очередь задач
+        taskQueue.clear();
+        
+        // Обновляем статус всех выполняющихся задач на ERROR
+        for (MangaTask task : taskStatuses.values()) {
+            if (task.getStatus() == TaskStatus.RUNNING) {
+                task.setStatus(TaskStatus.ERROR);
+                task.setErrorMessage("Task stopped by user");
+            }
+        }
+        
+        // Очищаем активные задачи для аккаунтов
+        activeAccountTasks.clear();
+        
+        // Останавливаем executor service
+        executorService.shutdownNow();
+        executorService = null;
     }
 } 

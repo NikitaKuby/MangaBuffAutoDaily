@@ -76,6 +76,8 @@ public class ScanningProgress {
         return 0L; // Возвращаем 0 если не удалось распарсить
     }
 
+    // EventGift parsing - Disabled on 2024-03-19 due to event end
+    /*
     private Integer parseEventGiftCount(Long id) {
         try {
             Document eventDoc = fetchDocument(id, "https://mangabuff.ru/event/pack");
@@ -94,6 +96,7 @@ public class ScanningProgress {
         }
         return null; // Возвращаем null если элемент не найден или другая ошибка
     }
+    */
 
     public Map<String, CountScroll> parseScrollCount(Long id) {
         try {
@@ -130,7 +133,11 @@ public class ScanningProgress {
             }
 
             Long diamondBalance = parseDiamondBalance(balanceDoc);
+            // EventGift update - Disabled on 2024-03-19 due to event end
+            /*
             Integer eventGiftCount = parseEventGiftCount(id);
+            */
+            Integer eventGiftCount = null; // Temporarily disabled
             log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
             Document balanceDocPage2 = null;
             try {
@@ -262,7 +269,8 @@ public class ScanningProgress {
                 // При обновлении существующего прогресса, сохраняем текущее состояние чекбоксов из БД
                 mangaProgressRepository.save(progress);
 
-                // Обновляем количество event-gift в базе данных
+                // EventGift update - Disabled on 2024-03-19 due to event end
+                /*
                 if (eventGiftCount != null && eventGiftCount != -1) { // Пропускаем обновление, если была ошибка парсинга или значение null
                     List<GiftStatistic> existingStats = giftRepository.findByUserIdAndDate(id, today);
                     if (!existingStats.isEmpty()) {
@@ -272,16 +280,13 @@ public class ScanningProgress {
                         });
                     } else {
                         GiftStatistic newStat = new GiftStatistic();
-                        UserCookie user = userRepository.findById(id)
-                            .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
                         newStat.setUser(user);
                         newStat.setCountEventGift(eventGiftCount);
                         newStat.setDate(today);
                         giftRepository.save(newStat);
                     }
-                } else {
-                    log.warn("[{}] Пропущено обновление event-gift в БД из-за ошибки парсинга или null значения", id);
                 }
+                */
                 // Возвращаем обновленный объект AccountProgress для UI
                 MangaProgress updatedProgress = mangaProgressRepository.findByUserId(id).orElseThrow(() -> new RuntimeException("Progress not found after save for user " + id));
                 Platform.runLater(() -> {

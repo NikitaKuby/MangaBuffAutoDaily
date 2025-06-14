@@ -7,6 +7,8 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 // import java.io.File; // This import is no longer needed
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
 
+@Slf4j
 public class GiftImagesPopupController {
 
     @FXML
@@ -74,7 +77,7 @@ public class GiftImagesPopupController {
         }
 
         if (imagePaths.isEmpty()) {
-            System.out.println("[{}] Нет изображений подарков для отображения для даты: {}".replace("{}", accountId.toString()).replace("{}", date.toString()));
+            log.info("[{}] Нет изображений подарков для отображения для даты: {}".replace("{}", accountId.toString()).replace("{}", date.toString()));
             // Optionally display a message in the popup indicating no gifts for this date
             Label noGiftsLabel = new Label("Нет подарков за эту дату.");
             imageFlowPane.getChildren().add(noGiftsLabel);
@@ -85,11 +88,11 @@ public class GiftImagesPopupController {
             try {
                 Image image = new Image(imagePath);
                 ImageView imageView = new ImageView(image);
-                imageView.setFitWidth(100);
+                imageView.setFitWidth(120);
                 imageView.setPreserveRatio(true);
                 imageFlowPane.getChildren().add(imageView);
             } catch (Exception e) {
-                System.err.println("Ошибка загрузки изображения подарка из URI " + imagePath + ": " + e.getMessage());
+                log.error("Ошибка загрузки изображения подарка из URI " + imagePath + ": " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -139,7 +142,7 @@ public class GiftImagesPopupController {
                         LocalDate date = LocalDate.parse(dateDir.getName());
                         dates.add(date);
                     } catch (java.time.format.DateTimeParseException e) {
-                        System.err.println("Skipping non-date directory in gifts folder: " + dateDir.getName());
+                        log.error("Skipping non-date directory in gifts folder: " + dateDir.getName());
                     }
                 }
             }

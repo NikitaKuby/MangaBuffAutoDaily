@@ -6,7 +6,6 @@
 .btn-white {
     -fx-background-color: white;
     -fx-text-fill: black;
-    -fx-border-color: #bdbdbd;
 }
 .btn-red {
     -fx-background-color: #F44336;
@@ -29,6 +28,7 @@
     min-width: 120px;
     max-width: 120px;
     border-radius: 8px;
+    border-width: 0px;
     -fx-effect: dropshadow(gaussian, #bdbdbd, 4, 0.2, 0, 2);
     font-size: 15px;
     font-weight: 500;

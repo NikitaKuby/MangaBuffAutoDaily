@@ -27,7 +27,7 @@ public class AppConfig {
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setUrl("jdbc:h2:./mangabuffdb;AUTO_SERVER=TRUE"); // Использование файловой БД
+        dataSource.setUrl("jdbc:h2:./mangabuffdb;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE;MODE=PostgreSQL");
         dataSource.setUsername("sa");
         dataSource.setPassword("");
         return dataSource;

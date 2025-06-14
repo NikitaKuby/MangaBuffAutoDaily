@@ -53,6 +53,9 @@ import ru.finwax.mangabuffjob.model.TaskType;
 
 import java.util.Map;
 import javafx.geometry.Pos;
+import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 
 @Component
 @Getter
@@ -369,6 +372,19 @@ public class AccountItemController {
                  }
              });
         }
+
+        // Add mouse event handlers for gift icon
+        giftImageView.setOnMouseEntered(event -> {
+            giftImageView.setFitHeight(23.04); // 19.2 * 1.2
+            giftImageView.setFitWidth(23.04);  // 19.2 * 1.2
+            showGiftImagesPopup();
+        });
+
+        giftImageView.setOnMouseExited(event -> {
+            giftImageView.setFitHeight(19.2);
+            giftImageView.setFitWidth(19.2);
+            hideGiftImagesPopupWithDelay();
+        });
     }
 
     public void setAccount(AccountProgress account) {
@@ -532,7 +548,7 @@ public class AccountItemController {
         // Define the directory path for gift images
         String giftDirPath = "gifts/account_" + account.getUserId() + "/" + today;
         File giftDir = new File(giftDirPath);
-
+        
         int calculatedGiftCount = 0;
         if (giftDir.exists() && giftDir.isDirectory()) {
             File[] giftFiles = giftDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg"));
@@ -545,18 +561,24 @@ public class AccountItemController {
 
         // Fetch event gift count from DB
         List<GiftStatistic> gifts = giftRepository.findByUserIdAndDate(account.getUserId(), today);
+        // EventGift update - Disabled on 2024-03-19 due to event end
+        /*
         int eventGiftCount = gifts.isEmpty() ? 0 : gifts.get(0).getCountEventGift();
         Image eventGiftImage = new Image(getClass().getResourceAsStream("/static/icon/watermelon.png"));
+        */
         Platform.runLater(() -> {
             giftCountLabel.setText(String.valueOf(finalGiftCount));
+            // EventGift update - Disabled on 2024-03-19 due to event end
+            /*
             eventGiftCountLabel.setText(String.valueOf(eventGiftCount));
-
+            
             // Обновляем иконку event-gift
             if (eventGiftCount == -1) { // Используем -1 для индикации ошибки сканирования
                 eventGiftImageView.setImage(eventGiftImage);
             } else {
                 eventGiftImageView.setImage(eventGiftImage);
             }
+            */
         });
     }
 
@@ -679,7 +701,7 @@ public class AccountItemController {
 
     private void handleStartChapters() {
         if (isButtonGreen(startChaptersButton)) return;
-        System.out.println("Start Chapters button clicked for account: " + account.getUsername());
+        log.info("Start Chapters button clicked for account: " + account.getUsername());
         setButtonState(startChaptersButton, "blue"); // Синяя кнопка и блокировка
         updateStatusIcon(readerStatusIcon, readerProgressTooltip, account.getReaderProgress(), "blue");
 
@@ -689,7 +711,7 @@ public class AccountItemController {
                 try {
                     Integer countOfChapters = Integer.parseInt(Objects.requireNonNull(account.getReaderProgress()).split("/")[1]) -
                         Integer.parseInt(account.getReaderProgress().split("/")[0]);
-                    System.out.println(countOfChapters);
+                    log.info(String.valueOf(countOfChapters));
 
                     mangaReadScheduler.readMangaChapters(account.getUserId(), countOfChapters, isTaskEnabled(TaskType.READER));
                     Platform.runLater(() -> {
@@ -698,7 +720,7 @@ public class AccountItemController {
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startChaptersButton, "red"));
                     updateStatusIcon(readerStatusIcon, readerProgressTooltip, account.getReaderProgress(), "red");
-                    System.err.println("Ошибка при чтении глав: " + e.getMessage());
+                    log.error("Ошибка при чтении глав: " + e.getMessage());
                 }
                 return null;
             }
@@ -708,7 +730,7 @@ public class AccountItemController {
 
     private void handleStartComments() {
         if (isButtonGreen(startCommentsButton)) return;
-        System.out.println("Start Comments button clicked for account: " + account.getUsername());
+        log.info("Start Comments button clicked for account: " + account.getUsername());
         setButtonState(startCommentsButton, "blue");
         updateStatusIcon(commentStatusIcon, commentProgressTooltip, account.getCommentProgress(), "blue");
 
@@ -731,7 +753,7 @@ public class AccountItemController {
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startCommentsButton, "red"));
                     updateStatusIcon(commentStatusIcon, commentProgressTooltip, account.getCommentProgress(), "red");
-                    System.err.println("Ошибка при отправке комментариев: " + e.getMessage());
+                    log.error("Ошибка при отправке комментариев: " + e.getMessage());
                 }
                 return null;
             }
@@ -741,7 +763,7 @@ public class AccountItemController {
 
     private void handleStartQuiz() {
         if (isButtonGreen(startQuizButton)) return;
-        System.out.println("Start Quiz button clicked for account: " + account.getUsername());
+        log.info("Start Quiz button clicked for account: " + account.getUsername());
         setButtonState(startQuizButton, "blue");
         updateStatusIcon(quizStatusIcon, quizProgressTooltip, String.valueOf(account.getQuizDone()), "blue");
 
@@ -754,7 +776,7 @@ public class AccountItemController {
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startQuizButton, "red"));
                     updateStatusIcon(quizStatusIcon, quizProgressTooltip, String.valueOf(account.getQuizDone()), "red");
-                    System.err.println("Ошибка при запуске квиза: " + e.getMessage());
+                    log.error("Ошибка при запуске квиза: " + e.getMessage());
                     e.printStackTrace();
                 }
                 return null;
@@ -778,12 +800,12 @@ public class AccountItemController {
                         parentController.scanAccount(account.getUserId());
                     } else {
                         Platform.runLater(() -> setButtonState(startMiningButton, "green"));
-                        System.out.println("Нет доступных кликов для майнинга у аккаунта: " + account.getUsername());
+                        log.info("Нет доступных кликов для майнинга у аккаунта: " + account.getUsername());
                     }
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startMiningButton, "red"));
                     updateStatusIcon(mineStatusIcon, mineProgressTooltip, account.getMineProgress(), "red");
-                    System.err.println("Ошибка при запуске майнинга: " + e.getMessage());
+                    log.error("Ошибка при запуске майнинга: " + e.getMessage());
                     e.printStackTrace();
                 }
                 return null;
@@ -794,7 +816,7 @@ public class AccountItemController {
 
     private void handleStartAdv() {
         if (isButtonGreen(startAdvButton)) return;
-        System.out.println("Start Adv button clicked for account: " + account.getUsername());
+        log.info("Start Adv button clicked for account: " + account.getUsername());
         setButtonState(startAdvButton, "blue");
         updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), "blue");
 
@@ -809,12 +831,12 @@ public class AccountItemController {
                         parentController.scanAccount(account.getUserId());
                     } else {
                         Platform.runLater(() -> setButtonState(startAdvButton, "green"));
-                        System.out.println("No available ads for account: " + account.getUsername());
+                        log.info("No available ads for account: " + account.getUsername());
                     }
                 } catch (Exception e) {
                     Platform.runLater(() -> setButtonState(startAdvButton, "red"));
                     updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), "red");
-                    System.err.println("Error starting ads: " + e.getMessage());
+                    log.info("Error starting ads: " + e.getMessage());
                     e.printStackTrace();
                 }
                 return null;
@@ -826,14 +848,14 @@ public class AccountItemController {
     @FXML
     private void handleDeleteAccount() {
         try {
-            System.out.println("Удаление аккаунта: " + account.getUsername());
+            log.info("Удаление аккаунта: " + account.getUsername());
             accountService.deleteAccount(account.getUsername());
-            System.out.println("Аккаунт успешно удален");
-            System.out.println("Account successfully deleted");
+            log.info("Аккаунт успешно удален");
+            log.info("Account successfully deleted");
             // Обновляем список аккаунтов
             parentController.loadAccountsFromDatabase();
         } catch (Exception e) {
-            System.err.println("Account deletion error: " + e.getMessage());
+            log.error("Account deletion error: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -859,17 +881,12 @@ public class AccountItemController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/GiftImagesPopup.fxml"));
                 VBox popupContent = loader.load();
                 GiftImagesPopupController controller = loader.getController();
-                 // Pass the account ID to the popup controller
                 controller.setAccountId(account.getUserId());
-                // Load images for the current date initially
                 controller.loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
 
                 giftImagesPopup = new Popup();
                 giftImagesPopup.getContent().add(popupContent);
-                // Don't use autoHide, we will manage visibility manually
-                // giftImagesPopup.setAutoHide(true);
 
-                // Add mouse event handlers to the popup content
                 popupContent.setOnMouseEntered(event -> {
                     if (hidePopupTimeline != null) {
                         hidePopupTimeline.stop();
@@ -877,18 +894,40 @@ public class AccountItemController {
                     }
                 });
                 popupContent.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
-
-                 // Set mouse exited handler for the giftImageView
                 giftImageView.setOnMouseExited(event -> hideGiftImagesPopupWithDelay());
             }
 
-            // Only show if not already showing
             if (!giftImagesPopup.isShowing()) {
-                giftImagesPopup.show(giftImageView.getScene().getWindow(),
-                                  giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMinX(),
-                                  giftImageView.localToScreen(giftImageView.getBoundsInLocal()).getMaxY());
-            }
+                // Get screen bounds
+                Screen screen = Screen.getPrimary();
+                Rectangle2D screenBounds = screen.getVisualBounds();
 
+                // Get popup size
+                giftImagesPopup.show(giftImageView.getScene().getWindow(), 0, 0);
+                double popupWidth = giftImagesPopup.getWidth();
+                double popupHeight = giftImagesPopup.getHeight();
+                giftImagesPopup.hide();
+
+                // Calculate position
+                Bounds bounds = giftImageView.localToScreen(giftImageView.getBoundsInLocal());
+                double x = bounds.getMinX();
+                double y = bounds.getMaxY();
+
+                // Adjust position if popup would go off screen
+                if (x + popupWidth > screenBounds.getMaxX()) {
+                    x = screenBounds.getMaxX() - popupWidth - 10; // Add some padding
+                }
+                if (y + popupHeight > screenBounds.getMaxY()) {
+                    y = bounds.getMinY() - popupHeight - 10; // Add some padding
+                }
+
+                // Ensure minimum position
+                x = Math.max(10, x);
+                y = Math.max(10, y);
+
+                // Show popup at adjusted position
+                giftImagesPopup.show(giftImageView.getScene().getWindow(), x, y);
+            }
         } catch (Exception e) {
             System.err.println("Ошибка при показе окна подарков: " + e.getMessage());
             e.printStackTrace();
@@ -919,11 +958,11 @@ public class AccountItemController {
 
     public void showReloginRequiredState() {
         if (taskOverlayPane == null || reloginButton == null) {
-            System.err.println("UI components not initialized");
+            log.error("UI components not initialized");
             return;
         }
         Platform.runLater(() -> {
-            System.out.println("Showing relogin state for account: " + account.getUsername());
+            log.info("Showing relogin state for account: " + account.getUsername());
             taskOverlayPane.getStyleClass().setAll("relogin-overlay");
             taskOverlayPane.setVisible(true);
             taskOverlayPane.setMouseTransparent(false);
@@ -937,12 +976,12 @@ public class AccountItemController {
             }
             taskOverlayPane.requestLayout();
             reloginButton.requestLayout();
-            System.out.println("Relogin state shown for account: " + account.getUsername());
+            log.info("Relogin state shown for account: " + account.getUsername());
         });
     }
 
     public void hideReloginRequiredState() {
-        System.out.println("Attempting to hide relogin state for account: " + (account != null ? account.getUsername() : "null"));
+        log.info("Attempting to hide relogin state for account: " + (account != null ? account.getUsername() : "null"));
         if (taskOverlayPane == null || reloginButton == null || taskButtonsStack == null || taskButtonsHBox == null) {
             System.err.println("Critical error: UI components are null (task overlay)");
             return;
@@ -971,16 +1010,16 @@ public class AccountItemController {
                 taskButtonsStack.requestLayout();
                 taskOverlayPane.requestLayout();
                 reloginButton.requestLayout();
-                System.out.println("Successfully hid relogin state for account: " + account.getUsername());
+                log.info("Successfully hid relogin state for account: " + account.getUsername());
             } catch (Exception e) {
-                System.err.println("Error hiding relogin state: " + e.getMessage());
+                log.info("Error hiding relogin state: " + e.getMessage());
                 e.printStackTrace();
             }
         });
     }
 
     private void handleRelogin() {
-        System.out.println("Relogin button clicked for account: " + account.getUsername());
+        log.info("Relogin button clicked for account: " + account.getUsername());
         try {
             // Выполняем повторную аутентификацию
             UserCookie userCookie = mangaBuffAuth.authenticate(account.getUsername());
@@ -992,7 +1031,7 @@ public class AccountItemController {
                 parentController.scanAccount(account.getUserId());
             });
         } catch (Exception e) {
-            System.err.println("Ошибка при повторном входе: " + e.getMessage());
+            log.error("Ошибка при повторном входе: " + e.getMessage());
             e.printStackTrace();
             // Показываем сообщение об ошибке
             Platform.runLater(() -> {
@@ -1006,7 +1045,7 @@ public class AccountItemController {
     }
 
     private void handleOpenCards() {
-        System.out.println("Open Cards button clicked for account: " + account.getUsername());
+        log.info("Open Cards button clicked for account: " + account.getUsername());
         new Thread(() -> {
             try {
                 ChromeDriver driver = mbAuth.getActualDriver(account.getUserId(), CARDS_TASK_NAME, true);

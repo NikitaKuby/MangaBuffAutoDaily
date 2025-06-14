@@ -6,51 +6,63 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 
-<AnchorPane prefHeight="40.0" style="-fx-border-color: #f0f1f4; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: #f0f1f4;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="40.0" style="-fx-border-color: #f0f1f4; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: #f0f1f4;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.AccountHeadersController">
    <children>
-      <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+      <HBox alignment="CENTER_LEFT" spacing="5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
          <children>
-            <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
+            <VBox alignment="CENTER" prefWidth="130.0" minWidth="130.0" maxWidth="130.0">
                <children>
                   <Label text="" />
                </children>
             </VBox>
-            <VBox alignment="CENTER" prefWidth="28.0" minWidth="28.0" maxWidth="28.0">
-               <children>
-                  <Label text="" />
-               </children>
-            </VBox>
-            <VBox alignment="CENTER_LEFT" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
-               <children>
-                  <Label text="" style="-fx-font-weight: bold;" />
-               </children>
-            </VBox>
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <HBox alignment="CENTER_LEFT" spacing="5.0">
                 <children>
                     <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                         <children>
-                            <Label text="Reader" style="-fx-font-weight: bold;" />
+                            <ImageView fx:id="readerImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" onMouseClicked="#handleReaderIconClick" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/namedTask/reader.png" />
+                                </image>
+                            </ImageView>
                         </children>
                     </VBox>
                     <VBox alignment="CENTER" prefWidth="90.0" minWidth="90.0" maxWidth="90.0">
                         <children>
-                            <Label text="Comments" style="-fx-font-weight: bold;" />
+                            <ImageView fx:id="commentImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" onMouseClicked="#handleCommentIconClick" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/namedTask/comment.png" />
+                                </image>
+                            </ImageView>
                         </children>
                     </VBox>
                     <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                         <children>
-                            <Label text="Quiz" style="-fx-font-weight: bold;" />
+                            <ImageView fx:id="quizImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" onMouseClicked="#handleQuizIconClick" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/namedTask/quiz.png" />
+                                </image>
+                            </ImageView>
                         </children>
                     </VBox>
                     <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                         <children>
-                            <Label text="Mine" style="-fx-font-weight: bold;" />
+                            <ImageView fx:id="minerImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" onMouseClicked="#handleMinerIconClick" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/namedTask/miner.png" />
+                                </image>
+                            </ImageView>
                         </children>
                     </VBox>
                     <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                         <children>
-                            <Label text="Adv" style="-fx-font-weight: bold;" />
+                            <ImageView fx:id="advImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" onMouseClicked="#handleAdvIconClick" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/namedTask/adv.png" />
+                                </image>
+                            </ImageView>
                         </children>
                     </VBox>
                     <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
@@ -58,12 +70,12 @@
                             <Label text="" style="-fx-font-weight: bold;" />
                         </children>
                     </VBox>
-                    <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
+                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
                         <children>
                             <Label text="" style="-fx-font-weight: bold;" />
                         </children>
                     </VBox>
-                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
+                    <VBox alignment="CENTER" prefWidth="80.0" minWidth="80.0" maxWidth="80.0">
                         <children>
                             <Label text="" style="-fx-font-weight: bold;" />
                         </children>

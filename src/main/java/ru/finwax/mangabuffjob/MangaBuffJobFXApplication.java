@@ -6,10 +6,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import javax.sql.DataSource;
 
+@Slf4j
 public class MangaBuffJobFXApplication extends Application {
 
     private ConfigurableApplicationContext springContext;
@@ -32,13 +36,20 @@ public class MangaBuffJobFXApplication extends Application {
         primaryStage.setTitle("MangaBuffJob Desktop");
         primaryStage.setScene(new Scene(root));
 
+        // Добавляем обработчик закрытия окна
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume(); // Предотвращаем немедленное закрытие
+            stop(); // Вызываем наш метод закрытия
+            primaryStage.close();
+        });
+
         // Установка иконки приложения (favicon)
         try {
             // Можно использовать favicon.ico или png (32x32)
             Image icon = new Image(getClass().getResourceAsStream("/static/favicon_io/favicon-32x32.png"));
             primaryStage.getIcons().add(icon);
         } catch (Exception e) {
-            System.err.println("Не удалось загрузить иконку приложения: " + e.getMessage());
+            log.error("Не удалось загрузить иконку приложения: " + e.getMessage());
         }
 
         primaryStage.show();
@@ -46,13 +57,25 @@ public class MangaBuffJobFXApplication extends Application {
 
     @Override
     public void stop() {
-        System.out.println("Stopping MangaBuffJob Desktop...");
-        // Завершаем процессы Chrome/chromedriver перед закрытием Spring контекста
-        ru.finwax.mangabuffjob.controller.MangaBuffJobViewController.killChromeDrivers();
-        if (springContext != null) {
-            springContext.close();
+        try {
+            log.info("Закрытие приложения...");
+            if (springContext != null) {
+                // Закрываем все соединения с базой данных
+                try {
+                    DataSource dataSource = springContext.getBean(DataSource.class);
+                    if (dataSource instanceof DriverManagerDataSource) {
+                        ((DriverManagerDataSource) dataSource).getConnection().close();
+                    }
+                } catch (Exception e) {
+                    log.error("Ошибка при закрытии соединения с базой данных: " + e.getMessage());
+                }
+                
+                springContext.close();
+            }
+            log.info("MangaBuffJob Desktop остановлен.");
+        } catch (Exception e) {
+            log.error("Ошибка при закрытии приложения: " + e.getMessage());
         }
-        System.out.println("MangaBuffJob Desktop stopped.");
     }
 
     public static void main(String[] args) {

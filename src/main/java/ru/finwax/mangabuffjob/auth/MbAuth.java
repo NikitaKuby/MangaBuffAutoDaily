@@ -32,7 +32,7 @@ public class MbAuth {
     private static final String CARDS_TASK_NAME = "cards";
 
     public ChromeOptions setUpDriver(Long id) {
-        log.info("[{}] Настройка драйвера...", id);
+        log.debug("[{}] Настройка драйвера...", id);
         try {
             WebDriverManager.chromedriver()
                 .clearDriverCache()
@@ -69,7 +69,7 @@ public class MbAuth {
         // Получаем User-Agent для пользователя или используем дефолтный
         String userAgent = userAgents.getOrDefault(id%10, userAgents.get(-1L));
         options.addArguments("--user-agent="+userAgent);
-        log.info("[{}] Использован User-Agent: {}", id, userAgent);
+        log.debug("[{}] Использован User-Agent: {}", id, userAgent);
 
         // Дополнительные настройки для анонимности
         options.addArguments("--disable-webrtc");
@@ -112,7 +112,7 @@ public class MbAuth {
 
             cookieService.loadCookies(id).ifPresent(cookies -> {
                 cookies.forEach(tempDriver.manage()::addCookie);
-                log.info("[{}] Куки добавлены.", id);
+                log.debug("[{}] Куки добавлены.", id);
             });
 
             driver.navigate().refresh();
@@ -122,9 +122,9 @@ public class MbAuth {
             WebElement csrfMetaTag = driver.findElement(By.cssSelector("meta[name=\'csrf-token\']"));
             String csrfToken = csrfMetaTag.getAttribute("content");
 
-            log.info("[{}] Сохранение куки и CSRF токена в БД...", id);
+            log.debug("[{}] Сохранение куки и CSRF токена в БД...", id);
             cookieService.saveCookies(id, driver.manage().getCookies(), csrfToken);
-            log.info("[{}] Куки и CSRF токен сохранены.", id);
+            log.debug("[{}] Куки и CSRF токен сохранены.", id);
 
 
             return (ChromeDriver)driver;

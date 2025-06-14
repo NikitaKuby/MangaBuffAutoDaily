@@ -15,7 +15,7 @@
 <?import javafx.scene.image.Image?>
 
 <?import java.net.URL?>
-<AnchorPane fx:id="rootPane" minHeight="400.0" minWidth="300.0" prefHeight="800.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+<AnchorPane fx:id="rootPane" minHeight="400.0" minWidth="300.0" prefHeight="860.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
    <stylesheets>
       <URL value="@styles.css"/>
    </stylesheets>
@@ -69,28 +69,35 @@
               </HBox>
             </children>
           </AnchorPane>
-          <HBox spacing="20.0" alignment="CENTER_LEFT">
+          <HBox spacing="20.0" alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
             <children>
-              <Button fx:id="periodicReadingButton" mnemonicParsing="false" text="Запускать периодическое чтение" />
+              <Button fx:id="periodicReadingButton" mnemonicParsing="false" text="Запускать периодическое чтение" styleClass="btn-white"/>
+              <Button fx:id="stopPeriodicReadingButton" mnemonicParsing="false" text="Остановить периодическое чтение" styleClass="btn-red" visible="false" managed="false" />
               <CheckBox fx:id="viewsCheckBox" mnemonicParsing="false" text="Views">
                  <tooltip>
                     <Tooltip text="Отображение браузера" showDelay="50ms" />
                  </tooltip>
               </CheckBox>
-
             </children>
           </HBox>
         </children>
       </VBox>
       
-      <!-- Promo Code Section -->
-      <HBox alignment="CENTER_RIGHT" spacing="10" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="40.0">
-          <children>
-              <TextField fx:id="promoCodeInput" promptText="Вставьте промокод" />
-              <Button fx:id="applyPromoCodeButton" text="Применить" />
-          </children>
-      </HBox>
-      <Button fx:id="runBotButton" mnemonicParsing="false" text="Запустить бота" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="10.0" maxWidth="1.0E7" />
+      <!-- Promo Code Section and Run/Stop Buttons -->
+      <VBox AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="10.0" spacing="10">
+          <HBox alignment="CENTER_RIGHT" spacing="10">
+              <children>
+                  <TextField fx:id="promoCodeInput" promptText="Вставьте промокод" HBox.hgrow="ALWAYS"/>
+                  <Button fx:id="applyPromoCodeButton" text="Применить" />
+              </children>
+          </HBox>
+          <HBox spacing="10" alignment="CENTER">
+              <children>
+                  <Button fx:id="runBotButton" mnemonicParsing="false" text="Запустить бота" styleClass="btn-green" maxWidth="1.0E7" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="stopBotButton" mnemonicParsing="false" text="Остановить бота" styleClass="btn-red" maxWidth="1.0E7" HBox.hgrow="ALWAYS" visible="false" managed="false" />
+              </children>
+          </HBox>
+      </VBox>
 
    </children>
 </AnchorPane>
