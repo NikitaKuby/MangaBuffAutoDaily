@@ -65,6 +65,15 @@
                             </ImageView>
                         </children>
                     </VBox>
+                    <VBox alignment="CENTER" prefWidth="60.0" minWidth="60.0" maxWidth="60.0">
+                        <children>
+                            <ImageView fx:id="scrollImageView" fitHeight="25" fitWidth="25" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+                                <image>
+                                    <Image url="/static/icon/scroll/S.png" />
+                                </image>
+                            </ImageView>
+                        </children>
+                    </VBox>
                     <VBox alignment="CENTER" prefWidth="40.0" minWidth="40.0" maxWidth="40.0">
                         <children>
                             <Label text="" style="-fx-font-weight: bold;" />

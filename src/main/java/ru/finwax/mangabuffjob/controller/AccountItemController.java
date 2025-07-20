@@ -56,6 +56,11 @@ import javafx.geometry.Pos;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
+import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
+import javafx.scene.input.TransferMode;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.Node;
+import javafx.scene.input.Dragboard;
 
 @Component
 @Getter
@@ -214,12 +219,51 @@ public class AccountItemController {
     private Timeline loadingTimelineAdv;
 
     private Popup giftImagesPopup;
+    private GiftImagesPopupController giftImagesPopupController;
 
     private static final String CARDS_TASK_NAME = "cards";
 
     private Timeline hidePopupTimeline;
 
     private final MangaBuffAuth mangaBuffAuth;
+
+    private Popup minePopup;
+    private CheckBox autoExchangeCheckBox;
+    private CheckBox autoUpgradeCheckBox;
+
+    private boolean isMouseOverMinePopup = false;
+
+    private Popup readerPopup;
+    private boolean isMouseOverReaderPopup = false;
+
+    private final MangaReadingProgressRepository mangaReadingProgressRepository;
+
+    private boolean hasNewGiftToday = false;
+
+    private static final String GIFT_ICON_DEFAULT = "/static/card-gift.png";
+    private static final String GIFT_ICON_NEW = "/static/card-gift-new.png";
+
+    public void setNewGiftIcon() {
+        if (!hasNewGiftToday) {
+            hasNewGiftToday = true;
+            animateGiftIconChange(GIFT_ICON_NEW);
+        }
+    }
+
+    private void animateGiftIconChange(String iconPath) {
+        if (giftImageView == null) return;
+        javafx.animation.FadeTransition fadeOut = new javafx.animation.FadeTransition(javafx.util.Duration.millis(150), giftImageView);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(event -> {
+            giftImageView.setImage(new Image(getClass().getResourceAsStream(iconPath)));
+            javafx.animation.FadeTransition fadeIn = new javafx.animation.FadeTransition(javafx.util.Duration.millis(150), giftImageView);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+        });
+        fadeOut.play();
+    }
 
     public AccountItemController(
         AccountService accountService,
@@ -231,7 +275,8 @@ public class AccountItemController {
         MangaReadScheduler mangaReadScheduler,
         GiftStatisticRepository giftRepository,
         MbAuth mbAuth,
-        MangaBuffAuth mangaBuffAuth
+        MangaBuffAuth mangaBuffAuth,
+        MangaReadingProgressRepository mangaReadingProgressRepository
     ) {
         this.accountService = accountService;
         this.parentController = parentController;
@@ -243,6 +288,7 @@ public class AccountItemController {
         this.giftRepository = giftRepository;
         this.mbAuth = mbAuth;
         this.mangaBuffAuth = mangaBuffAuth;
+        this.mangaReadingProgressRepository = mangaReadingProgressRepository;
     }
 
     @FXML
@@ -385,6 +431,80 @@ public class AccountItemController {
             giftImageView.setFitWidth(19.2);
             hideGiftImagesPopupWithDelay();
         });
+
+//        // Удаляем Tooltip у mineStatusIcon, если был
+//        Tooltip.uninstall(mineStatusIcon, mineProgressTooltip);
+        // Заменяем Tooltip на кастомный Popup для mineStatusIcon
+        mineStatusIcon.setOnMouseEntered(e -> showMinePopup());
+        mineStatusIcon.setOnMouseExited(e -> {
+            // Задержка, чтобы дать время мыши перейти на popup
+            javafx.application.Platform.runLater(() -> {
+                if (!isMouseOverMinePopup) {
+                    hideMinePopup();
+                }
+            });
+        });
+        // Popup для Reader
+        readerStatusIcon.setOnMouseEntered(e -> showReaderPopup());
+        readerStatusIcon.setOnMouseExited(e -> {
+            javafx.application.Platform.runLater(() -> {
+                if (!isMouseOverReaderPopup) {
+                    hideReaderPopup();
+                }
+            });
+        });
+        addDragAndDropHandlers(accountItem);
+    }
+
+    private void addDragAndDropHandlers(Node node) {
+        node.setOnDragDetected(event -> {
+            Dragboard db = node.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            content.putString("");
+            db.setContent(content);
+            event.consume();
+        });
+
+        node.setOnDragOver(event -> {
+            if (event.getGestureSource() != node && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+
+        node.setOnDragEntered(event -> {
+            if (event.getGestureSource() != node && event.getDragboard().hasString()) {
+                node.setStyle("-fx-border-color: #9450E0; -fx-border-width: 2;");
+            }
+        });
+
+        node.setOnDragExited(event -> {
+            node.setStyle("");
+        });
+
+        node.setOnDragDropped(event -> {
+            if (event.getGestureSource() != node && event.getDragboard().hasString()) {
+                VBox parent = (VBox) node.getParent();
+                Node dragged = (Node) event.getGestureSource();
+
+                int thisIndex = parent.getChildren().indexOf(node);
+                int draggedIndex = parent.getChildren().indexOf(dragged);
+
+                if (thisIndex != draggedIndex) {
+                    parent.getChildren().remove(dragged);
+                    parent.getChildren().add(thisIndex, dragged);
+                }
+                event.setDropCompleted(true);
+            } else {
+                event.setDropCompleted(false);
+            }
+            event.consume();
+        });
+
+        node.setOnDragDone(event -> {
+            node.setStyle("");
+            event.consume();
+        });
     }
 
     public void setAccount(AccountProgress account) {
@@ -427,10 +547,10 @@ public class AccountItemController {
             updateStatusIcon(advStatusIcon, advProgressTooltip, account.getAdvProgress(), isAdvCompleted(account.getAdvDone()) ? "green" : "grey");
 
             // Привязка Tooltip к ImageView программно
-            Tooltip.install(readerStatusIcon, readerProgressTooltip);
+            //Tooltip.install(readerStatusIcon, readerProgressTooltip);
             Tooltip.install(commentStatusIcon, commentProgressTooltip);
             Tooltip.install(quizStatusIcon, quizProgressTooltip);
-            Tooltip.install(mineStatusIcon, mineProgressTooltip);
+            // Tooltip.install(mineStatusIcon, mineProgressTooltip);
             Tooltip.install(advStatusIcon, advProgressTooltip);
 
             // Установка количества подарков
@@ -495,6 +615,10 @@ public class AccountItemController {
 
             // Обновляем информацию о свитках
             updateScrollStatsPopup();
+
+            // Восстанавливаем состояние чекбоксов майнера
+            if (autoExchangeCheckBox != null) autoExchangeCheckBox.setSelected(account.isAutoExchangeEnabled());
+            if (autoUpgradeCheckBox != null) autoUpgradeCheckBox.setSelected(account.isAutoUpgradeEnabled());
         }
     }
 
@@ -537,7 +661,13 @@ public class AccountItemController {
             }
             Image statusIcon = new Image(getClass().getResourceAsStream(iconPath));
             iconView.setImage(statusIcon);
-            tooltip.setText(progressText);
+            
+            // Добавляем информацию о валюте для индикатора майнинга
+            if (iconView == mineStatusIcon && account != null && account.getMineCoin() != null) {
+                tooltip.setText(progressText + "\nВалюта: " + account.getMineCoin() + "\nLvl: " + account.getMineLvl());
+            } else {
+                tooltip.setText(progressText);
+            }
         });
     }
 
@@ -790,13 +920,16 @@ public class AccountItemController {
         setButtonState(startMiningButton, "blue");
         updateStatusIcon(mineStatusIcon, mineProgressTooltip, account.getMineProgress(), "blue");
 
+        boolean autoUpgrade = account != null && account.isAutoUpgradeEnabled();
+        boolean autoExchange = account != null && account.isAutoExchangeEnabled();
+
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
                 try {
                     Integer mineHitsLeft = account.getMineHitsLeft();
                     if (mineHitsLeft != null && mineHitsLeft > 0) {
-                        mineScheduler.performMining(account.getUserId(), mineHitsLeft, isTaskEnabled(TaskType.MINE));
+                        mineScheduler.performMining(account.getUserId(), mineHitsLeft, isTaskEnabled(TaskType.MINE), autoUpgrade, autoExchange);
                         parentController.scanAccount(account.getUserId());
                     } else {
                         Platform.runLater(() -> setButtonState(startMiningButton, "green"));
@@ -883,6 +1016,7 @@ public class AccountItemController {
                 GiftImagesPopupController controller = loader.getController();
                 controller.setAccountId(account.getUserId());
                 controller.loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
+                giftImagesPopupController = controller; // сохраняем ссылку
 
                 giftImagesPopup = new Popup();
                 giftImagesPopup.getContent().add(popupContent);
@@ -928,9 +1062,20 @@ public class AccountItemController {
                 // Show popup at adjusted position
                 giftImagesPopup.show(giftImageView.getScene().getWindow(), x, y);
             }
+            // Сброс статуса "новый подарок" при наведении
+            if (hasNewGiftToday) {
+                hasNewGiftToday = false;
+                animateGiftIconChange(GIFT_ICON_DEFAULT);
+            }
         } catch (Exception e) {
             System.err.println("Ошибка при показе окна подарков: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    public void refreshGiftImagesPopup() {
+        if (giftImagesPopup != null && giftImagesPopup.isShowing() && giftImagesPopupController != null) {
+            giftImagesPopupController.loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
         }
     }
 
@@ -1152,6 +1297,261 @@ public class AccountItemController {
                 label.setText(count.getCount() + " | " + count.getBlessedCount());
             }
         }
+    }
+
+    private String formatCoin(int value) {
+        return String.format("%,d", value).replace(',', '.');
+    }
+
+    private void showMinePopup() {
+        if (minePopup == null) {
+            minePopup = new Popup();
+            VBox content = new VBox(10);
+            HBox infoBox = new HBox(8);
+            infoBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            if (account != null) {
+                // Прогресс
+                Label progressLabel = new Label(account.getMineProgress());
+                // Валюта
+                ImageView coinIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/icon/icon-miner/minerRood.png")));
+                coinIcon.setFitWidth(16);
+                coinIcon.setFitHeight(16);
+                coinIcon.setPreserveRatio(true);
+                int mineCoin = account.getMineCoin() != null ? account.getMineCoin() : 0;
+                String formattedCoin = formatCoin(mineCoin);
+                Label coinLabel = new Label(formattedCoin);
+                int diamondValue = mineCoin / 100;
+                ImageView diamondIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/diamond.png")));
+                diamondIcon.setFitWidth(16);
+                diamondIcon.setFitHeight(16);
+                diamondIcon.setPreserveRatio(true);
+                Label diamondLabel = new Label(String.valueOf(diamondValue));
+                HBox coinBox = new HBox(3, coinIcon, coinLabel, new Label(" ("), diamondIcon, diamondLabel, new Label(")"));
+                coinBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                // Уровень
+                ImageView lvlIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/icon/icon-miner/lvl.png")));
+                lvlIcon.setFitWidth(16);
+                lvlIcon.setFitHeight(16);
+                lvlIcon.setPreserveRatio(true);
+                Label lvlLabel = new Label(String.valueOf(account.getMineLvl()));
+                HBox lvlBox = new HBox(3, lvlIcon, lvlLabel);
+                lvlBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                // Добавляем всё в infoBox
+                infoBox.getChildren().addAll(progressLabel, coinBox, lvlBox);
+            }
+            content.getChildren().add(infoBox);
+            autoExchangeCheckBox = new CheckBox("Обменивать Валюту автоматически");
+            autoUpgradeCheckBox = new CheckBox("Прокачивать уровень автоматически");
+            // Восстанавливаем состояние чекбоксов из account
+            autoExchangeCheckBox.setSelected(account != null && account.isAutoExchangeEnabled());
+            autoUpgradeCheckBox.setSelected(account != null && account.isAutoUpgradeEnabled());
+            // Взаимоисключающие чекбоксы
+            autoExchangeCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal) autoUpgradeCheckBox.setSelected(false);
+                if (account != null) {
+                    account.setAutoExchangeEnabled(newVal);
+                    // Сохраняем в БД
+                    saveMinerCheckboxesToDb(account);
+                }
+            });
+            autoUpgradeCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal) autoExchangeCheckBox.setSelected(false);
+                if (account != null) {
+                    account.setAutoUpgradeEnabled(newVal);
+                    // Сохраняем в БД
+                    saveMinerCheckboxesToDb(account);
+                }
+            });
+            // Иконка для чекбокса обмена
+            ImageView transferIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/icon/icon-miner/transfer.png")));
+            transferIcon.setFitWidth(18);
+            transferIcon.setFitHeight(18);
+            transferIcon.setPreserveRatio(true);
+            Tooltip transferTooltip = new Tooltip("Обменивать Валюту автоматически");
+            transferTooltip.setShowDelay(javafx.util.Duration.millis(100));
+            Tooltip.install(transferIcon, transferTooltip);
+            autoExchangeCheckBox.setText("");
+            HBox exchangeBox = new HBox(6, autoExchangeCheckBox, transferIcon);
+            exchangeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            content.getChildren().add(exchangeBox);
+            // Иконка для чекбокса прокачки
+            ImageView upgradeIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/icon/icon-miner/level-up.png")));
+            upgradeIcon.setFitWidth(18);
+            upgradeIcon.setFitHeight(18);
+            upgradeIcon.setPreserveRatio(true);
+            Tooltip upgradeTooltip = new Tooltip("Прокачивать уровень автоматически");
+            upgradeTooltip.setShowDelay(javafx.util.Duration.millis(100));
+            Tooltip.install(upgradeIcon, upgradeTooltip);
+            autoUpgradeCheckBox.setText("");
+            HBox upgradeBox = new HBox(6, autoUpgradeCheckBox, upgradeIcon);
+            upgradeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            // Добавляем чекбокс прокачки только если уровень < 15
+            if (account != null && account.getMineLvl() < 15) {
+                content.getChildren().add(upgradeBox);
+                autoUpgradeCheckBox.setDisable(false);
+            } else {
+                autoUpgradeCheckBox.setSelected(false);
+                autoUpgradeCheckBox.setDisable(true);
+            }
+            content.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 10; -fx-border-color: #888; -fx-border-radius: 5; -fx-background-radius: 5;");
+            content.setOnMouseEntered(ev -> {
+                isMouseOverMinePopup = true;
+            });
+            content.setOnMouseExited(ev -> {
+                isMouseOverMinePopup = false;
+                javafx.application.Platform.runLater(() -> {
+                    if (!mineStatusIcon.isHover()) {
+                        hideMinePopup();
+                    }
+                });
+            });
+            minePopup.getContent().add(content);
+        } else {
+            if (account != null) {
+                VBox content = (VBox) minePopup.getContent().get(0);
+                HBox infoBox = (HBox) content.getChildren().get(0);
+                // Обновляем значения
+                if (infoBox.getChildren().size() == 3) {
+                    ((Label) infoBox.getChildren().get(0)).setText(account.getMineProgress());
+                    HBox coinBox = (HBox) infoBox.getChildren().get(1);
+                    ((Label) coinBox.getChildren().get(1)).setText(String.valueOf(account.getMineCoin()));
+                    HBox lvlBox = (HBox) infoBox.getChildren().get(2);
+                    ((Label) lvlBox.getChildren().get(1)).setText(String.valueOf(account.getMineLvl()));
+                }
+            }
+        }
+        javafx.geometry.Bounds bounds = mineStatusIcon.localToScreen(mineStatusIcon.getBoundsInLocal());
+        minePopup.show(mineStatusIcon, bounds.getMinX(), bounds.getMaxY());
+    }
+
+    private void hideMinePopup() {
+        if (minePopup != null) minePopup.hide();
+    }
+
+    private void saveMinerCheckboxesToDb(AccountProgress account) {
+        try {
+            // Получаем MangaProgress из репозитория
+            ru.finwax.mangabuffjob.Entity.MangaProgress progress = parentController.getMangaProgressRepository().findByUserId(account.getUserId()).orElse(null);
+            if (progress != null) {
+                progress.setAutoUpgradeEnabled(account.isAutoUpgradeEnabled());
+                progress.setAutoExchangeEnabled(account.isAutoExchangeEnabled());
+                parentController.getMangaProgressRepository().save(progress);
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при сохранении состояния чекбоксов майнера: {}", e.getMessage());
+        }
+    }
+
+    private void showReaderPopup() {
+        if (readerPopup == null) {
+            readerPopup = new Popup();
+            VBox content = new VBox(10);
+            content.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 10; -fx-border-color: #888; -fx-border-radius: 5; -fx-background-radius: 5;");
+            content.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            // Прогресс
+            Label progressLabel = new Label(account != null ? account.getReaderProgress() : "-");
+            // Кнопка skip
+            ImageView skipIcon = new ImageView(new Image(getClass().getResourceAsStream("/static/button/skip.png")));
+            skipIcon.setFitWidth(48);
+            skipIcon.setFitHeight(48);
+            skipIcon.setPreserveRatio(true);
+            Tooltip skipTooltip = new Tooltip("Пропустить текущую мангу");
+            skipTooltip.setShowDelay(javafx.util.Duration.millis(100));
+            Tooltip.install(skipIcon, skipTooltip);
+            Button skipButton = new Button();
+            skipButton.setGraphic(skipIcon);
+            skipButton.setStyle("-fx-background-color: transparent;");
+            skipButton.setFocusTraversable(false);
+            skipButton.setCursor(javafx.scene.Cursor.HAND);
+            // Проверяем, есть ли манга для пропуска
+            boolean canSkip = canSkipCurrentManga();
+            skipButton.setDisable(!canSkip);
+            skipIcon.setOpacity(canSkip ? 1.0 : 0.4);
+            skipButton.setOnAction(ev -> handleSkipManga());
+            HBox skipBox = new HBox(6, skipButton);
+            skipBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            content.getChildren().addAll(progressLabel, skipBox);
+            content.setOnMouseEntered(ev -> isMouseOverReaderPopup = true);
+            content.setOnMouseExited(ev -> {
+                isMouseOverReaderPopup = false;
+                javafx.application.Platform.runLater(() -> {
+                    if (!readerStatusIcon.isHover()) {
+                        hideReaderPopup();
+                    }
+                });
+            });
+            readerPopup.getContent().add(content);
+        } else {
+            // Обновляем прогресс и активность skip
+            VBox content = (VBox) readerPopup.getContent().get(0);
+            ((Label) content.getChildren().get(0)).setText(account != null ? account.getReaderProgress() : "-");
+            HBox skipBox = (HBox) content.getChildren().get(1);
+            Button skipButton = (Button) skipBox.getChildren().get(0);
+            ImageView skipIcon = (ImageView) skipButton.getGraphic();
+            skipIcon.setFitWidth(48);
+            skipIcon.setFitHeight(48);
+            boolean canSkip = canSkipCurrentManga();
+            skipButton.setDisable(!canSkip);
+            skipIcon.setOpacity(canSkip ? 1.0 : 0.4);
+        }
+        javafx.geometry.Bounds bounds = readerStatusIcon.localToScreen(readerStatusIcon.getBoundsInLocal());
+        readerPopup.show(readerStatusIcon, bounds.getMinX(), bounds.getMaxY());
+    }
+
+    private void handleSkipManga() {
+        // Пропустить текущую мангу (установить hasReaded=true)
+        new Thread(() -> {
+            try {
+                var opt = mangaReadingProgressRepository.findMangaReadingProgressByUserCookieIdAndHasReadedIsFalse(account.getUserId());
+                if (opt.isPresent()) {
+                    var progress = opt.get();
+                    progress.setHasReaded(true);
+                    mangaReadingProgressRepository.save(progress);
+                    // Показываем Toast
+                    javafx.application.Platform.runLater(() -> {
+                        try {
+                            // Используем ToastNotificationController, если есть
+                            Class<?> toastClass = Class.forName("ru.finwax.mangabuffjob.controller.ToastNotificationController");
+                            var method = toastClass.getMethod("showToast", javafx.stage.Window.class, String.class);
+                            method.invoke(null, readerStatusIcon.getScene().getWindow(), "Манга пропущена!");
+                        } catch (Exception ex) {
+                            // Если Toast не найден, fallback на Alert
+                            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+                            alert.setTitle("Успех");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Манга пропущена!");
+                            alert.showAndWait();
+                        }
+                        // Обновляем прогресс
+                        parentController.scanAccount(account.getUserId());
+                        // Не закрываем popup здесь!
+                    });
+                }
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+                    alert.setTitle("Ошибка");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Не удалось пропустить мангу: " + e.getMessage());
+                    alert.showAndWait();
+                });
+            }
+        }).start();
+    }
+
+    private boolean canSkipCurrentManga() {
+        try {
+            // Проверяем, есть ли манга для пропуска через репозиторий
+            return mangaReadingProgressRepository
+                .findMangaReadingProgressByUserCookieIdAndHasReadedIsFalse(account.getUserId())
+                .isPresent();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void hideReaderPopup() {
+        if (readerPopup != null) readerPopup.hide();
     }
 }
 

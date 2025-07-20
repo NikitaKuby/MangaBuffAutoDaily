@@ -86,7 +86,7 @@ public class GiftImagesPopupController {
 
         for (String imagePath : imagePaths) {
             try {
-                Image image = new Image(imagePath);
+                Image image = new Image(imagePath, false);
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(120);
                 imageView.setPreserveRatio(true);

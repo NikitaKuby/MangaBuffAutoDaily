@@ -64,10 +64,10 @@ public class MangaReadScheduler {
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
     private MangaBuffJobViewController viewController;
-    private static final int CHAPTER_READ_TIME_MS =  100 * 1000;
+    private static final int CHAPTER_READ_TIME_MS =  120 * 1000;
     private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
-    private static final int CHAPTERS_PER_READ = 3;
+    private static final int CHAPTERS_PER_READ = 4;
     private static final int MAX_PARALLEL_TASKS = 3;
 
     private final MangaDataRepository mangaRepository;
@@ -366,29 +366,44 @@ public class MangaReadScheduler {
         }
     }
 
+    private int getMaxYOffset(ChromeDriver driver){
+        Dimension windowSize = driver.manage().window().getSize();
+        return windowSize.getHeight();
+    }
+//    private double getScrollMultiplier(ChromeDriver driver){
+//        Dimension windowSize = driver.manage().window().getSize();
+//        int maxYOffset = windowSize.getHeight();
+//        // Получаем общую высоту всех страниц
+//        long totalPageHeight = calculateTotalPageHeight(driver);
+//
+//        // Если не удалось получить высоту, используем старую логику
+//        if (totalPageHeight == 0) {
+//            WebElement pageCounter = driver.findElement(By.cssSelector("div.reader-menu__item--page"));
+//            String textAfterSpan = pageCounter.getText().substring(
+//                pageCounter.findElement(By.tagName("span")).getText().length()
+//            );
+//            int totalChapters = Integer.parseInt(textAfterSpan.replace("/", "").trim());
+//            totalPageHeight = (long) totalChapters * maxYOffset; // Примерная оценка
+//
+//            // Рассчитываем оптимальную скорость скроллинга
+//        }
+//        return Math.max(0.6, Math.min(3.0, (double) totalPageHeight / (maxYOffset * 20)));
+//    }
+    private double getScrollMultiplier(){
+        return 1.0 + (Math.random() * 2.0);
+    }
+
     private void readChapter(ChromeDriver driver, Long accountId) throws InterruptedException {
         try {
             long startTime = System.currentTimeMillis();
+            long lastCheckTime = System.currentTimeMillis();
             long endTime = startTime + CHAPTER_READ_TIME_MS;
-            Dimension windowSize = driver.manage().window().getSize();
-            int maxYOffset = windowSize.getHeight();
+            double scrollMultiplier = getScrollMultiplier();
+            int maxYOffset = getMaxYOffset(driver);
 
-            // Получаем общую высоту всех страниц
-            long totalPageHeight = calculateTotalPageHeight(driver);
-            
-            // Если не удалось получить высоту, используем старую логику
-            if (totalPageHeight == 0) {
-                WebElement pageCounter = driver.findElement(By.cssSelector("div.reader-menu__item--page"));
-                String textAfterSpan = pageCounter.getText().substring(
-                    pageCounter.findElement(By.tagName("span")).getText().length()
-                );
-                int totalChapters = Integer.parseInt(textAfterSpan.replace("/", "").trim());
-                totalPageHeight = totalChapters * maxYOffset; // Примерная оценка
-            }
+            int delayChapter = (int) ((9+Math.random()*2)*1000);
+            Thread.sleep(delayChapter);
 
-            // Рассчитываем оптимальную скорость скроллинга
-            double scrollMultiplier = Math.max(1.0, Math.min(3.0, totalPageHeight / (maxYOffset * 20)));
-            
             // Оптимизированные параметры
             final int SCROLL_CYCLES = 15;
             final int BASE_DELAY = 50;
@@ -399,7 +414,8 @@ public class MangaReadScheduler {
             long lastGiftCheckTime = System.currentTimeMillis();
             final int GIFT_CHECK_INTERVAL = 1000;
 
-            while (System.currentTimeMillis() < endTime) {
+//            while (System.currentTimeMillis() < endTime) {
+            while (!isEndOfChapter(driver)) {
                 try {
                     // Проверка подарков и event-gift
                     if (System.currentTimeMillis() - lastGiftCheckTime > GIFT_CHECK_INTERVAL) {
@@ -414,6 +430,7 @@ public class MangaReadScheduler {
 
                     // Проверяем, достигли ли мы конца главы
                     if (isEndOfChapter(driver)) {
+                        log.info("Конец страницы");
                         log.debug("[{}] Достигнут конец главы", accountId);
                         // Продолжаем скроллинг до истечения времени
                         // Это поможет избежать подозрительного поведения
@@ -421,6 +438,11 @@ public class MangaReadScheduler {
                         continue;
                     }
 
+                    if (System.currentTimeMillis() - lastCheckTime >= 10000) {
+                        maxYOffset = getMaxYOffset(driver);
+                        scrollMultiplier = getScrollMultiplier();
+                        lastCheckTime = System.currentTimeMillis(); // сбрасываем таймер
+                    }
                     // Односторонний плавный скролл вниз
                     for (int i = 0; i < SCROLL_CYCLES && System.currentTimeMillis() < endTime; i++) {
                         double progress = (double) i / SCROLL_CYCLES;
@@ -552,6 +574,17 @@ public class MangaReadScheduler {
                 String imageUrl = modalImage.getAttribute("src");
                 String imageName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
+                // Добавляем временную метку к имени файла
+                String time = java.time.LocalTime.now(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss"));
+                int dotIndex = imageName.lastIndexOf(".");
+                String imageNameWithTime;
+                if (dotIndex != -1) {
+                    imageNameWithTime = time+"_"+imageName.substring(0, dotIndex)  + imageName.substring(dotIndex);
+                } else {
+                    imageNameWithTime = time+ "_" + imageName;
+                }
+
                 // 4. Создаем структуру папок и сохраняем изображение
                 String basePath = "gifts";
                 String accountPath = basePath + "/account_" + accountId;
@@ -562,7 +595,7 @@ public class MangaReadScheduler {
                 new File(datePath).mkdirs();
 
                 // Полный путь для сохранения
-                String fullPath = datePath + "/" + imageName;
+                String fullPath = datePath + "/" + imageNameWithTime;
 
                 // Скачиваем и сохраняем изображение
                 try (InputStream in = new URL(imageUrl).openStream();
@@ -575,6 +608,18 @@ public class MangaReadScheduler {
                 }
 
                 log.info("[{}] Сохранен файл подарка: {}", accountId, fullPath);
+
+                // Обновляем UI (если viewController != null)
+                if (viewController != null) {
+                    Platform.runLater(() -> {
+                        AccountItemController controller = getAccountItemController(accountId);
+                        if (controller != null) {
+                            controller.updateGiftCount();
+                            controller.refreshGiftImagesPopup();
+                            controller.setNewGiftIcon();
+                        }
+                    });
+                }
 
                 // 5. Закрываем модальное окно
                 tryAlternativeCloseMethods(driver, accountId);
@@ -662,7 +707,7 @@ public class MangaReadScheduler {
 
         // Запускаем планировщик
         scheduler.scheduleAtFixedRate(this::scheduleNextReading, 0,
-            90L,
+            70L,
             TimeUnit.MINUTES);
     }
 

@@ -56,7 +56,15 @@ public class TaskExecutionService {
 
     private void executeMineTask(MangaTask task) {
         try {
-            mineScheduler.performMining(task.getUserId(), task.getRemainingCount(), checkViews);
+            System.out.println(task.getUserId()+"UPGRADE: "+task.isAutoUpgrade());
+            System.out.println(task.getUserId()+"EXCHANGE: "+task.isAutoExchange());
+            mineScheduler.performMining(
+                task.getUserId(),
+                task.getRemainingCount(),
+                checkViews,
+                task.isAutoUpgrade(),
+                task.isAutoExchange()
+            );
             Thread.sleep(10000);
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при выполнении майнинга: " + e.getMessage(), e);

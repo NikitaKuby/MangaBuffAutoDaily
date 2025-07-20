@@ -55,6 +55,12 @@ public class MangaProgress {
     @Column(name = "mine_hits_left")
     private Integer mineHitsLeft = 100;
 
+    @Column(name = "mine_count_coin")
+    private Integer mineCountCoin;
+
+    @Column(name = "mine_lvl")
+    private Integer mineLvl;
+
     @Builder.Default
     @Column(name = "adv_done", nullable = false)
     private Integer advDone = 0;
@@ -94,6 +100,14 @@ public class MangaProgress {
     @Builder.Default
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Builder.Default
+    @Column(name = "auto_upgrade_enabled", columnDefinition = "boolean default false")
+    private boolean autoUpgradeEnabled = false;
+
+    @Builder.Default
+    @Column(name = "auto_exchange_enabled", columnDefinition = "boolean default false")
+    private boolean autoExchangeEnabled = false;
 
     @PreUpdate
     public void updateLastUpdated() {

@@ -40,23 +40,22 @@ public class MineScheduler {
     private final Semaphore concurrentSessionsSemaphore = new Semaphore(MAX_PARALLEL_SESSIONS);
 
 
-    public void performMining(Long id, Integer TOTAL_CLICKS, boolean checkViews) {
-        ChromeDriver driver = (ChromeDriver) mbAuth.getActualDriver(id, "mining", checkViews);
+    public void performMining(Long id, Integer TOTAL_CLICKS, boolean checkViews, boolean autoUpgrade, boolean autoExchange) {
+        log.info("Зашли в PerformMining");
+        ChromeDriver driver =  mbAuth.getActualDriver(id, "mining", checkViews);
+        log.info("Создали драйвер");
         if (!tryAcquireMiningPermission()) {
             log.warn("[{}]Max parallel mining sessions reached ({})", id, MAX_PARALLEL_SESSIONS);
             return;
         }
         try {
-
             limitReached.set(false);
-             CompletableFuture<Void> limitCheckFuture = new CompletableFuture<>();
-
-             DevTools devTools = driver.getDevTools();
-             devTools.createSession();
-
+            CompletableFuture<Void> limitCheckFuture = new CompletableFuture<>();
+            DevTools devTools = driver.getDevTools();
+            devTools.createSession();
             try {
                 setupNetworkMonitoring(devTools, limitCheckFuture);
-                performMiningOperations(driver,  limitCheckFuture,  id, TOTAL_CLICKS);
+                performMiningOperations(driver, limitCheckFuture, id, TOTAL_CLICKS, autoUpgrade, autoExchange);
             } finally {
                 cleanupResources(devTools);
                 releaseMiningPermission();
@@ -65,7 +64,7 @@ public class MineScheduler {
             log.error("[{}]Critical mining error: {}", id, e.getMessage());
             driver.quit();
             releaseMiningPermission();
-        }finally {
+        } finally {
             driver.quit();
         }
     }
@@ -102,7 +101,11 @@ public class MineScheduler {
         }
     }
 
-    private void performMiningOperations(WebDriver driver, CompletableFuture<Void> limitCheckFuture, Long id, Integer TOTAL_CLICKS) {
+    private void performMiningOperations(WebDriver driver,
+                                         CompletableFuture<Void> limitCheckFuture,
+                                         Long id, Integer TOTAL_CLICKS,
+                                         boolean autoUpgrade,
+                                         boolean autoExchange) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         driver.get(MINE_PAGE_URL);
 
@@ -116,20 +119,61 @@ public class MineScheduler {
                 mineButton.click();
                 clicksPerformed++;
                 Thread.sleep(CLICK_INTERVAL_MS);
-                //  try {
-                //      limitCheckFuture.get(CLICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
-                //      break;
-                //  } catch (InterruptedException e) {
-                //      Thread.currentThread().interrupt();
-                //      break;
-                //  }
             } catch (Exception e) {
                 log.error("[{}] Click error. Exception type: {}, Message: {}", id, e.getClass().getName(), e.getMessage());
                 if (e.getMessage() != null && e.getMessage().contains("element is not attached") || e.getClass().getName().contains("StaleElementReferenceException")) {
-                   log.warn("[{}] Element is stale or detached, stopping mining for this session.", id);
+                    log.warn("[{}] Element is stale or detached, stopping mining for this session.", id);
                     break;
                 }
             }
+        }
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // После всех кликов - логика для чекбоксов
+        if(autoExchange||autoUpgrade){
+            try {
+                WebElement modalOverview = driver.findElement(By.cssSelector(".main-mine__header_score-count"));
+                modalOverview.click();
+                log.info("[{}] Клик по кнопке 'Модального окна' выполнен.", id);
+            } catch (Exception e) {
+                log.warn("[{}] Не удалось кликнуть по кнопке 'Модального окна': {}", id, e.getMessage());
+            }
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (autoUpgrade) {
+                try {
+                    log.info("Зашли в автоапгрейд");
+                    WebElement upgradeBtn = driver.findElement(By.cssSelector("button.mine-shop__upgrade-btn"));
+                    if (upgradeBtn.isDisplayed() && upgradeBtn.isEnabled()) {
+                        upgradeBtn.click();
+                        log.info("[{}] Клик по кнопке 'Улучшить' выполнен.", id);
+                    }
+                } catch (Exception e) {
+                    log.warn("[{}] Не удалось кликнуть по кнопке 'Улучшить': {}", id, e.getMessage());
+                }
+            } else if (autoExchange) {
+                try {
+                    log.info("Зашли в автоОбмен");
+                    WebElement exchangeBtn = driver.findElement(By.cssSelector("button.mine-shop__ore-change-btn"));
+                    if (exchangeBtn.isDisplayed() && exchangeBtn.isEnabled()) {
+                        exchangeBtn.click();
+                        log.info("[{}] Клик по кнопке 'Обменять' выполнен.", id);
+                    }
+                } catch (Exception e) {
+                    log.warn("[{}] Не удалось кликнуть по кнопке 'Обменять': {}", id, e.getMessage());
+                }
+            }
+        }
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         logMiningResult(clicksPerformed, id);

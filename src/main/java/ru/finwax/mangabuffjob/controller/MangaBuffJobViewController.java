@@ -26,6 +26,7 @@ import ru.finwax.mangabuffjob.model.AccountProgress;
 import ru.finwax.mangabuffjob.model.CountScroll;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.service.ChatService;
 import ru.finwax.mangabuffjob.service.MangaParserService;
 import ru.finwax.mangabuffjob.service.ScanningProgress;
 import ru.finwax.mangabuffjob.model.TaskType;
@@ -33,14 +34,13 @@ import ru.finwax.mangabuffjob.service.TaskExecutor;
 import ru.finwax.mangabuffjob.model.MangaTask;
 import ru.finwax.mangabuffjob.Sheduled.service.MangaReadScheduler;
 import ru.finwax.mangabuffjob.service.AccountService;
-import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.AnchorPane;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.image.ImageView;
+import javafx.scene.control.Label;
+import javafx.scene.shape.Circle;
+import javafx.scene.paint.Color;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -52,8 +52,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import ru.finwax.mangabuffjob.auth.MbAuth;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 @Component
 @Slf4j
@@ -85,11 +93,20 @@ public class MangaBuffJobViewController implements Initializable {
     private Button applyPromoCodeButton;
     @FXML
     private AnchorPane rootPane;
+    @FXML
+    private StackPane customSwitch;
+    @FXML
+    private Label accountCountLabel;
+
+    private boolean isCustomSwitchOn = false;
+    private Circle switchCircle;
+    private Label switchLabel;
 
     private final UserCookieRepository userCookieRepository;
     private final MangaProgressRepository mangaProgressRepository;
     private final ApplicationContext applicationContext;
     private final AccountItemControllerFactory accountItemControllerFactory;
+    private final ChatService chatService;
     private final ScanningProgress scanningProgress;
     private final MangaParserService mangaParserService;
     private final TaskExecutor taskExecutor;
@@ -97,14 +114,18 @@ public class MangaBuffJobViewController implements Initializable {
     private final MangaReadScheduler mangaReadScheduler;
     private final AccountService accountService;
     private final ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService;
+    private ScheduledExecutorService chatDiamondExecutor;
+    private ScheduledFuture<?> chatDiamondFuture;
+    private volatile boolean isChatDiamondActive = false;
 
-    private ObservableList<AccountProgress> accountData = FXCollections.observableArrayList();
+    private final ObservableList<AccountProgress> accountData = FXCollections.observableArrayList();
     private final Set<Long> reloginRequiredAccounts = new HashSet<>();
 
     private Popup supportPopup;
     private Timeline hidePopupTimeline;
 
-    public MangaBuffJobViewController(
+
+    public MangaBuffJobViewController(ChatService chatService,
             UserCookieRepository userCookieRepository,
             MangaProgressRepository mangaProgressRepository,
             ApplicationContext applicationContext,
@@ -115,6 +136,7 @@ public class MangaBuffJobViewController implements Initializable {
             MangaReadScheduler mangaReadScheduler,
             AccountService accountService,
             ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService) {
+        this.chatService = chatService;
         this.userCookieRepository = userCookieRepository;
         this.mangaProgressRepository = mangaProgressRepository;
         this.applicationContext = applicationContext;
@@ -172,6 +194,12 @@ public class MangaBuffJobViewController implements Initializable {
             if (supportImageView == null) {
                 throw new IllegalStateException("supportImageView not initialized");
             }
+            if (customSwitch == null) {
+                throw new IllegalStateException("customSwitch not initialized");
+            }
+            if (accountCountLabel == null) {
+                throw new IllegalStateException("accountCountLabel not initialized");
+            }
 
             log.info("All components initialized successfully");
             
@@ -222,6 +250,19 @@ public class MangaBuffJobViewController implements Initializable {
             // Проверяем наличие данных в таблице манги
             if (mangaParserService.hasMangaData()) {
                 setButtonState(updateMangaListButton, "green");
+            }
+
+            // --- Кастомный тумблер ---
+            if (customSwitch != null) {
+                switchCircle = new Circle(10, Color.WHITE);
+                switchCircle.setStroke(Color.BLACK);
+                switchLabel = new Label();
+                switchLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #000000; -fx-font-family: 'Oswald', Arial, sans-serif;");
+                updateCustomSwitchUI();
+                customSwitch.setOnMouseClicked(event -> {
+                    isCustomSwitchOn = !isCustomSwitchOn;
+                    updateCustomSwitchUI();
+                });
             }
 
             log.info("Controller initialization finished successfully");
@@ -472,7 +513,11 @@ public class MangaBuffJobViewController implements Initializable {
                     progress.isQuizEnabled(),
                     progress.isMineEnabled(),
                     progress.isAdvEnabled(),
-                    existingScrollCounts
+                    existingScrollCounts,
+                    progress.getMineCountCoin(),
+                    progress.getMineLvl(),
+                    progress.isAutoUpgradeEnabled(),
+                    progress.isAutoExchangeEnabled()
                 ));
             });
             displayAccounts();
@@ -520,6 +565,14 @@ public class MangaBuffJobViewController implements Initializable {
                             System.err.println("Unexpected error processing account " + account.getUsername() + ": " + e.getMessage());
                             e.printStackTrace();
                         }
+                    }
+                    // Обновляем счётчик аккаунтов (без header'а)
+                    if (accountCountLabel != null) {
+                        int count = accountsVBox.getChildren().size();
+                        if (count > 0 && accountsVBox.getChildren().get(0) instanceof AnchorPane) {
+                            count = count - 1;
+                        }
+                        accountCountLabel.setText(String.valueOf(count));
                     }
                 } catch (Exception e) {
                     log.error("Critical error displaying accounts: " + e.getMessage());
@@ -580,17 +633,23 @@ public class MangaBuffJobViewController implements Initializable {
 
         // ADV tasks
         if (account.isAdvEnabled() && account.getAdvDone() < 3) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.ADV, 3 - account.getAdvDone()));
+            tasks.add(new MangaTask(account.getUserId(), TaskType.ADV, 3 - account.getAdvDone(), false, false));
         }
 
         // MINE tasks
         if (account.isMineEnabled() && account.getMineHitsLeft() > 0) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.MINE, account.getMineHitsLeft()));
+            tasks.add(new MangaTask(
+                account.getUserId(),
+                TaskType.MINE,
+                account.getMineHitsLeft(),
+                account.isAutoUpgradeEnabled(),
+                account.isAutoExchangeEnabled()
+            ));
         }
 
         // QUIZ tasks
         if (account.isQuizEnabled() && account.getQuizDone() != null && !account.getQuizDone()) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.QUIZ, 1));
+            tasks.add(new MangaTask(account.getUserId(), TaskType.QUIZ, 1, false, false));
         }
 
         // COMMENT tasks
@@ -598,7 +657,7 @@ public class MangaBuffJobViewController implements Initializable {
         int commentDone = Integer.parseInt(commentProgress[0]);
         int totalComments = Integer.parseInt(commentProgress[1]);
         if (account.isCommentEnabled() && commentDone < totalComments) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.COMMENT, totalComments - commentDone));
+            tasks.add(new MangaTask(account.getUserId(), TaskType.COMMENT, totalComments - commentDone, false, false));
         }
 
         // READER tasks
@@ -606,7 +665,7 @@ public class MangaBuffJobViewController implements Initializable {
         int readerDone = Integer.parseInt(readerProgress[0]);
         int totalReader = Integer.parseInt(readerProgress[1]);
         if (account.isReaderEnabled() && readerDone < totalReader) {
-            tasks.add(new MangaTask(account.getUserId(), TaskType.READER, totalReader - readerDone));
+            tasks.add(new MangaTask(account.getUserId(), TaskType.READER, totalReader - readerDone, false, false));
         }
 
         return tasks;
@@ -798,7 +857,11 @@ public class MangaBuffJobViewController implements Initializable {
                                     progress.isQuizEnabled(),
                                     progress.isMineEnabled(),
                                     progress.isAdvEnabled(),
-                                    scanningProgress.parseScrollCount(progress.getUserId())
+                                    scanningProgress.parseScrollCount(progress.getUserId()),
+                                    progress.getMineCountCoin(),
+                                    progress.getMineLvl(),
+                                    progress.isAutoUpgradeEnabled(),
+                                    progress.isAutoExchangeEnabled()
                                 );
 
                                 controller.setAccount(updatedAccount);
@@ -1174,4 +1237,74 @@ public class MangaBuffJobViewController implements Initializable {
         return false;
     }
 
+    public MangaProgressRepository getMangaProgressRepository() {
+        return mangaProgressRepository;
+    }
+
+    private void updateCustomSwitchUI() {
+        customSwitch.getChildren().clear();
+        if (isCustomSwitchOn) {
+            customSwitch.setStyle("-fx-background-color: #5DFF70; -fx-border-color: #0C0C0C; -fx-border-radius: 10; -fx-background-radius: 10; -fx-cursor: hand;");
+            switchLabel.setText("ON");
+            switchLabel.setTranslateX(-11);
+            switchCircle.setTranslateX(11);
+            showNotification("Успешный запуск сбор алмазов из чата", "success");
+            log.info("Тумблер в положении ON, включился");
+            // Запуск фоновой задачи
+            if (chatDiamondExecutor == null || chatDiamondExecutor.isShutdown()) {
+                chatDiamondExecutor = Executors.newSingleThreadScheduledExecutor();
+            }
+            isChatDiamondActive = true;
+            if (chatDiamondFuture == null || chatDiamondFuture.isCancelled() || chatDiamondFuture.isDone()) {
+                // 15 минут 30 секунд
+                int PERIOD_TAKIN_DAIMOND_IN_CHAT = 930;
+                chatDiamondFuture = chatDiamondExecutor.scheduleAtFixedRate(() -> {
+                    if (!isChatDiamondActive) return;
+                    try {
+                        MbAuth mbAuth = applicationContext.getBean(MbAuth.class);
+                        List<UserCookie> accounts = userCookieRepository.findAll();
+                        int total = accounts.size();
+                        final int[] success = {0};
+                        for (UserCookie account : accounts) {
+                            if (!isChatDiamondActive) break;
+                            try {
+                                ChromeDriver driver = mbAuth.getActualDriver(account.getId(), "chat", false); // true = не headless
+                                driver.get("https://mangabuff.ru/chat");
+                                WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(15));
+                                WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button.chat-arena__get-coins-btn")));
+                                Thread.sleep(2000);
+                                btn.click();
+                                Thread.sleep(1000);
+                                btn.click();
+                                Thread.sleep(1000);
+                                driver.quit();
+                                success[0]++;
+                            } catch (Exception e) {
+                                log.error("Ошибка при сборе алмазов для аккаунта {}: {}", account.getUsername(), e.getMessage());
+                            }
+                        }
+                        Platform.runLater(() -> showNotification("Сбор алмазов завершён: " + success[0] + "/" + total, "success"));
+                    } catch (Exception e) {
+                        log.error("Ошибка фоновой задачи сбора алмазов: {}", e.getMessage());
+                        Platform.runLater(() -> showNotification("Ошибка фоновой задачи сбора алмазов: " + e.getMessage(), "error"));
+                    }
+                }, 0, PERIOD_TAKIN_DAIMOND_IN_CHAT, TimeUnit.SECONDS);
+            }
+        } else {
+            customSwitch.setStyle("-fx-background-color: #C0C0C0; -fx-border-color: #0C0C0C; -fx-border-radius: 10; -fx-background-radius: 10; -fx-cursor: hand;");
+            switchLabel.setText("OFF");
+            switchLabel.setTranslateX(11);
+            switchCircle.setTranslateX(-11);
+            showNotification("Сбор алмазов остановленн", "success");
+            // Остановка фоновой задачи
+            isChatDiamondActive = false;
+            if (chatDiamondFuture != null && !chatDiamondFuture.isCancelled()) {
+                chatDiamondFuture.cancel(true);
+            }
+            if (chatDiamondExecutor != null && !chatDiamondExecutor.isShutdown()) {
+                chatDiamondExecutor.shutdownNow();
+            }
+        }
+        customSwitch.getChildren().addAll(switchCircle, switchLabel);
+    }
 } 

@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -140,8 +142,10 @@ public class ScanningProgress {
             Integer eventGiftCount = null; // Temporarily disabled
             log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
             Document balanceDocPage2 = null;
+            Document balanceDocPage3 = null;
             try {
                 balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
+                balanceDocPage3 = fetchDocument(id, "https://mangabuff.ru/balance?page=3");
             } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
                 log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
                 return;
@@ -153,10 +157,14 @@ public class ScanningProgress {
             // Парсим транзакции со страницы баланса
             Elements transactions = balanceDoc.select(".user-transactions__item");
             Elements transactions2 = balanceDocPage2.select(".user-transactions__item");
+            Elements transactions3 = balanceDocPage3.select(".user-transactions__item");
             Elements allTransactions = new Elements();
             allTransactions.addAll(transactions);
             if (!transactions2.isEmpty()) {
                 allTransactions.addAll(transactions2);
+            }
+            if (!transactions3.isEmpty()) {
+                allTransactions.addAll(transactions3);
             }
             boolean quizDoneToday = false;
             int advWatchedToday = 0;
@@ -225,7 +233,6 @@ public class ScanningProgress {
                 return;
             }
             log.info("Ответ сервера для /mine: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/mine").getStatusCode());
-
             // Парсим количество оставшихся ударов
             Element hitsLeftElement = mineDoc.selectFirst(".main-mine__game-hits-left");
             int mineHitsLeft = 100; // По умолчанию 100 ударов
@@ -236,12 +243,41 @@ public class ScanningProgress {
                     log.error("Не удалось распарсить количество ударов в шахте для пользователя {}", id, e);
                 }
             }
+            //<span class="main-mine__header_score-count js-score">89</span>
+            // Парсим количество коинов
+            int mineCoin = 0;
+            Element countMinerCoin = mineDoc.selectFirst(".main-mine__header_score-count");
+            if (countMinerCoin != null) {
+                try {
+                    // Удаляем пробелы из строки перед парсингом
+                    mineCoin = Integer.parseInt(countMinerCoin.text().replaceAll("\\s+", ""));
+                } catch (NumberFormatException e) {
+                    log.error("Не удалось распарсить количество валюты пользователя на шахте {}", id, e);
+                }
+            }
+
+            int mineLvl = 0;
+            Elements titles = mineDoc.select(".mine-shop__title");
+            for (Element title : titles) {
+                if (title.text().contains("Текущий уровень:")) {
+                    // вот он, нужный элемент!
+                    String text = title.text();
+                    Pattern pattern = Pattern.compile("Текущий уровень:\\s*(\\d+)");
+                    Matcher matcher = pattern.matcher(text);
+                    if (matcher.find()) {
+                        mineLvl = Integer.parseInt(matcher.group(1));
+                    }
+                    break;
+                }
+            }
 
             Optional<MangaProgress> existingProgress = mangaProgressRepository.findByUserId(id);
 
             if(existingProgress.isPresent()){
                 MangaProgress progress = existingProgress.get();
                 progress.setReaderDone(chaptersDone);
+                progress.setMineLvl(mineLvl);
+                progress.setMineCountCoin(mineCoin);
                 progress.setCommentDone(commentsDone);
                 progress.setTotalReaderChapters(totalChapters);
                 progress.setTotalCommentChapters(totalComments);
@@ -315,7 +351,11 @@ public class ScanningProgress {
                                     updatedProgress.isQuizEnabled(),
                                     updatedProgress.isMineEnabled(),
                                     updatedProgress.isAdvEnabled(),
-                                    parseScrollCount(id)
+                                    parseScrollCount(id),
+                                    updatedProgress.getMineCountCoin(),
+                                    updatedProgress.getMineLvl(),
+                                    updatedProgress.isAutoUpgradeEnabled(),
+                                    updatedProgress.isAutoExchangeEnabled()
                                 );
                                 controller.setAccount(updatedAccount);
                                 break;
@@ -347,6 +387,8 @@ public class ScanningProgress {
                     .lastUpdated(LocalDate.now())
                     .avatarPath(avatarUrl != null && !avatarUrl.isEmpty() ? saveAvatar(avatarUrl, id) : null)
                     .avatarAltText(avatarAltText)
+                    .autoUpgradeEnabled(false)
+                    .autoExchangeEnabled(false)
                     .build();
                 mangaProgressRepository.save(mangaProgress);
 
