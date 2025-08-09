@@ -1,4 +1,4 @@
-/* Светлый оверлей для relogin */
+    /* Светлый оверлей для relogin */
 .relogin-overlay {
     -fx-background-color: #e0f2e9cc;
     -fx-background-radius: 16;

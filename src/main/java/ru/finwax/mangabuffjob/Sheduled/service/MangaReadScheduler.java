@@ -1,8 +1,6 @@
 package ru.finwax.mangabuffjob.Sheduled.service;
 
 import javafx.application.Platform;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +13,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import ru.finwax.mangabuffjob.Entity.GiftStatistic;
 import ru.finwax.mangabuffjob.Entity.MangaData;
-import ru.finwax.mangabuffjob.Entity.MangaProgress;
 import ru.finwax.mangabuffjob.Entity.MangaReadingProgress;
 import ru.finwax.mangabuffjob.Entity.UserCookie;
 import ru.finwax.mangabuffjob.auth.MbAuth;
@@ -30,6 +25,8 @@ import ru.finwax.mangabuffjob.repository.MangaDataRepository;
 import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
 import ru.finwax.mangabuffjob.repository.UserCookieRepository;
+import ru.finwax.mangabuffjob.service.AccountService;
+import ru.finwax.mangabuffjob.service.DriverManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,7 +51,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -63,18 +59,20 @@ public class MangaReadScheduler {
 
     private final ConcurrentHashMap<Long, AtomicInteger> remainingChaptersMap = new ConcurrentHashMap<>();
     private final GiftStatisticRepository giftRepository;
+    private final MangaDataRepository mangaRepository;
+    private final UserCookieRepository userRepository;
+    private final AccountService accountService;
+    private final MangaReadingProgressRepository progressRepository;
+    private final MangaProgressRepository mangaProgressRepository;
+    private final MbAuth mbAuth;
+    private final DriverManager driverManager;
+
     private MangaBuffJobViewController viewController;
-    private static final int CHAPTER_READ_TIME_MS =  120 * 1000;
+    private static final int CHAPTER_READ_TIME_MS = 120 * 1000;
     private static final String TASK_NAME = "reading";
     private static final Random random = new Random();
     private static final int CHAPTERS_PER_READ = 4;
     private static final int MAX_PARALLEL_TASKS = 3;
-
-    private final MangaDataRepository mangaRepository;
-    private final UserCookieRepository userRepository;
-    private final MangaReadingProgressRepository progressRepository;
-    private final MangaProgressRepository mangaProgressRepository;
-    private final MbAuth mbAuth;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private volatile boolean isPeriodicReadingActive = false;
@@ -91,22 +89,15 @@ public class MangaReadScheduler {
         this.viewController = viewController;
     }
 
-    public void readMangaChapters(Long id, int countChapter,boolean checkViews) {
+    public void readMangaChapters(Long id, int countChapter, boolean checkViews) {
 
         try {
-            Thread.sleep(500); // 0.5 секунды
+            Thread.sleep(500); // 0.5 секунд    ы
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        mbAuth.killUserDriver(id, TASK_NAME);
-
-        try {
-            Thread.sleep(1000); // 1 секунда
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
+        String driverId = driverManager.generateDriverId(id, TASK_NAME);
         ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         long startTime = System.currentTimeMillis();
         remainingChaptersMap.putIfAbsent(id, new AtomicInteger(countChapter));
@@ -126,6 +117,12 @@ public class MangaReadScheduler {
             int iterations = 0;
             int actuallyRead = 0;
             while (remainingChapters.get() > 0 && iterations++ < maxIterations) {
+                // Проверяем, не закрыт ли драйвер
+                if (driverManager.isShuttingDown()) {
+                    log.warn("[{}] Приложение выключается, прерываем чтение", id);
+                    break;
+                }
+
                 Optional<MangaData> mangaOpt = getNextMangaToRead(id);
                 if (mangaOpt.isEmpty()) {
                     log.warn("[{}] Нет доступных манг для чтения", id);
@@ -175,13 +172,8 @@ public class MangaReadScheduler {
         } catch (Exception e) {
             log.error("[{}] Ошибка: {}", id, e.getMessage());
         } finally {
-            if (driver != null) {
-                try {
-                    driver.quit();
-                } catch (Exception e) {
-                    log.error("[{}] Ошибка при закрытии драйвера: {}", id, e.getMessage());
-                }
-            }
+            // Используем DriverManager для закрытия драйвера
+            driverManager.unregisterDriver(driverId);
             remainingChaptersMap.remove(id);
         }
     }
@@ -224,12 +216,11 @@ public class MangaReadScheduler {
     }
 
 
-
     private int readMangaChaptersInternal(MangaData manga,
-                                   Long accountId,
-                                   int chaptersToRead,
-                                   int chaptersRead,
-                                   ChromeDriver driver) {
+                                          Long accountId,
+                                          int chaptersToRead,
+                                          int chaptersRead,
+                                          ChromeDriver driver) {
 
         if (chaptersToRead <= 0) {
             log.warn("[{}] Запрошено чтение 0 глав", accountId);
@@ -238,7 +229,19 @@ public class MangaReadScheduler {
 
         int newChaptersRead = 0;
         try {
+            // Проверяем состояние драйвера перед использованием
+            if (driverManager.isShuttingDown()) {
+                log.warn("[{}] Приложение выключается, прерываем чтение манги", accountId);
+                return 0;
+            }
+
+            if (!isDriverAlive(driver)) {
+                log.error("[{}] Драйвер не активен при чтении манги", accountId);
+                return 0;
+            }
+
             synchronized (driver) {
+
                 driver.get(manga.getUrl());
                 Thread.sleep(1000);
 
@@ -272,6 +275,17 @@ public class MangaReadScheduler {
                 int chaptersToProcess = Math.min(chaptersToRead, chapterItems.size());
                 log.debug("chapterToProcess: {}", chaptersToProcess);
                 for (int i = 0; i < Math.min(chaptersToRead, chapterItems.size()); i++) {
+                    // Проверяем состояние драйвера перед каждой главой
+                    if (driverManager.isShuttingDown()) {
+                        log.warn("[{}] Приложение выключается, прерываем чтение глав", accountId);
+                        break;
+                    }
+
+                    if (!isDriverAlive(driver)) {
+                        log.error("[{}] Драйвер не активен при чтении глав", accountId);
+                        break;
+                    }
+
                     if (readSingleChapter(driver, accountId, chapterItems.get(i))) {
                         newChaptersRead++;
                     }
@@ -279,11 +293,11 @@ public class MangaReadScheduler {
                 }
 
                 if (newChaptersRead > 0) {
-                    int totalRead = manga.getCountChapters() - chapterItems.size()+newChaptersRead;
+                    int totalRead = manga.getCountChapters() - chapterItems.size() + newChaptersRead;
                     updateProgress(manga, accountId, totalRead);
                 }
 
-                if(newChaptersRead==0&&chapterItems.isEmpty()&&chaptersRead<manga.getCountChapters()){
+                if (newChaptersRead == 0 && chapterItems.isEmpty() && chaptersRead < manga.getCountChapters()) {
                     updateProgress(manga, accountId, manga.getCountChapters());
                 }
 
@@ -300,19 +314,19 @@ public class MangaReadScheduler {
         try {
             // JavaScript для получения высоты всех изображений
             String script = """
-                let totalHeight = 0;
-                const images = document.querySelectorAll('.reader__item img');
-                images.forEach(img => {
-                    if (img.complete) {
-                        totalHeight += img.naturalHeight;
-                    } else {
-                        // Если изображение еще не загружено, используем текущую высоту
-                        totalHeight += img.height || 0;
-                    }
-                });
-                return totalHeight;
-            """;
-            
+                    let totalHeight = 0;
+                    const images = document.querySelectorAll('.reader__item img');
+                    images.forEach(img => {
+                        if (img.complete) {
+                            totalHeight += img.naturalHeight;
+                        } else {
+                            // Если изображение еще не загружено, используем текущую высоту
+                            totalHeight += img.height || 0;
+                        }
+                    });
+                    return totalHeight;
+                """;
+
             return (long) ((JavascriptExecutor) driver).executeScript(script);
         } catch (Exception e) {
             log.error("Error calculating page height: {}", e.getMessage());
@@ -323,15 +337,15 @@ public class MangaReadScheduler {
     private boolean isElementInViewport(ChromeDriver driver, WebElement element) {
         try {
             String script = """
-                var elem = arguments[0];
-                var rect = elem.getBoundingClientRect();
-                return (
-                    rect.top >= 0 &&
-                    rect.left >= 0 &&
-                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-                );
-            """;
+                    var elem = arguments[0];
+                    var rect = elem.getBoundingClientRect();
+                    return (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                    );
+                """;
             return (boolean) ((JavascriptExecutor) driver).executeScript(script, element);
         } catch (Exception e) {
             return false;
@@ -353,10 +367,10 @@ public class MangaReadScheduler {
 
             // Дополнительная проверка: убедимся, что мы действительно достигли конца страницы
             String script = """
-                return Math.abs(
-                    (window.innerHeight + window.scrollY) - document.documentElement.scrollHeight
-                ) < 100;
-            """;
+                    return Math.abs(
+                        (window.innerHeight + window.scrollY) - document.documentElement.scrollHeight
+                    ) < 100;
+                """;
             return (boolean) ((JavascriptExecutor) driver).executeScript(script);
         } catch (NoSuchElementException e) {
             return false;
@@ -366,11 +380,12 @@ public class MangaReadScheduler {
         }
     }
 
-    private int getMaxYOffset(ChromeDriver driver){
+    private int getMaxYOffset(ChromeDriver driver) {
         Dimension windowSize = driver.manage().window().getSize();
         return windowSize.getHeight();
     }
-//    private double getScrollMultiplier(ChromeDriver driver){
+
+    //    private double getScrollMultiplier(ChromeDriver driver){
 //        Dimension windowSize = driver.manage().window().getSize();
 //        int maxYOffset = windowSize.getHeight();
 //        // Получаем общую высоту всех страниц
@@ -389,7 +404,7 @@ public class MangaReadScheduler {
 //        }
 //        return Math.max(0.6, Math.min(3.0, (double) totalPageHeight / (maxYOffset * 20)));
 //    }
-    private double getScrollMultiplier(){
+    private double getScrollMultiplier() {
         return 1.0 + (Math.random() * 2.0);
     }
 
@@ -401,7 +416,7 @@ public class MangaReadScheduler {
             double scrollMultiplier = getScrollMultiplier();
             int maxYOffset = getMaxYOffset(driver);
 
-            int delayChapter = (int) ((9+Math.random()*2)*1000);
+            int delayChapter = (int) ((9 + Math.random() * 2) * 1000);
             Thread.sleep(delayChapter);
 
             // Оптимизированные параметры
@@ -500,11 +515,22 @@ public class MangaReadScheduler {
     }
 
     private boolean readSingleChapter(ChromeDriver driver, Long accountId, WebElement chapterItem) {
+        // Проверяем состояние драйвера перед началом чтения главы
+        if (driverManager.isShuttingDown()) {
+            log.warn("[{}] Приложение выключается, пропускаем чтение главы", accountId);
+            return false;
+        }
+
+        if (!isDriverAlive(driver)) {
+            log.error("[{}] Драйвер не активен при чтении главы", accountId);
+            return false;
+        }
+
         String originalWindow = driver.getWindowHandle();
         try {
             // Открываем главу в новой вкладке
             String chapterUrl = chapterItem.getAttribute("href");
-            ((JavascriptExecutor)driver).executeScript("window.open(arguments[0])", chapterUrl);
+            ((JavascriptExecutor) driver).executeScript("window.open(arguments[0])", chapterUrl);
 
             // Ждём открытия новой вкладки (защита от race condition)
             Thread.sleep(500);
@@ -521,19 +547,30 @@ public class MangaReadScheduler {
             readChapter(driver, accountId);
             log.info("[{}] Глава прочитана за {} сек",
                 accountId,
-                (System.currentTimeMillis() - chapterStart)/1000 );
+                (System.currentTimeMillis() - chapterStart) / 1000);
             return true;
         } catch (Exception e) {
             log.error("[{}] Ошибка при чтении главы: {}", accountId, e.getMessage());
             return false;
         } finally {
-            for (String windowHandle : driver.getWindowHandles()) {
-                if (!originalWindow.equals(windowHandle)) {
-                    driver.switchTo().window(windowHandle);
-                    driver.close();
+            // Проверяем состояние драйвера перед закрытием вкладок
+            if (isDriverAlive(driver)) {
+                for (String windowHandle : driver.getWindowHandles()) {
+                    if (!originalWindow.equals(windowHandle)) {
+                        try {
+                            driver.switchTo().window(windowHandle);
+                            driver.close();
+                        } catch (Exception e) {
+                            log.debug("[{}] Ошибка при закрытии вкладки: {}", accountId, e.getMessage());
+                        }
+                    }
+                }
+                try {
+                    driver.switchTo().window(originalWindow);
+                } catch (Exception e) {
+                    log.debug("[{}] Ошибка при переключении на основную вкладку: {}", accountId, e.getMessage());
                 }
             }
-            driver.switchTo().window(originalWindow);
         }
     }
 
@@ -560,13 +597,13 @@ public class MangaReadScheduler {
 
             try {
                 // 1. Плавный скролл к элементу
-                ((JavascriptExecutor)driver).executeScript(
+                ((JavascriptExecutor) driver).executeScript(
                     "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
                     gift
                 );
 
                 // 2. Клик через JavaScript
-                ((JavascriptExecutor)driver).executeScript("arguments[0].click();", gift);
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", gift);
 
                 // 3. Ждем появления модального окна и получаем изображение
                 Thread.sleep(1000);
@@ -576,13 +613,13 @@ public class MangaReadScheduler {
 
                 // Добавляем временную метку к имени файла
                 String time = java.time.LocalTime.now(java.time.ZoneId.systemDefault())
-                        .format(java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss"));
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss"));
                 int dotIndex = imageName.lastIndexOf(".");
                 String imageNameWithTime;
                 if (dotIndex != -1) {
-                    imageNameWithTime = time+"_"+imageName.substring(0, dotIndex)  + imageName.substring(dotIndex);
+                    imageNameWithTime = time + "_" + imageName.substring(0, dotIndex) + imageName.substring(dotIndex);
                 } else {
-                    imageNameWithTime = time+ "_" + imageName;
+                    imageNameWithTime = time + "_" + imageName;
                 }
 
                 // 4. Создаем структуру папок и сохраняем изображение
@@ -614,9 +651,8 @@ public class MangaReadScheduler {
                     Platform.runLater(() -> {
                         AccountItemController controller = getAccountItemController(accountId);
                         if (controller != null) {
-                            controller.updateGiftCount();
-                            controller.refreshGiftImagesPopup();
-                            controller.setNewGiftIcon();
+                            // Принудительно обновляем отображение всех изображений подарков
+                            controller.forceRefreshGiftImages();
                         }
                     });
                 }
@@ -664,10 +700,23 @@ public class MangaReadScheduler {
     }
 
     public boolean isDriverAlive(ChromeDriver driver) {
+        if (driver == null) {
+            log.debug("Драйвер равен null");
+            return false;
+        }
+
         try {
+            // Проверяем, не выключается ли приложение
+            if (driverManager.isShuttingDown()) {
+                log.debug("Приложение выключается, драйвер не активен");
+                return false;
+            }
+
+            // Проверяем активность драйвера
             driver.getTitle(); // Простая проверка активности драйвера
             return true;
         } catch (Exception e) {
+            log.debug("Драйвер не активен: {}", e.getMessage());
             return false;
         }
     }
@@ -677,13 +726,18 @@ public class MangaReadScheduler {
             log.info("Периодическое чтение уже активно");
             return;
         }
+
+        // Сбрасываем флаг выключения в DriverManager для повторного запуска
+        driverManager.resetShutdownFlag();
+
+
         LocalDate today = LocalDate.now(ZoneId.systemDefault());
 
         isPeriodicReadingActive = true;
         log.info("Запуск периодического чтения");
 
-        // Получаем список аккаунтов и фильтруем только те, у которых включен readerCheckBox
-        List<Long> userIds = userRepository.findAll()
+        // Получаем список аккаунтов в правильном порядке и фильтруем только те, у которых включен readerCheckBox
+        List<Long> userIds = accountService.getAllAccountsInOrder()
             .stream()
             .map(UserCookie::getId)
             .filter(id -> {
@@ -697,7 +751,7 @@ public class MangaReadScheduler {
 
         // Запускаем обработчики очереди
         for (int i = 0; i < MAX_PARALLEL_TASKS; i++) {
-            readingExecutor.submit(()-> processReadingQueue(checkView));
+            readingExecutor.submit(() -> processReadingQueue(checkView));
         }
 
 //        // Запускаем планировщик (ДЛЯ ИВЕНТА)
@@ -712,12 +766,15 @@ public class MangaReadScheduler {
     }
 
     private AccountItemController getAccountItemController(Long userId) {
-        if (viewController == null) return null;
-        
+        if (viewController == null) {
+            log.warn("[{}] viewController равен null в getAccountItemController", userId);
+            return null;
+        }
+
         for (javafx.scene.Node node : viewController.getAccountsVBox().getChildren()) {
             if (node instanceof HBox accountItem) {
                 AccountItemController controller = (AccountItemController) accountItem.getUserData();
-                if (controller != null && controller.getAccount() != null && 
+                if (controller != null && controller.getAccount() != null &&
                     controller.getAccount().getUserId().equals(userId)) {
                     return controller;
                 }
@@ -732,13 +789,22 @@ public class MangaReadScheduler {
                 Long userId = readingQueue.poll(1, TimeUnit.SECONDS);
                 if (userId != null && !activeReaders.contains(userId)) {
                     activeReaders.add(userId);
+
+                    // Устанавливаем стиль процесса для аккаунта
+                    setAccountProcessStyle(userId, true);
+
                     try {
                         readMangaChapters(userId, CHAPTERS_PER_READ, checkView);
                         completedReaders.incrementAndGet();
-                        log.info("[{}] Аккаунт прочитал {} глав. Всего прочитано: {}/{}", 
-                            userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size()+completedReaders.get()-1);
+                        log.info("[{}] Аккаунт прочитал {} глав. Всего прочитано: {}/{}",
+                            userId, CHAPTERS_PER_READ, completedReaders.get(), readingQueue.size() + activeReaders.size() + completedReaders.get() - 1);
+                    } catch (Exception e) {
+                        log.error("[{}] Ошибка при чтении глав: {}", userId, e.getMessage());
+                        // Не увеличиваем счетчик completedReaders при ошибке
                     } finally {
                         activeReaders.remove(userId);
+                        // Возвращаем стандартный стиль для аккаунта
+                        setAccountProcessStyle(userId, false);
                     }
                 }
             } catch (InterruptedException e) {
@@ -752,7 +818,7 @@ public class MangaReadScheduler {
 
     private void scheduleNextReading() {
         LocalTime now = LocalTime.now();
-        if (/*now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(23, 0))*/true) {
+        if (true) {
             // Проверяем, все ли аккаунты прочитаны
             if (completedReaders.get() >= readingQueue.size() + activeReaders.size()) {
                 log.info("Все аккаунты прочитаны, запускаем новый цикл");
@@ -760,7 +826,7 @@ public class MangaReadScheduler {
                 completedReaders.set(0);
                 // Очищаем очередь и добавляем только те аккаунты, у которых включен readerCheckBox
                 readingQueue.clear();
-                List<Long> userIds = userRepository.findAll()
+                List<Long> userIds = accountService.getAllAccountsInOrder()
                     .stream()
                     .map(UserCookie::getId)
                     .filter(id -> {
@@ -782,11 +848,24 @@ public class MangaReadScheduler {
         log.info("Остановка периодического чтения...");
         isPeriodicReadingActive = false;
 
-        // Останавливаем все активные чтения и убиваем драйверы
-        for (Long userId : new HashSet<>(activeReaders)) { // Создаем копию, чтобы избежать ConcurrentModificationException
-            mbAuth.killUserDriver(userId, TASK_NAME);
-            activeReaders.remove(userId);
+        // Возвращаем стандартные стили для всех активных аккаунтов
+        for (Long userId : new HashSet<>(activeReaders)) {
+            setAccountProcessStyle(userId, false);
         }
+
+        // Закрываем все драйверы для активных читателей
+        for (Long userId : new HashSet<>(activeReaders)) {
+            try {
+                String driverId = driverManager.generateDriverId(userId, TASK_NAME);
+                driverManager.unregisterDriver(driverId);
+                log.debug("[{}] Драйвер закрыт при остановке периодического чтения", userId);
+            } catch (Exception e) {
+                log.warn("[{}] Ошибка при закрытии драйвера: {}", userId, e.getMessage());
+            }
+        }
+
+        // Очищаем активные читатели
+        activeReaders.clear();
 
         readingQueue.clear(); // Очищаем очередь, чтобы новые задачи не запускались
 
@@ -813,6 +892,33 @@ public class MangaReadScheduler {
 
     public boolean isPeriodicReadingActive() {
         return isPeriodicReadingActive;
+    }
+
+    /**
+     * Устанавливает или убирает стиль процесса для аккаунта
+     */
+    private void setAccountProcessStyle(Long userId, boolean isProcess) {
+        try {
+            if (viewController == null) {
+                log.warn("[{}] viewController равен null", userId);
+                return;
+            }
+
+            AccountItemController controller = getAccountItemController(userId);
+            if (controller != null) {
+                if (isProcess) {
+                    controller.setProcessStyle();
+                    log.debug("[{}] Установлен стиль процесса для аккаунта", userId);
+                } else {
+                    controller.setDefaultStyle();
+                    log.debug("[{}] Возвращен стандартный стиль для аккаунта", userId);
+                }
+            } else {
+                log.warn("[{}] Не найден контроллер для аккаунта", userId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Не удалось обновить стиль аккаунта: {}", userId, e.getMessage());
+        }
     }
 
     // EventGift methods - Disabled on 2024-03-19 due to event end

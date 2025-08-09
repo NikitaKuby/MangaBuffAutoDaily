@@ -57,10 +57,12 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
+import ru.finwax.mangabuffjob.repository.MangaProgressRepository;
 import javafx.scene.input.TransferMode;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.Node;
 import javafx.scene.input.Dragboard;
+import ru.finwax.mangabuffjob.service.DiamondCounterService;
 
 @Component
 @Getter
@@ -99,10 +101,21 @@ public class AccountItemController {
 
     @FXML
     private Label diamondCountLabel;
+
+    @FXML
+    private Label cardCountLabel;
     @FXML
     private ImageView diamondImageView;
     @FXML
+    private ImageView cardImageView;
+    @FXML
     private ImageView scrollImageView;
+    
+    // Счётчик алмазов
+    @FXML
+    private Label diamondCounterText;
+    @FXML
+    private ImageView diamondCounterIcon;
     @FXML
     private Label giftCountLabel;
     @FXML
@@ -237,6 +250,7 @@ public class AccountItemController {
     private boolean isMouseOverReaderPopup = false;
 
     private final MangaReadingProgressRepository mangaReadingProgressRepository;
+    private final DiamondCounterService diamondCounterService;
 
     private boolean hasNewGiftToday = false;
 
@@ -276,7 +290,8 @@ public class AccountItemController {
         GiftStatisticRepository giftRepository,
         MbAuth mbAuth,
         MangaBuffAuth mangaBuffAuth,
-        MangaReadingProgressRepository mangaReadingProgressRepository
+        MangaReadingProgressRepository mangaReadingProgressRepository,
+        DiamondCounterService diamondCounterService
     ) {
         this.accountService = accountService;
         this.parentController = parentController;
@@ -289,6 +304,7 @@ public class AccountItemController {
         this.mbAuth = mbAuth;
         this.mangaBuffAuth = mangaBuffAuth;
         this.mangaReadingProgressRepository = mangaReadingProgressRepository;
+        this.diamondCounterService = diamondCounterService;
     }
 
     @FXML
@@ -493,6 +509,9 @@ public class AccountItemController {
                 if (thisIndex != draggedIndex) {
                     parent.getChildren().remove(dragged);
                     parent.getChildren().add(thisIndex, dragged);
+                    
+                    // Сохраняем новый порядок в базе данных
+                    saveNewOrder(parent);
                 }
                 event.setDropCompleted(true);
             } else {
@@ -505,6 +524,29 @@ public class AccountItemController {
             node.setStyle("");
             event.consume();
         });
+    }
+
+    private void saveNewOrder(VBox parent) {
+        try {
+            // Собираем userId в порядке их отображения (пропускаем header)
+            List<Long> userIdOrder = parent.getChildren().stream()
+                .filter(node -> node instanceof HBox)
+                .map(node -> {
+                    AccountItemController controller = (AccountItemController) node.getUserData();
+                    return controller != null && controller.getAccount() != null ? 
+                           controller.getAccount().getUserId() : null;
+                })
+                .filter(userId -> userId != null)
+                .collect(Collectors.toList());
+            
+            // Обновляем порядок через сервис
+            if (!userIdOrder.isEmpty()) {
+                // Используем AccountService для обновления порядка
+                accountService.updateAccountOrder(userIdOrder);
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при сохранении порядка аккаунтов: {}", e.getMessage(), e);
+        }
     }
 
     public void setAccount(AccountProgress account) {
@@ -579,7 +621,15 @@ public class AccountItemController {
             Image diamondImage = new Image(getClass().getResourceAsStream("/static/diamond.png"));
             diamondImageView.setImage(diamondImage);
 
+            Image cardImage = new Image(getClass().getResourceAsStream("/static/cards_icon.png"));
+            cardImageView.setImage(cardImage);
+
             diamondCountLabel.setText(String.valueOf(account.getDiamond()));
+
+            cardCountLabel.setText(String.valueOf(account.getCountCards()));
+            
+            // Регистрируем контроллер в сервисе счётчика алмазов
+            registerDiamondCounter();
 
             if(account.getAvatarAltText().length()>6) {
                 avatarAltTextLabel.setText(account.getAvatarAltText().substring(0, 6));
@@ -1078,6 +1128,25 @@ public class AccountItemController {
             giftImagesPopupController.loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
         }
     }
+    
+    /**
+     * Принудительно обновляет отображение всех изображений подарков
+     * Вызывается при получении нового подарка
+     */
+    public void forceRefreshGiftImages() {
+        // Принудительно обновляем счетчик подарков
+        updateGiftCount();
+        
+        // Если popup открыт, обновляем его содержимое
+        if (giftImagesPopup != null && giftImagesPopup.isShowing() && giftImagesPopupController != null) {
+            giftImagesPopupController.forceReloadImages();
+        }
+        
+        // Устанавливаем иконку нового подарка
+        setNewGiftIcon();
+        
+        log.debug("[{}] Принудительно обновлено отображение подарков", account.getUserId());
+    }
 
     private void hideGiftImagesPopupWithDelay() {
         if (hidePopupTimeline != null) {
@@ -1276,6 +1345,39 @@ public class AccountItemController {
                 advCheckBox.setSelected(enabled);
                 break;
         }
+    }
+    
+    /**
+     * Устанавливает стиль карточки аккаунта в режим "процесс"
+     */
+    public void setProcessStyle() {
+        Platform.runLater(() -> {
+            if (accountItem != null) {
+                accountItem.getStyleClass().remove("account-card");
+                accountItem.getStyleClass().add("account-card");
+                accountItem.getStyleClass().add("process");
+            }
+        });
+    }
+    
+    /**
+     * Возвращает стандартный стиль карточки аккаунта
+     */
+    public void setDefaultStyle() {
+        Platform.runLater(() -> {
+            if (accountItem != null) {
+                accountItem.getStyleClass().remove("process");
+                accountItem.getStyleClass().remove("account-card");
+                accountItem.getStyleClass().add("account-card");
+            }
+        });
+    }
+    
+    /**
+     * Проверяет, активен ли процесс для данного аккаунта
+     */
+    public boolean isProcessActive() {
+        return accountItem != null && accountItem.getStyleClass().contains("process");
     }
 
     private void updateScrollStatsPopup() {
@@ -1552,6 +1654,42 @@ public class AccountItemController {
 
     private void hideReaderPopup() {
         if (readerPopup != null) readerPopup.hide();
+    }
+    
+    /**
+     * Устанавливает активное состояние счётчика алмазов (показывает иконку)
+     */
+    public void setDiamondCounterActive(boolean active) {
+        Platform.runLater(() -> {
+            diamondCounterIcon.setVisible(active);
+        });
+    }
+    
+    /**
+     * Обновляет текст счётчика алмазов
+     */
+    public void updateDiamondCounter(int count) {
+        Platform.runLater(() -> {
+            diamondCounterText.setText(count + "/96");
+        });
+    }
+    
+    /**
+     * Регистрирует контроллер в сервисе счётчика алмазов
+     */
+    public void registerDiamondCounter() {
+        if (account != null) {
+            diamondCounterService.registerAccountController(account.getUserId(), this);
+        }
+    }
+    
+    /**
+     * Удаляет регистрацию контроллера из сервиса счётчика алмазов
+     */
+    public void unregisterDiamondCounter() {
+        if (account != null) {
+            diamondCounterService.unregisterAccountController(account.getUserId());
+        }
     }
 }
 

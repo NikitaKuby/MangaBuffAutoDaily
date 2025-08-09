@@ -29,6 +29,7 @@ import ru.finwax.mangabuffjob.repository.UserCookieRepository;
 import ru.finwax.mangabuffjob.service.ChatService;
 import ru.finwax.mangabuffjob.service.MangaParserService;
 import ru.finwax.mangabuffjob.service.ScanningProgress;
+import ru.finwax.mangabuffjob.service.DiamondCounterService;
 import ru.finwax.mangabuffjob.model.TaskType;
 import ru.finwax.mangabuffjob.service.TaskExecutor;
 import ru.finwax.mangabuffjob.model.MangaTask;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -114,6 +116,7 @@ public class MangaBuffJobViewController implements Initializable {
     private final MangaReadScheduler mangaReadScheduler;
     private final AccountService accountService;
     private final ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService;
+    private final DiamondCounterService diamondCounterService;
     private ScheduledExecutorService chatDiamondExecutor;
     private ScheduledFuture<?> chatDiamondFuture;
     private volatile boolean isChatDiamondActive = false;
@@ -135,7 +138,8 @@ public class MangaBuffJobViewController implements Initializable {
             TaskExecutor taskExecutor,
             MangaReadScheduler mangaReadScheduler,
             AccountService accountService,
-            ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService) {
+            ru.finwax.mangabuffjob.service.PromoCodeService promoCodeService,
+            DiamondCounterService diamondCounterService) {
         this.chatService = chatService;
         this.userCookieRepository = userCookieRepository;
         this.mangaProgressRepository = mangaProgressRepository;
@@ -147,6 +151,7 @@ public class MangaBuffJobViewController implements Initializable {
         this.mangaReadScheduler = mangaReadScheduler;
         this.accountService = accountService;
         this.promoCodeService = promoCodeService;
+        this.diamondCounterService = diamondCounterService;
     }
 
     @Override
@@ -460,22 +465,23 @@ public class MangaBuffJobViewController implements Initializable {
     public void loadAccountsFromDatabase() {
         try {
             accountData.clear();
-            var accounts = userCookieRepository.findAll();
+            var allAccounts = userCookieRepository.findAll();
 
-            accounts.forEach(userCookie -> {
-                MangaProgress progress = mangaProgressRepository.findByUserId(userCookie.getId())
-                    .orElseGet(() -> {
-                        MangaProgress newProgress = MangaProgress.builder()
-                            .userId(userCookie.getId())
-                            .readerDone(0)
-                            .commentDone(0)
-                            .quizDone(false)
-                            .mineHitsLeft(100)
-                            .advDone(0)
-                            .lastUpdated(LocalDate.now())
-                            .build();
-                        return mangaProgressRepository.save(newProgress);
-                    });
+            // Получаем все прогрессы с сортировкой по displayOrder
+            List<MangaProgress> sortedProgresses = mangaProgressRepository.findAllOrderByDisplayOrder();
+            
+            // Создаем Map для быстрого поиска аккаунта по userId
+            Map<Long, UserCookie> accountMap = allAccounts.stream()
+                .collect(Collectors.toMap(UserCookie::getId, a -> a));
+
+            // Итерируемся по отсортированным прогрессам для сохранения порядка
+            sortedProgresses.forEach(progress -> {
+                UserCookie userCookie = accountMap.get(progress.getUserId());
+                if (userCookie == null) {
+                    log.warn("Не найден аккаунт для userId: {}", progress.getUserId());
+                    return;
+                }
+                
                 int mineHitsLeftForDisplay = progress.getMineHitsLeft() != null ? progress.getMineHitsLeft() : 100;
 
                 // Получаем текущие данные о свитках из существующего аккаунта, если он есть
@@ -517,9 +523,72 @@ public class MangaBuffJobViewController implements Initializable {
                     progress.getMineCountCoin(),
                     progress.getMineLvl(),
                     progress.isAutoUpgradeEnabled(),
-                    progress.isAutoExchangeEnabled()
+                    progress.isAutoExchangeEnabled(),
+                    progress.getDisplayOrder(),
+                    progress.getCountCard()
                 ));
             });
+            
+            // Добавляем аккаунты, которые есть в базе, но не имеют прогресса (новые аккаунты)
+            allAccounts.forEach(userCookie -> {
+                boolean hasProgress = sortedProgresses.stream()
+                    .anyMatch(progress -> progress.getUserId().equals(userCookie.getId()));
+                
+                if (!hasProgress) {
+                    log.info("Создаем новый прогресс для аккаунта: {}", userCookie.getUsername());
+                    MangaProgress newProgress = mangaProgressRepository.findByUserId(userCookie.getId())
+                        .orElseGet(() -> {
+                            MangaProgress progress = MangaProgress.builder()
+                                .userId(userCookie.getId())
+                                .readerDone(0)
+                                .commentDone(0)
+                                .quizDone(false)
+                                .mineHitsLeft(100)
+                                .advDone(0)
+                                .lastUpdated(LocalDate.now())
+                                .displayOrder(sortedProgresses.size()) // Новые аккаунты добавляются в конец
+                                .build();
+                            return mangaProgressRepository.save(progress);
+                        });
+                    
+                    // Добавляем новый аккаунт в конец списка
+                    int mineHitsLeftForDisplay = newProgress.getMineHitsLeft() != null ? newProgress.getMineHitsLeft() : 100;
+                    
+                    // Получаем данные о свитках
+                    Map<String, CountScroll> existingScrollCounts = scanningProgress.parseScrollCount(userCookie.getId());
+                    
+                    accountData.add(new AccountProgress(
+                        userCookie.getUsername(),
+                        newProgress.getReaderDone() + "/" + newProgress.getTotalReaderChapters(),
+                        newProgress.getCommentDone() + "/" + newProgress.getTotalCommentChapters(),
+                        newProgress.getQuizDone(),
+                        (100 - mineHitsLeftForDisplay) + "/100",
+                        newProgress.getAdvDone() + "/3",
+                        newProgress.getAdvDone(),
+                        newProgress.getAvatarPath(),
+                        newProgress.getAvatarAltText(),
+                        userCookie.getId(),
+                        newProgress.getTotalReaderChapters(),
+                        newProgress.getTotalCommentChapters(),
+                        mineHitsLeftForDisplay,
+                        newProgress.getDiamond(),
+                        reloginRequiredAccounts.contains(userCookie.getId()),
+                        newProgress.isReaderEnabled(),
+                        newProgress.isCommentEnabled(),
+                        newProgress.isQuizEnabled(),
+                        newProgress.isMineEnabled(),
+                        newProgress.isAdvEnabled(),
+                        existingScrollCounts,
+                        newProgress.getMineCountCoin(),
+                        newProgress.getMineLvl(),
+                        newProgress.isAutoUpgradeEnabled(),
+                        newProgress.isAutoExchangeEnabled(),
+                        newProgress.getDisplayOrder(),
+                        newProgress.getCountCard()
+                    ));
+                }
+            });
+            
             displayAccounts();
         } catch (Exception e) {
             log.error("Error loading accounts from database: " + e.getMessage());
@@ -861,7 +930,9 @@ public class MangaBuffJobViewController implements Initializable {
                                     progress.getMineCountCoin(),
                                     progress.getMineLvl(),
                                     progress.isAutoUpgradeEnabled(),
-                                    progress.isAutoExchangeEnabled()
+                                    progress.isAutoExchangeEnabled(),
+                                    progress.getDisplayOrder(),
+                                    progress.getCountCard()
                                 );
 
                                 controller.setAccount(updatedAccount);
@@ -917,7 +988,7 @@ public class MangaBuffJobViewController implements Initializable {
                         }
                     });
                 });
-                var accounts = userCookieRepository.findAll();
+                var accounts = accountService.getAllAccountsInOrder();
                 for (UserCookie userCookie : accounts) {
                     try {
                         scanningProgress.sendGetRequestWithCookies(userCookie.getId());
@@ -1262,13 +1333,17 @@ public class MangaBuffJobViewController implements Initializable {
                     if (!isChatDiamondActive) return;
                     try {
                         MbAuth mbAuth = applicationContext.getBean(MbAuth.class);
-                        List<UserCookie> accounts = userCookieRepository.findAll();
+                        List<UserCookie> accounts = accountService.getAllAccountsInOrder();
                         int total = accounts.size();
                         final int[] success = {0};
                         for (UserCookie account : accounts) {
                             if (!isChatDiamondActive) break;
                             try {
+                                // Устанавливаем активное состояние счётчика
+                                diamondCounterService.setActiveState(account.getId());
+                                
                                 ChromeDriver driver = mbAuth.getActualDriver(account.getId(), "chat", false); // true = не headless
+                                
                                 driver.get("https://mangabuff.ru/chat");
                                 WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(15));
                                 WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button.chat-arena__get-coins-btn")));
@@ -1277,10 +1352,20 @@ public class MangaBuffJobViewController implements Initializable {
                                 Thread.sleep(1000);
                                 btn.click();
                                 Thread.sleep(1000);
-                                driver.quit();
+                                
+                                // Инкрементируем счётчик алмазов
+                                diamondCounterService.incrementDiamondCounter(account.getId());
+                                
+                                mbAuth.killUserDriver(account.getId(), "chat");
+                                
+                                // Устанавливаем неактивное состояние счётчика
+                                diamondCounterService.setInactiveState(account.getId());
+                                
                                 success[0]++;
                             } catch (Exception e) {
                                 log.error("Ошибка при сборе алмазов для аккаунта {}: {}", account.getUsername(), e.getMessage());
+                                // Устанавливаем неактивное состояние счётчика в случае ошибки
+                                diamondCounterService.setInactiveState(account.getId());
                             }
                         }
                         Platform.runLater(() -> showNotification("Сбор алмазов завершён: " + success[0] + "/" + total, "success"));

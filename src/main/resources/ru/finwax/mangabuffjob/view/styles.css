@@ -98,4 +98,15 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 1);
     -fx-padding: 5px;
     -fx-margin: 5px;
-} 
+}
+
+.account-card.process {
+    -fx-background-color: #c8fff5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 1);
+    -fx-padding: 5px;
+    -fx-margin: 5px;
+}

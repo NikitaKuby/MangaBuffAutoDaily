@@ -13,6 +13,7 @@ import ru.finwax.mangabuffjob.repository.GiftStatisticRepository;
 import ru.finwax.mangabuffjob.auth.MbAuth;
 import ru.finwax.mangabuffjob.auth.MangaBuffAuth;
 import ru.finwax.mangabuffjob.repository.MangaReadingProgressRepository;
+import ru.finwax.mangabuffjob.service.DiamondCounterService;
 
 import java.io.IOException;
 
@@ -29,6 +30,7 @@ public class AccountItemControllerFactory {
     private final MbAuth mbAuth;
     private final MangaBuffAuth mangaBuffAuth;
     private final MangaReadingProgressRepository mangaReadingProgressRepository;
+    private final DiamondCounterService diamondCounterService;
 
     public AccountItemController createController(MangaBuffJobViewController parentController) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ru/finwax/mangabuffjob/view/AccountItem.fxml"));
@@ -43,7 +45,8 @@ public class AccountItemControllerFactory {
             giftRepository,
             mbAuth,
             mangaBuffAuth,
-            mangaReadingProgressRepository
+            mangaReadingProgressRepository,
+            diamondCounterService
         );
         loader.setController(controller);
         loader.load();

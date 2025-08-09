@@ -1,6 +1,5 @@
 package ru.finwax.mangabuffjob.auth;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +29,7 @@ public class MangaBuffAuth {
 
 
     public ChromeOptions setUpDriver() {
-        WebDriverManager.chromedriver()
-            .clearDriverCache()
-            .clearResolutionCache()
-            .setup();
+        // Убеждаемся, что драйвер инициализирован
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
         options.addArguments("--disable-blink-features=AutomationControlled");
@@ -41,6 +37,8 @@ public class MangaBuffAuth {
         options.addArguments("--disable-application-cache");
         options.addArguments("--disk-cache-size=0");
         options.addArguments("--disable-cache");
+        options.addArguments("--disable-logging");
+        options.addArguments("--log-level=3"); // 0 = DEBUG, 3 = NONE
         options.addArguments("--force-device-scale-factor=0.8");
         options.addArguments("--blink-setting=imagesEnabled=false");
         return options;

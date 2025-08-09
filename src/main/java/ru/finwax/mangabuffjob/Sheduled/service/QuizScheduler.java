@@ -12,6 +12,7 @@ import org.openqa.selenium.devtools.DevTools;
 import org.openqa.selenium.devtools.v136.network.Network;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.auth.MbAuth;
+import ru.finwax.mangabuffjob.service.DriverManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ public class QuizScheduler {
     private static final String TASK_NAME = "quiz";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final int MAX_CLICKS = 15;
+    private final DriverManager driverManager;
 
     public void monitorQuizRequests(Long id, boolean checkViews) {
 
@@ -34,14 +36,12 @@ public class QuizScheduler {
             Thread.currentThread().interrupt();
         }
 
-        mbAuth.killUserDriver(id, TASK_NAME);
-
         try {
             Thread.sleep(1000); // 1 секунда
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-
+        String driverId = driverManager.generateDriverId(id, TASK_NAME);
         ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         AtomicInteger clickCounter = new AtomicInteger(0);
         clickCounter.set(0);
@@ -93,8 +93,14 @@ public class QuizScheduler {
             log.error("Error in quiz monitoring", e);
             throw new RuntimeException("Quiz monitoring failed", e);
         } finally {
-            devTools.disconnectSession();  // Закрываем только DevTools
-            driver.quit();
+            try {
+                if (devTools != null) {
+                    devTools.disconnectSession();
+                }
+            } catch (Exception e) {
+                log.warn("Error closing DevTools: {}", e.getMessage());
+            }
+            driverManager.unregisterDriver(driverId);
         }
 
     }

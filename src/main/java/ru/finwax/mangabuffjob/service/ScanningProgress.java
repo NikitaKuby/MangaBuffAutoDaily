@@ -78,6 +78,27 @@ public class ScanningProgress {
         return 0L; // Возвращаем 0 если не удалось распарсить
     }
 
+    private Long parseCountCards(Document doc) {
+        try {
+            // Находим элемент с заголовком, содержащим количество карточек
+            Element titleElement = doc.selectFirst("h2.secondary-title");
+
+            if (titleElement != null) {
+                // Извлекаем текст из span с классом secondary-text
+                Element countElement = titleElement.selectFirst("span.secondary-text");
+                if (countElement != null) {
+                    String countText = countElement.text().trim();
+                    // Удаляем возможные разделители тысяч (если есть)
+                    countText = countText.replaceAll("[^\\d]", "");
+                    return Long.parseLong(countText);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге кол-ва карт", e);
+        }
+        return 0L;
+    }
+
     // EventGift parsing - Disabled on 2024-03-19 due to event end
     /*
     private Integer parseEventGiftCount(Long id) {
@@ -100,6 +121,31 @@ public class ScanningProgress {
     }
     */
 
+
+    private String parseUserId(Document balanceDoc) {
+        try {
+            // Находим script-тег, содержащий window.user_id
+            Elements scripts = balanceDoc.select("script");
+
+            for (Element script : scripts) {
+                String scriptContent = script.html();
+
+                // Ищем строку с window.user_id
+                if (scriptContent.contains("window.user_id")) {
+                    // Регулярное выражение для извлечения значения user_id
+                    Pattern pattern = Pattern.compile("window\\.user_id\\s*=\\s*(\\d+)");
+                    Matcher matcher = pattern.matcher(scriptContent);
+
+                    if (matcher.find()) {
+                        return matcher.group(1); // Возвращаем найденное значение
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при парсинге id", e);
+        }
+        return "0"; // Возвращаем "0" если не удалось распарсить
+    }
     public Map<String, CountScroll> parseScrollCount(Long id) {
         try {
             Document eventDoc = fetchDocument(id, "https://mangabuff.ru/cards/upLevel");
@@ -125,49 +171,55 @@ public class ScanningProgress {
         try {
             log.info("Пытаемся проверить статус глав/комментариев, прогресс шахты и скачать аватар для пользователя {}", id);
 
-            // Сканируем страницу баланса
-            Document balanceDoc = null;
-            try {
-                balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
-            } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
-                log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
-                return;
-            }
+   
 
-            Long diamondBalance = parseDiamondBalance(balanceDoc);
-            // EventGift update - Disabled on 2024-03-19 due to event end
             /*
             Integer eventGiftCount = parseEventGiftCount(id);
             */
             Integer eventGiftCount = null; // Temporarily disabled
             log.info("Ответ сервера для /balance: {}", requestModel.sendGetRequest(requestModel.getHeaderBase(id), "https://mangabuff.ru/balance").getStatusCode());
-            Document balanceDocPage2 = null;
-            Document balanceDocPage3 = null;
-            try {
-                balanceDocPage2 = fetchDocument(id, "https://mangabuff.ru/balance?page=2");
-                balanceDocPage3 = fetchDocument(id, "https://mangabuff.ru/balance?page=3");
-            } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
-                log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
-                return;
+            Elements allTransactions = new Elements();
+            String page;
+            
+            Document balanceDoc = null;
+            balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance");
+            Long diamondBalance = parseDiamondBalance(balanceDoc);
+
+            String idUser = parseUserId(balanceDoc);
+
+
+
+            Document countCardsDocument = null;
+            countCardsDocument = fetchDocument(id, "https://mangabuff.ru/users/"+idUser+"/cards");
+            Long countCard = parseCountCards(countCardsDocument);
+
+            Elements transactions = balanceDoc.select(".user-transactions__item");;
+            allTransactions.addAll(transactions);
+            for (int i = 2; i <= 4; i++) {
+                try {
+                    page="?page="+i;
+                    balanceDoc = fetchDocument(id, "https://mangabuff.ru/balance"+page);
+                } catch (org.springframework.web.client.HttpServerErrorException.BadGateway e) {
+                    log.error("Ошибка 502 Bad Gateway при сканировании для пользователя {}", id, e);
+                    return;
+                }
+                transactions = balanceDoc.select(".user-transactions__item");;
+                
+                if (!transactions.isEmpty()) {
+                    allTransactions.addAll(transactions);
+                }
+                
+                
             }
+           
+            
+            
+            boolean quizDoneToday = false;
+            int advWatchedToday = 0;
+
             // Получаем текущую дату
             LocalDate today = LocalDate.now();
             String todayStr = today.getDayOfMonth() + " " + getMonthName(today.getMonthValue()) + " " + today.getYear();
-
-            // Парсим транзакции со страницы баланса
-            Elements transactions = balanceDoc.select(".user-transactions__item");
-            Elements transactions2 = balanceDocPage2.select(".user-transactions__item");
-            Elements transactions3 = balanceDocPage3.select(".user-transactions__item");
-            Elements allTransactions = new Elements();
-            allTransactions.addAll(transactions);
-            if (!transactions2.isEmpty()) {
-                allTransactions.addAll(transactions2);
-            }
-            if (!transactions3.isEmpty()) {
-                allTransactions.addAll(transactions3);
-            }
-            boolean quizDoneToday = false;
-            int advWatchedToday = 0;
 
             for (Element transaction : allTransactions) {
                 String date = transaction.select(".user-transactions__date").text();
@@ -286,6 +338,7 @@ public class ScanningProgress {
                 progress.setMineHitsLeft(mineHitsLeft);
                 progress.setLastUpdated(LocalDate.now());
                 progress.setDiamond(diamondBalance);
+                progress.setCountCard(countCard);
                 // Загружаем состояние чекбоксов из существующего прогресса
                 boolean currentReaderEnabled = progress.isReaderEnabled();
                 boolean currentCommentEnabled = progress.isCommentEnabled();
@@ -355,7 +408,9 @@ public class ScanningProgress {
                                     updatedProgress.getMineCountCoin(),
                                     updatedProgress.getMineLvl(),
                                     updatedProgress.isAutoUpgradeEnabled(),
-                                    updatedProgress.isAutoExchangeEnabled()
+                                    updatedProgress.isAutoExchangeEnabled(),
+                                    updatedProgress.getDisplayOrder(),
+                                    updatedProgress.getCountCard()
                                 );
                                 controller.setAccount(updatedAccount);
                                 break;
@@ -413,6 +468,7 @@ public class ScanningProgress {
             throw new RuntimeException("Failed to send comment", e);
         }
     }
+
 
     private String saveAvatar(String avatarUrl, Long userId) throws IOException {
         Path avatarsDir = Paths.get(AVATARS_DIR);

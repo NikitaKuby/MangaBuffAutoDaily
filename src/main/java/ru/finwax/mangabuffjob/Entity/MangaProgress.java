@@ -109,6 +109,13 @@ public class MangaProgress {
     @Column(name = "auto_exchange_enabled", columnDefinition = "boolean default false")
     private boolean autoExchangeEnabled = false;
 
+    @Builder.Default
+    @Column(name = "display_order", nullable = true)
+    private Integer displayOrder = 0;
+
+    @Column(name = "card_count")
+    private Long countCard;
+
     @PreUpdate
     public void updateLastUpdated() {
         this.lastUpdated = LocalDate.now();

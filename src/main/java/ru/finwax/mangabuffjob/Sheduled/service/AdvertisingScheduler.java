@@ -10,6 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 import ru.finwax.mangabuffjob.auth.MbAuth;
+import ru.finwax.mangabuffjob.service.DriverManager;
 
 import java.time.Duration;
 
@@ -19,6 +20,7 @@ import java.time.Duration;
 public class AdvertisingScheduler {
 
     private final MbAuth mbAuth;
+    private final DriverManager driverManager;
     private static final String TASK_NAME = "adv";
     private static final String ADV_PAGE_URL = "https://mangabuff.ru/balance";
 
@@ -38,8 +40,16 @@ public class AdvertisingScheduler {
             Thread.currentThread().interrupt();
         }
 
+        String driverId = driverManager.generateDriverId(id, TASK_NAME);
         ChromeDriver driver = mbAuth.getActualDriver(id, TASK_NAME, checkViews);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        
+        // Проверяем состояние драйвера перед использованием
+        if (driverManager.isShuttingDown()) {
+            log.warn("[{}] Приложение выключается, прерываем рекламу", id);
+            return;
+        }
+        
         try {
             driver.get(ADV_PAGE_URL);
             int countNow = 0;
@@ -70,7 +80,7 @@ public class AdvertisingScheduler {
 
 
         } finally {
-            driver.quit();
+            driverManager.unregisterDriver(driverId);
         }
     }
 

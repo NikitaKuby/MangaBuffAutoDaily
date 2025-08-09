@@ -91,7 +91,7 @@ public class TaskExecutionService {
 
     private void executeReaderTask(MangaTask task) {
         try {
-            mangaReadScheduler.readMangaChapters(task.getUserId(), task.getRemainingCount(), checkViews);
+            mangaReadScheduler.readMangaChapters(task.getUserId(), task.getRemainingCount()+1, checkViews);
             Thread.sleep(10000);
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при выполнении чтения: " + e.getMessage(), e);

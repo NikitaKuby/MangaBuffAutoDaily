@@ -24,17 +24,27 @@ public class AccountProgress {
     private Integer totalReaderChapters;
     private Integer totalCommentChapters;
     private Long diamond;
+    @Getter
     private boolean reloginRequired;
+    @Getter
     private boolean readerEnabled;
+    @Getter
     private boolean commentEnabled;
+    @Getter
     private boolean quizEnabled;
+    @Getter
     private boolean mineEnabled;
+    @Getter
     private boolean advEnabled;
     private Map<String, CountScroll> scrollCounts;
     private Integer mineCoin;
     private Integer mineLvl;
+    @Getter
     private boolean autoUpgradeEnabled;
+    @Getter
     private boolean autoExchangeEnabled;
+    private Integer displayOrder;
+    private Long countCards;
 
     public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone,
                          String mineProgress, String advProgress, Integer advDone, String avatarPath,
@@ -43,7 +53,7 @@ public class AccountProgress {
                          boolean reloginRequired, boolean readerEnabled, boolean commentEnabled,
                          boolean quizEnabled, boolean mineEnabled, boolean advEnabled,
                          Map<String, CountScroll> scrollCounts, Integer mineCoin, Integer mineLvl,
-                         boolean autoUpgradeEnabled, boolean autoExchangeEnabled) {
+                         boolean autoUpgradeEnabled, boolean autoExchangeEnabled, Integer displayOrder) {
         this.username = username;
         this.readerProgress = readerProgress;
         this.commentProgress = commentProgress;
@@ -69,66 +79,72 @@ public class AccountProgress {
         this.mineLvl = mineLvl;
         this.autoUpgradeEnabled = autoUpgradeEnabled;
         this.autoExchangeEnabled = autoExchangeEnabled;
+        this.displayOrder = displayOrder;
     }
 
-    public boolean isReloginRequired() {
-        return reloginRequired;
+    public AccountProgress(String username, String readerProgress, String commentProgress, Boolean quizDone,
+                           String mineProgress, String advProgress, Integer advDone, String avatarPath,
+                           String avatarAltText, Long userId, Integer totalReaderChapters,
+                           Integer totalCommentChapters, Integer mineHitsLeft, Long diamond,
+                           boolean reloginRequired, boolean readerEnabled, boolean commentEnabled,
+                           boolean quizEnabled, boolean mineEnabled, boolean advEnabled,
+                           Map<String, CountScroll> scrollCounts, Integer mineCoin, Integer mineLvl,
+                           boolean autoUpgradeEnabled, boolean autoExchangeEnabled, Integer displayOrder, Long countCards) {
+        this.username = username;
+        this.readerProgress = readerProgress;
+        this.commentProgress = commentProgress;
+        this.quizDone = quizDone;
+        this.mineProgress = mineProgress;
+        this.mineHitsLeft = mineHitsLeft;
+        this.advProgress = advProgress;
+        this.advDone = advDone;
+        this.avatarPath = avatarPath;
+        this.avatarAltText = avatarAltText;
+        this.userId = userId;
+        this.totalReaderChapters = totalReaderChapters;
+        this.totalCommentChapters = totalCommentChapters;
+        this.diamond = diamond;
+        this.reloginRequired = reloginRequired;
+        this.readerEnabled = readerEnabled;
+        this.commentEnabled = commentEnabled;
+        this.quizEnabled = quizEnabled;
+        this.mineEnabled = mineEnabled;
+        this.advEnabled = advEnabled;
+        this.scrollCounts = scrollCounts;
+        this.mineCoin = mineCoin;
+        this.mineLvl = mineLvl;
+        this.autoUpgradeEnabled = autoUpgradeEnabled;
+        this.autoExchangeEnabled = autoExchangeEnabled;
+        this.displayOrder = displayOrder;
+        this.countCards = countCards;
     }
 
     public void setReloginRequired(boolean reloginRequired) {
         this.reloginRequired = reloginRequired;
     }
 
-    public boolean isReaderEnabled() {
-        return readerEnabled;
-    }
-
     public void setReaderEnabled(boolean readerEnabled) {
         this.readerEnabled = readerEnabled;
-    }
-
-    public boolean isCommentEnabled() {
-        return commentEnabled;
     }
 
     public void setCommentEnabled(boolean commentEnabled) {
         this.commentEnabled = commentEnabled;
     }
 
-    public boolean isQuizEnabled() {
-        return quizEnabled;
-    }
-
     public void setQuizEnabled(boolean quizEnabled) {
         this.quizEnabled = quizEnabled;
-    }
-
-    public boolean isMineEnabled() {
-        return mineEnabled;
     }
 
     public void setMineEnabled(boolean mineEnabled) {
         this.mineEnabled = mineEnabled;
     }
 
-    public boolean isAdvEnabled() {
-        return advEnabled;
-    }
-
     public void setAdvEnabled(boolean advEnabled) {
         this.advEnabled = advEnabled;
     }
 
-    public boolean isAutoUpgradeEnabled() {
-        return autoUpgradeEnabled;
-    }
-
     public void setAutoUpgradeEnabled(boolean autoUpgradeEnabled) {
         this.autoUpgradeEnabled = autoUpgradeEnabled;
-    }
-
-    public boolean isAutoExchangeEnabled() {
-        return autoExchangeEnabled;
     }
 
     public void setAutoExchangeEnabled(boolean autoExchangeEnabled) {

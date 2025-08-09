@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import ru.finwax.mangabuffjob.Entity.MangaProgress;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,7 +16,13 @@ public interface MangaProgressRepository extends JpaRepository<MangaProgress, Lo
     Optional<MangaProgress> findByUserId(Long userId);
     boolean existsByUserIdIs(Long userId);
 
+    @Modifying
+    @Query("SELECT m FROM MangaProgress m ORDER BY m.displayOrder ASC")
+    List<MangaProgress> findAllOrderByDisplayOrder();
 
+    @Modifying
+    @Query("UPDATE MangaProgress m SET m.displayOrder = :displayOrder WHERE m.userId = :userId")
+    void updateDisplayOrder(@Param("userId") Long userId, @Param("displayOrder") Integer displayOrder);
 
     @Modifying
     void deleteByUserId(Long userId);

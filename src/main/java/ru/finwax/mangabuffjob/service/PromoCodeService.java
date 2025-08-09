@@ -27,14 +27,16 @@ import org.openqa.selenium.NoSuchElementException;
 public class PromoCodeService {
 
     private final UserCookieRepository userCookieRepository;
+    private final AccountService accountService;
     private final TaskExecutor taskExecutor;
     private final MbAuth mbAuth;
+    private final DriverManager driverManager;
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private AtomicBoolean stopProcessing = new AtomicBoolean(false);
 
     public void applyPromoCodeToAllAccounts(String promoCode, BiConsumer<String, String> notificationCallback) {
-        List<UserCookie> accounts = userCookieRepository.findAll();
+        List<UserCookie> accounts = accountService.getAllAccountsInOrder();
 
         List<CompletableFuture<Void>> futures = new java.util.ArrayList<>();
 
@@ -66,6 +68,7 @@ public class PromoCodeService {
     private void applyPromoCodeToAccount(UserCookie account, String promoCode, BiConsumer<String, String> notificationCallback) {
         ChromeDriver driver = null;
         try {
+            String driverId = driverManager.generateDriverId(account.getId(), "promoCode");
             // Initialize WebDriver using MbAuth
             driver = mbAuth.getActualDriver(account.getId(), "promoCode", false); // Use a specific task name and hide views
 
@@ -91,8 +94,6 @@ public class PromoCodeService {
                 return; // Stop processing for this account
             }
 
-            // TODO: Monitor for toast notifications for 5 seconds
-            // You will need to implement the logic to find and interpret the toast messages.
             monitorToastNotifications(driver, account.getId(), account.getUsername(), notificationCallback);
 
         } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
@@ -104,8 +105,7 @@ public class PromoCodeService {
             notificationCallback.accept("Error applying promo code for account " + account.getUsername() + ": " + e.getMessage(), "error");
         } finally {
             if (driver != null) {
-                driver.quit();
-                mbAuth.killUserDriver(account.getId(), "promoCode"); // Kill driver process as well
+                driverManager.unregisterDriver(account.getId().toString());
             }
         }
     }

@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.ArrayList;
-import java.util.Map;
+import ru.finwax.mangabuffjob.service.DriverManager;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +24,7 @@ public class TaskExecutor {
     private final ConcurrentHashMap<Long, AtomicBoolean> activeAccountTasks = new ConcurrentHashMap<>();
     @Getter
     private final TaskExecutionService taskExecutionService;
+    private final DriverManager driverManager;
     private volatile boolean isRunning = false;
 
     public List<MangaTask> getRunningTasks() {
@@ -44,6 +45,10 @@ public class TaskExecutor {
         if (isRunning) {
             return;
         }
+        
+        // Сбрасываем флаг выключения в DriverManager для повторного запуска
+        driverManager.resetShutdownFlag();
+
         isRunning = true;
 
         // Если executorService был остановлен, создаем новый
@@ -142,6 +147,9 @@ public class TaskExecutor {
         
         // Очищаем активные задачи для аккаунтов
         activeAccountTasks.clear();
+        
+        // Закрываем все драйверы
+        driverManager.closeAllDrivers();
         
         // Останавливаем executor service
         executorService.shutdownNow();

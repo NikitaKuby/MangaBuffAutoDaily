@@ -96,7 +96,7 @@ public class CommentParserService {
 
     private void processMangaElement(Element mangaElement, MangaData manga, Long id) {
         Element chapterValue = mangaElement.selectFirst("div.chapters__value span");
-        log.info("chapter value = "+ Objects.requireNonNull(chapterValue).text());
+//        log.info("chapter value = "+ Objects.requireNonNull(chapterValue).text());
         double chapterNumber = Double.parseDouble(Objects.requireNonNull(chapterValue).text());
 
         Element likeButton = mangaElement.selectFirst("button.chapters__like-btn");

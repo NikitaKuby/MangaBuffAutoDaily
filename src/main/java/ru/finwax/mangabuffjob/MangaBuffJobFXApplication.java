@@ -11,6 +11,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import ru.finwax.mangabuffjob.service.DiamondCounterService;
+import ru.finwax.mangabuffjob.service.DriverManager;
+import ru.finwax.mangabuffjob.service.TaskExecutor;
+import ru.finwax.mangabuffjob.service.ProcessManager;
 import javax.sql.DataSource;
 
 @Slf4j
@@ -60,6 +64,44 @@ public class MangaBuffJobFXApplication extends Application {
         try {
             log.info("Закрытие приложения...");
             if (springContext != null) {
+                // Останавливаем все задачи
+                try {
+                    TaskExecutor taskExecutor = springContext.getBean(TaskExecutor.class);
+                    taskExecutor.stopAllTasks();
+                    log.info("Все задачи остановлены");
+                } catch (Exception e) {
+                    log.error("Ошибка при остановке задач: " + e.getMessage());
+                }
+                
+                // Закрываем все драйверы
+                try {
+                    DriverManager driverManager = springContext.getBean(DriverManager.class);
+                    driverManager.closeAllDrivers();
+                    log.info("Все драйверы закрыты");
+                } catch (Exception e) {
+                    log.error("Ошибка при закрытии драйверов: " + e.getMessage());
+                }
+
+                
+                // Очищаем Java процессы
+                try {
+                    ProcessManager processManager = springContext.getBean(ProcessManager.class);
+                    processManager.logProcessInfo();
+                    processManager.killJavaProcesses();
+                    log.info("Java процессы очищены");
+                } catch (Exception e) {
+                    log.error("Ошибка при очистке Java процессов: " + e.getMessage());
+                }
+                
+                // Останавливаем сервис счётчика алмазов
+                try {
+                    DiamondCounterService diamondCounterService = springContext.getBean(DiamondCounterService.class);
+                    diamondCounterService.shutdown();
+                    log.info("Сервис счётчика алмазов остановлен");
+                } catch (Exception e) {
+                    log.error("Ошибка при остановке сервиса счётчика алмазов: " + e.getMessage());
+                }
+                
                 // Закрываем все соединения с базой данных
                 try {
                     DataSource dataSource = springContext.getBean(DataSource.class);

@@ -5,7 +5,6 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Tooltip?>
@@ -16,17 +15,18 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.Region?>
 
 <?import java.net.URL?>
-<AnchorPane fx:id="rootPane" minHeight="420.0" minWidth="300.0" prefHeight="900.0" prefWidth="900.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
+<AnchorPane fx:id="rootPane" minHeight="420.0" minWidth="300.0" prefHeight="900.0" prefWidth="1080.0" maxHeight="-Infinity" maxWidth="-Infinity" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.finwax.mangabuffjob.controller.MangaBuffJobViewController">
    <stylesheets>
       <URL value="@styles.css"/>
    </stylesheets>
    <children>
       <VBox layoutX="20.0" layoutY="20.0" spacing="0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="60.0">
         <children>
-          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;" minHeight="140.0" prefHeight="700.0" maxHeight="-Infinity" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+          <AnchorPane style="-fx-background-color: #f0f1f4; -fx-border-color: #bdbdbd; -fx-border-radius: 10; -fx-background-radius: 10;"
+                      minHeight="140.0"   prefHeight="700.0" maxHeight="1280.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                      VBox.vgrow="ALWAYS">
             <children>
               <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="50.0" VBox.vgrow="ALWAYS">
                 <content>
@@ -84,7 +84,7 @@
               </HBox>
             </children>
           </AnchorPane>
-          <HBox spacing="20.0" alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
+          <HBox spacing="20.0" alignment="CENTER_LEFT" style="-fx-padding: 5 0 50 0;">
             <children>
               <Button fx:id="periodicReadingButton" mnemonicParsing="false" text="Запускать периодическое чтение" styleClass="btn-white"/>
               <Button fx:id="stopPeriodicReadingButton" mnemonicParsing="false" text="Остановить периодическое чтение" styleClass="btn-red" visible="false" managed="false" />
@@ -94,23 +94,8 @@
                  </tooltip>
               </CheckBox>
               <Pane HBox.hgrow="ALWAYS" />
-              <!-- Diamond-блок увеличен на 20%, увеличены отступы слева и справа -->
-              <HBox alignment="CENTER" spacing="17"
-                    style="-fx-background-color: #E2E2E2; -fx-border-color: #000000; -fx-border-radius: 14; -fx-background-radius: 14;"
-                    prefWidth="190" prefHeight="54" maxWidth="190" maxHeight="54">
-                <padding>
-                    <Insets top="0" right="13" bottom="0" left="13"/>
-                </padding>
-                <children>
-                    <ImageView fitWidth="26" fitHeight="26" preserveRatio="true">
-                        <image>
-                            <Image url="@/static/diamond.png" />
-                        </image>
-                    </ImageView>
-                    <Label text="0/ 96"
-                           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #9450E0; -fx-font-family: 'Oswald', Arial, sans-serif;"/>
                     <StackPane fx:id="customSwitch" prefWidth="50" prefHeight="32" minHeight="32" maxHeight="32"
-                               style="-fx-background-color: #C0C0C0; -fx-border-color: #0C0C0C; -fx-border-radius: 10; -fx-background-radius: 10;">
+                               style="-fx-background-color: #C0C0C0; -fx-border-color: #0C0C0C; -fx-border-radius: 10; -fx-background-radius: 10; -fx-margin: 0 0 0 10;">
                         <children>
                             <Circle radius="10" fill="WHITE" stroke="BLACK" translateX="-11"/>
                             <Label text="OFF"
@@ -118,8 +103,6 @@
                                    prefWidth="22" prefHeight="22" alignment="CENTER_RIGHT" translateX="11"/>
                         </children>
                     </StackPane>
-                </children>
-              </HBox>
             </children>
           </HBox>
         </children>

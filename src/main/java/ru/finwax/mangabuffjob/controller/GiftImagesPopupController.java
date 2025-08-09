@@ -77,7 +77,7 @@ public class GiftImagesPopupController {
         }
 
         if (imagePaths.isEmpty()) {
-            log.info("[{}] Нет изображений подарков для отображения для даты: {}".replace("{}", accountId.toString()).replace("{}", date.toString()));
+            log.debug("[{}] Нет изображений подарков для отображения для даты: {}".replace("{}", accountId.toString()).replace("{}", date.toString()));
             // Optionally display a message in the popup indicating no gifts for this date
             Label noGiftsLabel = new Label("Нет подарков за эту дату.");
             imageFlowPane.getChildren().add(noGiftsLabel);
@@ -86,16 +86,51 @@ public class GiftImagesPopupController {
 
         for (String imagePath : imagePaths) {
             try {
+                // Принудительно создаем новое изображение без кэширования
                 Image image = new Image(imagePath, false);
+                
+                // Создаем новый ImageView для каждого изображения
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(120);
                 imageView.setPreserveRatio(true);
+                
+                // Добавляем обработчик ошибок загрузки
+                image.errorProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue) {
+                        log.warn("Ошибка загрузки изображения: {}", imagePath);
+                    }
+                });
+                
                 imageFlowPane.getChildren().add(imageView);
             } catch (Exception e) {
                 log.error("Ошибка загрузки изображения подарка из URI " + imagePath + ": " + e.getMessage());
                 e.printStackTrace();
             }
         }
+    }
+    
+    /**
+     * Принудительно перезагружает все изображения подарков
+     * Очищает кэш JavaFX и перезагружает изображения
+     */
+    public void forceReloadImages() {
+        if (accountId == null) {
+            log.warn("Account ID is not set in GiftImagesPopupController.");
+            return;
+        }
+        
+        log.debug("[{}] Принудительная перезагрузка изображений подарков", accountId);
+        
+        // Очищаем все изображения из кэша JavaFX
+        imageFlowPane.getChildren().clear();
+        
+        // Принудительно очищаем кэш изображений
+        System.gc(); // Запускаем сборщик мусора для очистки кэша
+        
+        // Перезагружаем изображения для текущей даты
+        loadImagesForDate(LocalDate.now(ZoneId.systemDefault()));
+        
+        log.debug("[{}] Изображения подарков перезагружены", accountId);
     }
 
     private void generateDateButtons() {
