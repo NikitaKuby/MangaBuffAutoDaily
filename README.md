@@ -14,7 +14,7 @@ _Идеально подходит для тех, кто хочет эконом
 ## ⁉️ Сборка через Mvn, либо [Relese](https://github.com/NikitaKuby/MangaBuffAutoDaily/releases/tag/v1.0.2)
 
 ## Системные требования
- - JRE version: 17.
+ - JDK version: 21.
  - Google Chrome последней версии.
  - 8GB RAM для околостабильной работы
 
